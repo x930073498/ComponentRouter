@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.x930073498.library">
+
+    <application>
+        <provider
+            android:authorities="${applicationId}.99e5038-7e7b-49da-b9dd-b6eafd267273.lib"
+            android:name=".LibraryProvider"
+            android:exported="false" />
+    </application>
+</manifest>
