@@ -1,9 +1,16 @@
+import com.x930073498.Versions
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'com.x930073498.plugin'
 
+kapt {
+    arguments {
+        arg("authority", "app")
+        arg("packageName", "com.x930073498.router")
+    }
+}
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"

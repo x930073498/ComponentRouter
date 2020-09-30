@@ -113,23 +113,6 @@ class ActivityAnnotationProcessor : BaseProcessor() {
         buildTargetFunction(targetClassName, element, typeSpec)
     }
 
-//    private fun buildFactoryFunction(
-//        typeSpec: TypeSpec.Builder,
-//        element: TypeElement,
-//        fragmentAnnotation: ActivityAnnotation,
-//    ) {
-//        val factoryClassName =
-//            ClassName.bestGuess("com.x930073498.router.impl.FragmentActionDelegate.Factory")
-//                .parameterizedBy(element.asClassName())
-//        val factory = FunSpec.builder("factory")
-//            .addModifiers(KModifier.OVERRIDE)
-//            .addStatement("return %T{_,_,bundle->%T().apply{arguments=bundle}}",
-//                factoryClassName,
-//                element.asType())
-//        typeSpec.addFunction(factory.build())
-//
-//    }
-
 
 
 
