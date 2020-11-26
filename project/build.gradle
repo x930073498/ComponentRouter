@@ -1,0 +1,33 @@
+import com.x930073498.Versions
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://oss.sonatype.org/service/local/repositories/snapshots/content/" }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:1.4.20"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.20"
+        classpath "com.vanniktech:gradle-maven-publish-plugin:0.11.1"
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:+'
+    }
+
+
+}
+
+
+plugins{
+    id "com.x930073498.compose"
+}
+
+allprojects {
+ext.kotlin_version= Versions.kotlin
+    repositories {
+        google()
+        jcenter()
+        maven { url "https://jitpack.io" }
+    }
+
+}
+

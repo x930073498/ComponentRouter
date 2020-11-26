@@ -1,0 +1,10 @@
+includeBuild "../buildPlugin"
+include ':module1'
+include ':router'
+include ':plugin'
+include ':library'
+include ':api'
+include ':annotations'
+include ':compiler'
+include ':app'
+rootProject.name = "My Application"
