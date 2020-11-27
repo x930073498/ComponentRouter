@@ -1,17 +1,15 @@
 package com.x930073498.library
 
+import android.app.Application
 import android.content.ContentProvider
 import android.content.ContentValues
 import android.database.Cursor
 import android.net.Uri
+import com.zx.common.auto.AutoTaskRegister
 
 class LibraryProvider : ContentProvider() {
     override fun onCreate(): Boolean {
-        executor.submit {
-            while (isEnable==null){
-                Thread.sleep(100)
-            }
-        }
+        AutoTaskRegister.init(context as Application)
         return false
     }
 

@@ -1,7 +1,9 @@
 package com.x930073498.kotlinpoet
 
+import android.app.Application
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.OnBackPressedDispatcher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -22,20 +24,21 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     @Inject
-    lateinit var app:App
+    lateinit var app: Application
 
     @Inject
-    lateinit var foo:ActivityFoo
+    lateinit var foo: ActivityFoo
 
-val viewModel by lazy {
-    ViewModelProvider(this)[MainViewModel::class.java]
-}
+    private val viewModel by lazy {
+        ViewModelProvider(this)[MainViewModel::class.java]
+    }
+
     @ValueAutowiredAnnotation("name")
     var name: String = ""
     val tag = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        app.a()
+        println("enter this line app=$app")
         foo.test()
         viewModel.test()
         setContentView(R.layout.activity_main)

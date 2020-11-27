@@ -5,6 +5,8 @@ import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.tasks.KOTLIN_KAPT_PLUGIN_ID
 import com.x930073498.Libraries
 import com.x930073498.Versions
+import com.x930073498.plugin.register.AutoRegisterConfig
+import com.x930073498.plugin.register.RegisterTransform
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -16,6 +18,24 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class StubPlugin : Plugin<Project> {
+    val EXT_NAME = "autoregister"
+    private fun init(project: Project, transform: RegisterTransform) {
+        val config = project.extensions.findByName(EXT_NAME) as? AutoRegisterConfig
+            ?: AutoRegisterConfig()
+        config.registerInfo.add(
+            mutableMapOf(
+                //com.zx.common.auto
+            "codeInsertToClassName" to "com.zx.common.auto.AutoTaskRegister",
+            "codeInsertToMethodName" to "load",
+            "registerMethodName" to "register",
+            "scanInterface" to "com.zx.common.auto.IAuto"
+        )
+        )
+        config.project = project
+        config.convertConfig()
+        transform.config = config
+    }
+
     override fun apply(project: Project) {
         println("测试----")
 
@@ -30,6 +50,9 @@ class StubPlugin : Plugin<Project> {
             afterEvaluate {
                 if (plugins.hasPlugin(AppPlugin::class.java)){
                     println("enter this line ")
+                    if(!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)){
+                        plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
+                    }
                     plugins.apply("dagger.hilt.android.plugin")
                     dependencies{
                         add("kapt", "com.google.dagger:hilt-android-compiler:+")
@@ -43,6 +66,14 @@ class StubPlugin : Plugin<Project> {
 
 
             plugins.whenPluginAdded {
+                if (this is AppPlugin) {
+                    extensions.create(EXT_NAME, AutoRegisterConfig::class.java)
+                    val transform = RegisterTransform(this@subprojects)
+                    afterEvaluate {
+                        init(this@subprojects, transform)
+                    }
+                    android.registerTransform(transform)
+                }
 //                if (this is AppPlugin) {
 //                    this@subprojects.apply {
 //                        plugin(KOTLIN_KAPT_PLUGIN_ID)
