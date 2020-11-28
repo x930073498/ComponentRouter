@@ -1,6 +1,8 @@
 import com.x930073498.Versions
 buildscript {
     repositories {
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        mavenCentral()
         google()
         jcenter()
         maven { url "https://oss.sonatype.org/service/local/repositories/snapshots/content/" }
@@ -24,6 +26,8 @@ plugins{
 allprojects {
 ext.kotlin_version= Versions.kotlin
     repositories {
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        mavenCentral()
         google()
         jcenter()
         maven { url "https://jitpack.io" }

@@ -109,6 +109,8 @@ class FragmentAnnotationProcessor : BaseProcessor() {
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME, "FragmentActionDelegate")
                 .parameterizedBy(element.asClassName())
         typeSpec.addSuperinterface(fragmentDelegateType)
+//        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction").parameterizedBy(element.asClassName()))
+//        typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
         buildInjectFunction(typeSpec, element, fragmentAnnotation)
         buildKeyProperty(typeSpec, element, fragmentAnnotation)
         buildTargetFunction(typeSpec, element, fragmentAnnotation)

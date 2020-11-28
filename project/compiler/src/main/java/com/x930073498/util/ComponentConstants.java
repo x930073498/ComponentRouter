@@ -1,23 +1,18 @@
 package com.x930073498.util;
 
-/**
- * time   : 2018/07/26
- *
- * @author : xiaojinzi
- */
+
 public class ComponentConstants {
 
     private ComponentConstants() {
     }
 
-    /**
-     * 当使用 Fragment 或者 Context 中有这个 tag 的 fragment,那么就会最终用这个实现跳转
-     */
+
     public static final String ACTIVITY_RESULT_FRAGMENT_TAG = "TAG_FOR_ROUTER_GET_ACTIVITY_RESULT";
 
     // System interface
     public static final String ROUTER_ACTION_PACKAGE_NAME = "com.x930073498.router.action";
     public static final String ROUTER_INTERFACE_PACKAGE_NAME = "com.x930073498.router.impl";
+    public static final String AUTO_INTERFACE_NAME="com.zx.common.auto.IAuto";
 
     //    public static final String COMPONENT_GENERATED_ANNO_CLASS_NAME = "com.xiaojinzi.component.anno.support.ComponentGeneratedAnno";
 //    public static final String APPLCATON_INTERFACE_CLASS_NAME = "com.xiaojinzi.component.application.IComponentApplication";
@@ -88,9 +83,7 @@ public class ComponentConstants {
      */
     public static final String INJECT_SUFFIX = "_inject";
 
-    /**
-     * 整串字符串放到 https://jex.im/regulex 就可以看到效果
-     */
+
     public static final String HOST_REGEX =
             "^([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])*$";
 

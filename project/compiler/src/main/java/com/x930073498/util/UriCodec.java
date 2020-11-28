@@ -23,11 +23,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 
-/**
- * Decodes “application/x-www-form-urlencoded” content.
- *
- * @hide
- */
+
 public final class UriCodec {
 
     private UriCodec() {}
@@ -65,14 +61,7 @@ public final class UriCodec {
         return uri.charAt(index);
     }
 
-    /**
-     * Decode a string according to the rules of this decoder.
-     *
-     * - if {@code convertPlus == true} all ‘+’ chars in the decoded output are converted to ‘ ‘
-     *   (white space)
-     * - if {@code throwOnFailure == true}, an {@link IllegalArgumentException} is thrown for
-     *   invalid inputs. Else, U+FFFd is emitted to the output in place of invalid input octets.
-     */
+
     public static String decode(
             String s, boolean convertPlus, Charset charset, boolean throwOnFailure) {
         StringBuilder builder = new StringBuilder(s.length());
@@ -80,9 +69,7 @@ public final class UriCodec {
         return builder.toString();
     }
 
-    /**
-     * Character to be output when there's an error decoding an input.
-     */
+
     private static final char INVALID_INPUT_CHARACTER = '\ufffd';
 
     private static void appendDecoded(
@@ -95,8 +82,7 @@ public final class UriCodec {
                 .onMalformedInput(CodingErrorAction.REPLACE)
                 .replaceWith("\ufffd")
                 .onUnmappableCharacter(CodingErrorAction.REPORT);
-        // Holds the bytes corresponding to the escaped chars being read (empty if the last char
-        // wasn't a escaped char).
+
         ByteBuffer byteBuffer = ByteBuffer.allocate(s.length());
         int i = 0;
         while (i < s.length()) {

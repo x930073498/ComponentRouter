@@ -2,6 +2,7 @@ package com.zx.common.auto
 
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -12,11 +13,17 @@ internal object AutoTaskRegister {
     internal val activityLifecycle = FragmentAutoActivityLifecycle()
 
     @JvmStatic
-    internal fun init(app: Application) {
+    internal fun init(context: Context) {
         if (hasInit) return
-        this.app = app
+        this.app = getApplication(context)
         activityLifecycle.register()
         load()
+    }
+
+    private fun getApplication(context: Context):Application{
+        if (context is Application)return context
+        val appContext=context.applicationContext
+        return appContext as Application
     }
 
     @JvmStatic

@@ -1,10 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.x930073498.library">
 
     <application>
         <provider
-            android:authorities="${applicationId}.99e5038-7e7b-49da-b9dd-b6eafd267273.lib"
-            android:name=".LibraryProvider"
-            android:exported="false" />
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="com.zx.common.auto.AutoInitializer"
+                android:value="@string/androidx_startup" />
+        </provider>
     </application>
 </manifest>

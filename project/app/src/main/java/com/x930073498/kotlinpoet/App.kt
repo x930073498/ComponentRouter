@@ -17,7 +17,6 @@ class App : Application() {
         super.onCreate()
         foo.test()
         Router.init(this).checkRouteUnique(true)
-        TestModuleRegister.register()
 
     }
     fun a(){

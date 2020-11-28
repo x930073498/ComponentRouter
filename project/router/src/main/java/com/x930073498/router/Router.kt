@@ -110,7 +110,6 @@ class Router(uri: Uri = Uri.EMPTY) {
         }.beforeIntercept {
             request().syncUriToBundle()
         }
-
             .start()
     }
 

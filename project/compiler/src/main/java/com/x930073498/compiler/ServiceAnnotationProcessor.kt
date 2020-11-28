@@ -54,6 +54,8 @@ class ServiceAnnotationProcessor : BaseProcessor() {
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME, "ServiceActionDelegate")
                 .parameterizedBy(element.asClassName())
         typeSpec.addSuperinterface(serviceDelegateType)
+//        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction").parameterizedBy(element.asClassName()))
+//        typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
         buildInjectFunction(typeSpec, element, serviceAnnotation)
         buildKeyProperty(typeSpec, element, serviceAnnotation)
         buildTargetFunction(typeSpec, element, serviceAnnotation)

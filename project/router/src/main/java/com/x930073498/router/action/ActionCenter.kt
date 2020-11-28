@@ -20,7 +20,10 @@ object ActionCenter {
 
 
     fun register(actionDelegate: ActionDelegate<*>): Key {
-        val key = Key(actionDelegate.group, actionDelegate.path)
+        println("enter this line actionDelegate=$actionDelegate")
+        val key = Key(actionDelegate.group, actionDelegate.path).also {
+            println("enter this line actionDelegateKey=$it")
+        }
         if (checkKeyUnique) {
             val last = map[key]
             if (last != null) {
@@ -53,13 +56,24 @@ object ActionCenter {
 
     internal fun getAction(url: String): ActionDelegate<*>? {
         val key = Uri.parse(url).authorityAndPath()
-        return mMap[Key(key.authority, key.path)]
+        val group= getGroupFromPath(key.path)
+        return mMap[Key(group, key.path)]
     }
 
 
     internal fun getAction(uri: Uri): ActionDelegate<*>? {
         val key = uri.authorityAndPath()
-        return mMap[Key(key.authority, key.path)]
+        val group = getGroupFromPath(key.path)
+        return mMap[Key(group, key.path)]
+    }
+
+    private fun getGroupFromPath(path: String?): String? {
+        val group = runCatching { path?.substring(1, path.indexOf("/", 1)) }.onFailure {
+//        messager.printMessage(Diagnostic.Kind.ERROR,
+//            "Failed to extract default group! " + it.message)
+        }.getOrNull() ?: return null
+        if (group.isEmpty()) return null
+        return group
     }
 
 

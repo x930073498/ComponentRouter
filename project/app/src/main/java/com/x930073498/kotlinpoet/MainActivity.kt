@@ -38,7 +38,6 @@ class MainActivity : AppCompatActivity() {
     val tag = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        println("enter this line app=$app")
         foo.test()
         viewModel.test()
         setContentView(R.layout.activity_main)
