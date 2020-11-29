@@ -5,10 +5,12 @@ import android.os.Bundle
 import com.x930073498.annotations.MethodAnnotation
 import com.x930073498.annotations.MethodBundleNameAnnotation
 import com.x930073498.router.action.ContextHolder
+import com.x930073498.router.action.Target
+import com.x930073498.router.impl.AutoAction
 import com.x930073498.router.impl.MethodActionDelegate
 import com.x930073498.router.impl.MethodInvoker
-import com.x930073498.router.action.MethodTarget
 import com.x930073498.router.util.ParameterSupport
+import com.zx.common.auto.IAuto
 
 
 @MethodAnnotation(path = "/test/test4")
@@ -24,14 +26,10 @@ suspend fun testMethod(
 
 class TestMethodInvoker : MethodInvoker<String> {
     override suspend fun invoke(contextHolder: ContextHolder, bundle: Bundle): String? {
-        println("enter method testMethod bundle=$bundle")
         val context = contextHolder.getContext()
         val a = ParameterSupport.getString(bundle, "a")
-        println("a=$a")
         val b = ParameterSupport.getInt(bundle, "b")
-        println("b=$b")
         val c = ParameterSupport.getCharSequence(bundle, "c")
-        println("c=$c")
         if (a == null || b == null || c == null) {
             return null
         }
@@ -41,22 +39,24 @@ class TestMethodInvoker : MethodInvoker<String> {
 
 }
 
-class TestMethodActionDelegate : MethodActionDelegate<TestMethodInvoker, String> {
+class TestMethodActionDelegate : MethodActionDelegate<TestMethodInvoker, String>,IAuto,AutoAction<String>() {
     override val path: String
-        get() = "test4"
-
+        get() = "/test/test4"
+    override val group: String
+        get() = "test"
     override fun factory() = object :MethodActionDelegate.Factory<TestMethodInvoker> {
         override suspend fun create(
             contextHolder: ContextHolder,
             clazz: Class<TestMethodInvoker>,
             bundle: Bundle,
-        ): TestMethodInvoker? {
+        ): TestMethodInvoker {
            return TestMethodInvoker()
         }
 
     }
 
-    override suspend fun target() = MethodTarget(String::class.java, TestMethodInvoker::class.java)
+    override suspend fun target() =
+        Target.MethodTarget(String::class.java, TestMethodInvoker::class.java)
 
 }
 

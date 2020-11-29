@@ -1,6 +1,7 @@
 package com.x930073498.kotlinpoet
 
 import android.app.Application
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.OnBackPressedDispatcher
@@ -10,6 +11,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.x930073498.annotations.ActivityAnnotation
 import com.x930073498.annotations.ValueAutowiredAnnotation
 import com.x930073498.router.*
+import com.x930073498.router.impl.RouterInterceptor
+import com.x930073498.router.interceptor.Chain
+import com.x930073498.router.request.RouterRequest
+import com.x930073498.router.response.RouterResponse
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.components.ActivityComponent
@@ -67,4 +72,11 @@ class A {
             println("enter this line 2222")
         }
     }
+}
+
+class GlobalRouterInterceptor : RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+       return chain.process(chain.request())
+    }
+
 }

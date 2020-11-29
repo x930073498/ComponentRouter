@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.view.View
 import android.widget.TextView
+import androidx.activity.OnBackPressedDispatcher
 import androidx.fragment.app.Fragment
 import com.x930073498.annotations.FactoryAnnotation
 import com.x930073498.annotations.FragmentAnnotation
@@ -17,24 +18,22 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.Serializable
 
-@Parcelize
-data class A(val name: String) : Serializable, Parcelable
 
 @FragmentAnnotation(path = "/test/a")
 class TestFragment : Fragment(R.layout.fragment_test) {
-
     @ValueAutowiredAnnotation
     var name = ""
 
-    @ValueAutowiredAnnotation("aaa")
-    var a: A? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    OnBackPressedDispatcher
         super.onViewCreated(view, savedInstanceState)
         requireView().findViewById<TextView>(R.id.tv)?.text = name
         requireView().setOnClickListener {
             GlobalScope.launch {
-                Router.from("/test/service?testA=8484848&b=4&c=5").navigate<TestService>()
+                Router.from("/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
+                    println(it)
+                }
+//                Router.from("/test/service?testA=8484848&b=4&c=5").navigate<TestService>()
             }
         }
     }

@@ -109,8 +109,9 @@ class FragmentAnnotationProcessor : BaseProcessor() {
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME, "FragmentActionDelegate")
                 .parameterizedBy(element.asClassName())
         typeSpec.addSuperinterface(fragmentDelegateType)
-//        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction").parameterizedBy(element.asClassName()))
-//        typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
+        typeSpec.addAnnotation(FragmentRegister::class)
+        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction").parameterizedBy(element.asClassName()))
+        typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
         buildInjectFunction(typeSpec, element, fragmentAnnotation)
         buildKeyProperty(typeSpec, element, fragmentAnnotation)
         buildTargetFunction(typeSpec, element, fragmentAnnotation)
@@ -172,7 +173,7 @@ class FragmentAnnotationProcessor : BaseProcessor() {
         fragmentAnnotation: FragmentAnnotation,
     ) {
         val targetClassName =
-            ClassName(ComponentConstants.ROUTER_ACTION_PACKAGE_NAME, "FragmentTarget")
+            ClassName(ComponentConstants.ROUTER_ACTION_PACKAGE_NAME, "Target", "FragmentTarget")
         buildTargetFunction(targetClassName, element, typeSpec)
     }
 

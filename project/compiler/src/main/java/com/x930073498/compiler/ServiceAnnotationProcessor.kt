@@ -54,8 +54,14 @@ class ServiceAnnotationProcessor : BaseProcessor() {
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME, "ServiceActionDelegate")
                 .parameterizedBy(element.asClassName())
         typeSpec.addSuperinterface(serviceDelegateType)
-//        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction").parameterizedBy(element.asClassName()))
-//        typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
+        typeSpec.addAnnotation(ServiceRegister::class)
+        typeSpec.superclass(
+            ClassName(
+                ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
+                "AutoAction"
+            ).parameterizedBy(element.asClassName())
+        )
+        typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
         buildInjectFunction(typeSpec, element, serviceAnnotation)
         buildKeyProperty(typeSpec, element, serviceAnnotation)
         buildTargetFunction(typeSpec, element, serviceAnnotation)
@@ -73,8 +79,12 @@ class ServiceAnnotationProcessor : BaseProcessor() {
 
         val inject = FunSpec.builder("inject")
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter(ParameterSpec("bundle",
-                ClassName.bestGuess(ComponentConstants.ANDROID_BUNDLE)))
+            .addParameter(
+                ParameterSpec(
+                    "bundle",
+                    ClassName.bestGuess(ComponentConstants.ANDROID_BUNDLE)
+                )
+            )
             .addParameter(ParameterSpec.builder("provider", element.asClassName()).build())
         buildInjectAttrFunction(inject, element)
         typeSpec.addFunction(inject.build())
@@ -88,10 +98,12 @@ class ServiceAnnotationProcessor : BaseProcessor() {
             else null
         }.forEach {
             messager.printMessage(Diagnostic.Kind.OTHER, "获取到注入元素$it \n")
-            generateParameterCodeForInject(it.second as VariableElement,
+            generateParameterCodeForInject(
+                it.second as VariableElement,
                 inject,
                 it.second.simpleName.toString(),
-                "bundle", "provider")
+                "bundle", "provider"
+            )
         }
 
 
@@ -104,8 +116,10 @@ class ServiceAnnotationProcessor : BaseProcessor() {
         serviceAnnotation: ServiceAnnotation,
     ) {
         val info =
-            serviceAnnotation.toInfo() ?: return messager.printMessage(Diagnostic.Kind.ERROR,
-                "获取信息出错")
+            serviceAnnotation.toInfo() ?: return messager.printMessage(
+                Diagnostic.Kind.ERROR,
+                "获取信息出错"
+            )
         buildKeyProperty(typeSpec, info)
     }
 
@@ -115,7 +129,7 @@ class ServiceAnnotationProcessor : BaseProcessor() {
         serviceAnnotation: ServiceAnnotation,
     ) {
         val fragmentTargetClassName =
-            ClassName(ComponentConstants.ROUTER_ACTION_PACKAGE_NAME, "ServiceTarget")
+            ClassName(ComponentConstants.ROUTER_ACTION_PACKAGE_NAME ,"Target", "ServiceTarget")
         buildTargetFunction(fragmentTargetClassName, element, serviceAnnotation, typeSpec)
     }
 
@@ -137,8 +151,10 @@ class ServiceAnnotationProcessor : BaseProcessor() {
         serviceAnnotation: ServiceAnnotation,
     ) {
         val factoryClassName =
-            ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
-                "ServiceActionDelegate.Factory")
+            ClassName(
+                ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
+                "ServiceActionDelegate.Factory"
+            )
                 .parameterizedBy(element.asClassName())
 
         val contextHolderClassName =
@@ -147,13 +163,15 @@ class ServiceAnnotationProcessor : BaseProcessor() {
         val bundleClassName = ClassName.bestGuess(ComponentConstants.ANDROID_BUNDLE)
         val factoryObject = TypeSpec.anonymousClassBuilder()
             .addSuperinterface(factoryClassName)
-            .addFunction(FunSpec.builder("create")
-                .addModifiers(KModifier.SUSPEND, KModifier.OVERRIDE)
-                .addParameter("contextHolder", contextHolderClassName)
-                .addParameter("clazz", clazzClassName)
-                .addParameter("bundle", bundleClassName)
-                .addStatement("return %T()", element)
-                .build())
+            .addFunction(
+                FunSpec.builder("create")
+                    .addModifiers(KModifier.SUSPEND, KModifier.OVERRIDE)
+                    .addParameter("contextHolder", contextHolderClassName)
+                    .addParameter("clazz", clazzClassName)
+                    .addParameter("bundle", bundleClassName)
+                    .addStatement("return %T()", element)
+                    .build()
+            )
             .build()
 
         val factory = FunSpec.builder("factory")

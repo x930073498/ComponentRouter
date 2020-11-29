@@ -105,11 +105,12 @@ class Router(uri: Uri = Uri.EMPTY) {
     }
 
     suspend fun request(): RouterResponse {
-        return routerRequest(uriBuilder.build(), mBundle).onInterceptors {
-            routerResponse(request().uri, request().bundle)
-        }.beforeIntercept {
-            request().syncUriToBundle()
-        }
+        return routerRequest(uriBuilder.build(), mBundle)
+            .onInterceptors {
+                routerResponse(request().uri, request().bundle)
+            }.beforeIntercept {
+                request().syncUriToBundle()
+            }
             .start()
     }
 
@@ -169,20 +170,20 @@ class Router(uri: Uri = Uri.EMPTY) {
         internal fun <T> inject(activity: T) where T : Activity {
             val intent = activity.intent ?: return
             val key = ParameterSupport.getCenterKey(intent) ?: return
-            val center = ActionCenter.getAction(key) ?: return
+            val center = ActionCenter.getAction(key)
             (center as? ActivityActionDelegate<T>)?.inject(intent, activity)
         }
 
         internal fun <T> inject(fragment: T) where T : Fragment {
             val bundle = fragment.arguments ?: return
             val key = ParameterSupport.getCenterKey(bundle) ?: return
-            val center = ActionCenter.getAction(key) ?: return
+            val center = ActionCenter.getAction(key)
             (center as? FragmentActionDelegate<T>)?.inject(bundle, fragment)
         }
 
         internal suspend fun <T> inject(provider: T, bundle: Bundle) where T : IService {
             val key = ParameterSupport.getCenterKey(bundle) ?: return
-            val center = ActionCenter.getAction(key) ?: return
+            val center = ActionCenter.getAction(key)
             (center as? ServiceActionDelegate<T>)?.inject(bundle, provider)
         }
 

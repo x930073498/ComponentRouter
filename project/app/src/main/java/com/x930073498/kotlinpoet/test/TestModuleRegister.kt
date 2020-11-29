@@ -10,7 +10,7 @@ import com.zx.common.auto.IApplicationLifecycle
 import com.zx.common.auto.IAuto
 
 @Keep
-class TestModuleRegister : ModuleRegister,IAuto ,IApplicationLifecycle{
+class TestModuleRegister : ModuleRegister{
 
     override fun register() {
         ActionCenter.register(`_$$TestFragmentFragmentActionDelegateGenerated`())
@@ -18,9 +18,9 @@ class TestModuleRegister : ModuleRegister,IAuto ,IApplicationLifecycle{
         ActionCenter.register(`_$$TestServiceImplServiceActionDelegateGenerated`())
     }
 
-    override fun onApplicationCreated(app: Application) {
-        register()
-    }
+//    override fun onApplicationCreated(app: Application) {
+//        register()
+//    }
 
 
 }

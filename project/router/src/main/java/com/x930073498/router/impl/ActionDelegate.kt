@@ -3,7 +3,9 @@
 package com.x930073498.router.impl
 
 import android.app.Application
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.x930073498.router.Router
@@ -25,12 +27,25 @@ interface ActionDelegate<T> {
 
 }
 
+internal class SystemActionDelegate(override val path: String) : ActionDelegate<Unit> {
+    override suspend fun target(): Target<Unit> {
+        return Target.SystemTarget(path)
+    }
+
+}
+
+
 @Suppress("UNCHECKED_CAST")
 suspend fun <T> ActionDelegate<T>.navigate(bundle: Bundle, contextHolder: ContextHolder): T? {
     val target = target()
     ParameterSupport.putCenter(bundle, path)
     return withContext(Dispatchers.Main) {
         when (this@navigate) {
+            is SystemActionDelegate -> {
+                target as Target.SystemTarget
+                target.go(contextHolder.getContext())
+                null
+            }
             is FragmentActionDelegate<T> -> {
                 val factory = factory() ?: object : FragmentActionDelegate.Factory<T> {
                     override suspend fun create(
@@ -58,7 +73,7 @@ suspend fun <T> ActionDelegate<T>.navigate(bundle: Bundle, contextHolder: Contex
                 null
             }
             is ServiceActionDelegate<T> -> {
-                target as? ServiceTarget<T> ?: return@withContext null
+                target as? Target.ServiceTarget<T> ?: return@withContext null
                 val factory = factory() ?: object : ServiceActionDelegate.Factory<T> {
                     override suspend fun create(
                         contextHolder: ContextHolder,
@@ -89,7 +104,7 @@ suspend fun <T> ActionDelegate<T>.navigate(bundle: Bundle, contextHolder: Contex
             else -> {
                 this@navigate as? MethodActionDelegate<MethodInvoker<T>, T>
                     ?: return@withContext null
-                target as? MethodTarget<T, MethodInvoker<T>> ?: return@withContext null
+                target as? Target.MethodTarget<T, MethodInvoker<T>> ?: return@withContext null
                 var invoker = Target.getMethod(target.methodInvokerType)
                 val factory = factory() ?: object : MethodActionDelegate.Factory<MethodInvoker<T>> {
                     override suspend fun create(

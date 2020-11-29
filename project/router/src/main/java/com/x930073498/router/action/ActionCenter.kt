@@ -2,6 +2,7 @@ package com.x930073498.router.action
 
 import android.net.Uri
 import com.x930073498.router.impl.ActionDelegate
+import com.x930073498.router.impl.SystemActionDelegate
 import com.x930073498.router.util.authorityAndPath
 
 object ActionCenter {
@@ -54,17 +55,17 @@ object ActionCenter {
     }
 
 
-    internal fun getAction(url: String): ActionDelegate<*>? {
+    internal fun getAction(url: String): ActionDelegate<*> {
         val key = Uri.parse(url).authorityAndPath()
         val group= getGroupFromPath(key.path)
-        return mMap[Key(group, key.path)]
+        return mMap[Key(group, key.path)]?:SystemActionDelegate(key.path?:"")
     }
 
 
-    internal fun getAction(uri: Uri): ActionDelegate<*>? {
+    internal fun getAction(uri: Uri): ActionDelegate<*> {
         val key = uri.authorityAndPath()
         val group = getGroupFromPath(key.path)
-        return mMap[Key(group, key.path)]
+        return mMap[Key(group, key.path)]?:SystemActionDelegate(key.path?:"")
     }
 
     private fun getGroupFromPath(path: String?): String? {

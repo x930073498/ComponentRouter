@@ -89,6 +89,7 @@ object ParameterSupport {
     internal fun putCenter(bundle: Bundle?, key: String) {
         bundle?.putString(KEY_CENTER_KEY, key)
     }
+
     fun getCenterKey(bundle: Intent?): String? {
         return bundle?.getStringExtra(KEY_CENTER_KEY)
     }
@@ -583,7 +584,8 @@ object ParameterSupport {
         return if (bundle.containsKey(key)) {
             bundle.getCharSequence(key)
         } else {
-            defaultValue
+            //fixme 是否有更好的方法
+            getQueryString(bundle, key) ?: defaultValue
         }
     }
 
