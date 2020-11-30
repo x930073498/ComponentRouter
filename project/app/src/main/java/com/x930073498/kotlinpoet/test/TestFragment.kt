@@ -25,7 +25,6 @@ class TestFragment : Fragment(R.layout.fragment_test) {
     var name = ""
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    OnBackPressedDispatcher
         super.onViewCreated(view, savedInstanceState)
         requireView().findViewById<TextView>(R.id.tv)?.text = name
         requireView().setOnClickListener {

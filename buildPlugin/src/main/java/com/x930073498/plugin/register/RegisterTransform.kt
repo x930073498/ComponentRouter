@@ -15,7 +15,7 @@ internal class RegisterTransform constructor(
     private val project: Project
 ) : Transform() {
 
-     lateinit var config: AutoRegisterConfig
+    lateinit var config: AutoRegisterConfig
     override fun getName(): String {
         return "auto-register"
     }
@@ -58,7 +58,7 @@ internal class RegisterTransform constructor(
                 object : TypeToken<HashMap<String, ScanJarHarvest>>() {}.type
             )
         }
-        val scanProcessor = CodeScanProcessor(config.list, cacheMap)
+        val scanProcessor = CodeScanProcessor(config.info, cacheMap)
         transformInvocation.inputs.forEach { input ->
             input.jarInputs.forEach { jarInput ->
                 if (jarInput.status != Status.NOTCHANGED && cacheMap != null) {
@@ -106,21 +106,20 @@ internal class RegisterTransform constructor(
         }
         var scanFinishTime = System.currentTimeMillis()
         project.logger.error("register scan all class cost time: " + (scanFinishTime - time) + " ms")
-        config.list.forEach {ext ->
-            if (ext.fileContainsInitClass!=null) {
-                println("")
-                println("insert register code to file:" + ext.fileContainsInitClass?.absolutePath)
-                if (ext.classList.isEmpty()) {
-                    project.logger.error("No class implements found for interface:" + ext.interfaceName)
-                }else{
-                    ext.classList.forEach {
-                        println(it)
-                    }
-                    CodeInsertProcessor.insertInitCodeTo(ext)
+        val ext = config.info
+        if (ext.fileContainsInitClass != null) {
+            println("")
+            println("insert register code to file:" + ext.fileContainsInitClass?.absolutePath)
+            if (ext.classList.isEmpty()) {
+                project.logger.error("No class implements found for interface:" + ext.interfaceName)
+            } else {
+                ext.classList.forEach {
+                    println(it)
                 }
-            }else{
-                project.logger.error("The specified register class not found:" + ext.registerClassName)
+                CodeInsertProcessor.insertInitCodeTo(ext)
             }
+        } else {
+            project.logger.error("The specified register class not found:" + ext.registerClassName)
         }
         val finishTime = System.currentTimeMillis()
         project.logger.error("register insert code cost time: " + (finishTime - scanFinishTime) + " ms")

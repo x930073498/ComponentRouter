@@ -20,17 +20,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 class StubPlugin : Plugin<Project> {
     val EXT_NAME = "autoregister"
     private fun init(project: Project, transform: RegisterTransform) {
-        val config = project.extensions.findByName(EXT_NAME) as? AutoRegisterConfig
-            ?: AutoRegisterConfig()
-        config.registerInfo.add(
-            mutableMapOf(
-                //com.zx.common.auto
-            "codeInsertToClassName" to "com.zx.common.auto.AutoTaskRegister",
-            "codeInsertToMethodName" to "load",
-            "registerMethodName" to "register",
-            "scanInterface" to "com.zx.common.auto.IAuto"
-        )
-        )
+        val config = AutoRegisterConfig()
         config.project = project
         config.convertConfig()
         transform.config = config
@@ -48,17 +38,17 @@ class StubPlugin : Plugin<Project> {
             }
 
             afterEvaluate {
-                if (plugins.hasPlugin(AppPlugin::class.java)){
+                if (plugins.hasPlugin(AppPlugin::class.java)) {
                     println("enter this line ")
-                    if(!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)){
+                    if (!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
                         plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
                     }
                     plugins.apply("dagger.hilt.android.plugin")
-                    dependencies{
+                    dependencies {
                         add("kapt", "com.google.dagger:hilt-android-compiler:+")
                         add("implementation", "com.google.dagger:hilt-android:+")
                         add("kapt", "androidx.hilt:hilt-compiler:+")
-                        add("implementation","androidx.hilt:hilt-lifecycle-viewmodel:+")
+                        add("implementation", "androidx.hilt:hilt-lifecycle-viewmodel:+")
                     }
                 }
             }
