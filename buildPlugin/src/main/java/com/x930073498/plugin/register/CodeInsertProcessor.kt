@@ -57,21 +57,17 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
         return jarFile
     }
 
-    fun isInitClass(entryName: String?): Boolean {
+   private fun isInitClass(entryName: String?): Boolean {
         if (entryName == null || !entryName.endsWith(".class"))
             return false
-        if (extension.initClassName.isNotEmpty()) {
-           val name = entryName.substring(0, entryName.lastIndexOf('.'))
-            return extension.initClassName == name
-        }
-        return false
+        return NAME_CODE_INSERT_TO_CLASS == entryName
     }
 
     fun generateCodeIntoClassFile(file: File): ByteArray {
-        var optClass = File(file.parent, file.name + ".opt")
-        var inputStream = file.inputStream()
-        var outputStream = optClass.outputStream()
-        var bytes = doGenerateCode(inputStream)
+        val optClass = File(file.parent, file.name + ".opt")
+        val inputStream = file.inputStream()
+        val outputStream = optClass.outputStream()
+        val bytes = doGenerateCode(inputStream)
         outputStream.write(bytes)
         inputStream.close()
         outputStream.close()
@@ -82,9 +78,9 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
         return bytes
     }
 
-    fun doGenerateCode(inputStream: InputStream): ByteArray {
-        var cr = ClassReader(inputStream)
-        var cw = ClassWriter(cr, 0)
+   private fun doGenerateCode(inputStream: InputStream): ByteArray {
+        val cr = ClassReader(inputStream)
+        val cw = ClassWriter(cr, 0)
         val cv = MyClassVisitor(Opcodes.ASM6, cw)
         cr.accept(cv, ClassReader.EXPAND_FRAMES)
         return cw.toByteArray()
@@ -92,18 +88,6 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
 
     inner class MyClassVisitor(api: Int, classVisitor: ClassVisitor?) :
         ClassVisitor(api, classVisitor) {
-
-        override fun visit(
-            version: Int,
-            access: Int,
-            name: String,
-            signature: String?,
-            superName: String?,
-            interfaces: Array<out String>?
-        ) {
-            super.visit(version, access, name, signature, superName, interfaces)
-
-        }
 
         override fun visitMethod(
             access: Int,
@@ -113,7 +97,7 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
             exceptions: Array<out String>?
         ): MethodVisitor {
             var mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-            if (name == extension.initMethodName) {
+            if (name == METHOD_NAME_CODE_INSERT_TO) {
                 mv = MyMethodVisitor(Opcodes.ASM6, mv, (access and Opcodes.ACC_STATIC) > 0)
             }
             return mv
@@ -127,7 +111,7 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
     ) :
         MethodVisitor(api, methodVisitor) {
         override fun visitInsn(opcode: Int) {
-            if ((opcode >= Opcodes.IRETURN && opcode <= Opcodes.RETURN)) {
+            if (opcode >= Opcodes.IRETURN && opcode <= Opcodes.RETURN) {
                 extension.classList.forEach { name ->
                     if (!_static) {
                         //加载this
@@ -140,17 +124,17 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
                     if (_static) {
                         mv.visitMethodInsn(
                             Opcodes.INVOKESTATIC,
-                            extension.registerClassName,
-                            extension.registerMethodName,
-                            "(L${extension.interfaceName};)V",
+                            CLASS_NAME_CODE_INSERT_TO,
+                            METHOD_NAME_REGISTER,
+                            "(L${INTERFACE_NAME_SCAN};)V",
                             false
                         )
                     } else {
                         mv.visitMethodInsn(
                             Opcodes.INVOKEVIRTUAL,
-                            extension.registerClassName,
-                            extension.registerMethodName,
-                            "(L${extension.interfaceName};)V",
+                            CLASS_NAME_CODE_INSERT_TO,
+                            METHOD_NAME_REGISTER,
+                            "(L${INTERFACE_NAME_SCAN};)V",
                             false
                         )
                     }

@@ -47,7 +47,7 @@ internal class CodeScanProcessor(
         return true
     }
 
-    fun hitCache(jarFile: File, destFile: File): Boolean {
+   private fun hitCache(jarFile: File, destFile: File): Boolean {
         val jarFilePath = jarFile.absolutePath
         if (cacheMap != null) {
             val scanJarHarvest = cacheMap[jarFilePath]
@@ -55,18 +55,14 @@ internal class CodeScanProcessor(
                 val info = info
                 scanJarHarvest.harvestList.forEach { harvest ->
                     if (harvest.isInitClass) {
-                        if (info.initClassName == harvest.className) {
+                        if (CLASS_NAME_CODE_INSERT_TO == harvest.className) {
                             info.fileContainsInitClass = destFile
                             cachedJarContainsInitClass.add(jarFilePath)
                         }
-                    } else if (info.interfaceName == harvest.interfaceName) {
+                    } else if (INTERFACE_NAME_SCAN == harvest.interfaceName) {
                         info.classList.add(harvest.className)
                     }
-                    info.superClassNames.forEach {
-                        if (it == harvest.interfaceName) {
-                            info.classList.add(harvest.className)
-                        }
-                    }
+
                 }
                 return true
             }
@@ -78,16 +74,14 @@ internal class CodeScanProcessor(
         return checkInitClass(entryName, destFile, "")
     }
 
-    fun checkInitClass(entryName: String?, destFile: File, srcFilePath: String): Boolean {
+   private fun checkInitClass(entryName: String?, destFile: File, srcFilePath: String): Boolean {
         if (entryName == null || !entryName.endsWith(".class"))
             return false
-        val name = entryName.substring(0, entryName.lastIndexOf('.'))
         var found = false
-        val ext = info
-        if (ext.initClassName == name) {
-            ext.fileContainsInitClass = destFile
+        if (NAME_CODE_INSERT_TO_CLASS == entryName) {
+            info.fileContainsInitClass = destFile
             if (destFile.name.endsWith(".jar")) {
-                addToCacheMap(null, name, srcFilePath)
+                addToCacheMap(null, CLASS_NAME_CODE_INSERT_TO, srcFilePath)
                 found = true
             }
         }
@@ -141,10 +135,10 @@ internal class CodeScanProcessor(
             if (entryName.isNullOrEmpty()) return false
             if (info != null) {
                 val list = info.includePatterns
-                val exlist = info.excludePatterns
+                val excludeList = info.excludePatterns
                 list.forEach { pattern ->
                     if (pattern.matcher(entryName).matches()) {
-                        exlist.forEach { p ->
+                        excludeList.forEach { p ->
                             if (p.matcher(entryName).matches())
                                 return false
                         }
@@ -190,25 +184,12 @@ internal class CodeScanProcessor(
             }
             val ext = info
             if (shouldProcessThisClassForRegister(ext, name)) {
-                if (superName != "java/lang/Object" && ext.superClassNames.isNotEmpty()) {
-                    ext.superClassNames.forEach {
-                        if (it == superName) {
-                            if (!ext.classList.contains(name))
-                                ext.classList.add(name)
-                            found = true
-                            addToCacheMap(superName, name, filePath)
-                            return
-                        }
-                    }
-                }
-                if (ext.interfaceName.isNotEmpty() && interfaces != null) {
-                    interfaces.forEach {
-                        if (it == ext.interfaceName) {
-                            if (!ext.classList.contains(name))
-                                ext.classList.add(name)//需要把对象注入到管理类  就是fileContainsInitClass
-                            addToCacheMap(it, name, filePath)
-                            found = true
-                        }
+                interfaces?.forEach {
+                    if (it == INTERFACE_NAME_SCAN) {
+                        if (!ext.classList.contains(name))
+                            ext.classList.add(name)//需要把对象注入到管理类  就是fileContainsInitClass
+                        addToCacheMap(it, name, filePath)
+                        found = true
                     }
                 }
             }

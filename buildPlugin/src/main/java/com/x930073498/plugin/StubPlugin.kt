@@ -18,7 +18,6 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 class StubPlugin : Plugin<Project> {
-    val EXT_NAME = "autoregister"
     private fun init(project: Project, transform: RegisterTransform) {
         val config = AutoRegisterConfig()
         config.project = project
@@ -57,11 +56,8 @@ class StubPlugin : Plugin<Project> {
 
             plugins.whenPluginAdded {
                 if (this is AppPlugin) {
-                    extensions.create(EXT_NAME, AutoRegisterConfig::class.java)
                     val transform = RegisterTransform(this@subprojects)
-                    afterEvaluate {
-                        init(this@subprojects, transform)
-                    }
+                    init(this@subprojects, transform)
                     android.registerTransform(transform)
                 }
 //                if (this is AppPlugin) {

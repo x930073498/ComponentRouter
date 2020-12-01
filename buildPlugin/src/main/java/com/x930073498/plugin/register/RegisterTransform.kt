@@ -3,7 +3,6 @@ package com.x930073498.plugin.register
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import groovy.io.FileType
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
@@ -36,7 +35,7 @@ internal class RegisterTransform constructor(
         project.logger.warn("start auto-register transform...")
         config.reset()
         project.logger.warn(config.toString())
-        var clearCache = !transformInvocation.isIncremental
+        val clearCache = !transformInvocation.isIncremental
         if (clearCache) {
             transformInvocation.outputProvider.deleteAll()
         }
@@ -45,7 +44,7 @@ internal class RegisterTransform constructor(
         val cacheEnabled = config.cacheEnabled
         println("auto-register-----------isIncremental:${isIncremental}--------config.cacheEnabled:${cacheEnabled}--------------------\n")
 
-        var cacheMap: MutableMap<String, ScanJarHarvest>? = null
+        var cacheMap: HashMap<String, ScanJarHarvest>? = null
         var gson: Gson? = null
         var cacheFile: File? = null
         if (cacheEnabled) {
@@ -53,10 +52,7 @@ internal class RegisterTransform constructor(
             cacheFile = AutoRegisterHelper.getRegisterCacheFile(project)
             if (clearCache && cacheFile.exists())
                 cacheFile.delete()
-            cacheMap = AutoRegisterHelper.readToMap(
-                cacheFile,
-                object : TypeToken<HashMap<String, ScanJarHarvest>>() {}.type
-            )
+            cacheMap = AutoRegisterHelper.readToMap(gson, cacheFile)
         }
         val scanProcessor = CodeScanProcessor(config.info, cacheMap)
         transformInvocation.inputs.forEach { input ->
@@ -67,8 +63,8 @@ internal class RegisterTransform constructor(
                 scanJar(jarInput, transformInvocation.outputProvider, scanProcessor)
             }
             input.directoryInputs.forEach { directoryInput ->
-                var dirTime = System.currentTimeMillis();
-                var dest = transformInvocation.outputProvider.getContentLocation(
+                val dirTime = System.currentTimeMillis()
+                val dest = transformInvocation.outputProvider.getContentLocation(
                     directoryInput.name,
                     directoryInput.contentTypes,
                     directoryInput.scopes,
@@ -78,8 +74,8 @@ internal class RegisterTransform constructor(
                 if (!root.endsWith(File.separator))
                     root += File.separator
                 directoryInput.file.eachFileRecurse { file ->
-                    var path = file.absolutePath.replace(root, "")
-                    if (file.isFile()) {
+                    val path = file.absolutePath.replace(root, "")
+                    if (file.isFile) {
                         var entryName = path
                         if (!leftSlash) {
                             entryName = entryName.replace("\\\\", "/")
@@ -94,24 +90,23 @@ internal class RegisterTransform constructor(
 
                     }
                 }
-                var scanTime = System.currentTimeMillis();
+                val scanTime = System.currentTimeMillis()
                 FileUtils.copyDirectory(directoryInput.file, dest)
                 println("auto-register cost time: ${System.currentTimeMillis() - dirTime}, scan time: ${scanTime - dirTime}. path=${root}")
             }
         }
 
         if (cacheMap != null && cacheFile != null && gson != null) {
-            var json = gson.toJson(cacheMap)
+            val json = gson.toJson(cacheMap)
             AutoRegisterHelper.cacheRegisterHarvest(cacheFile, json)
         }
-        var scanFinishTime = System.currentTimeMillis()
+        val scanFinishTime = System.currentTimeMillis()
         project.logger.error("register scan all class cost time: " + (scanFinishTime - time) + " ms")
         val ext = config.info
         if (ext.fileContainsInitClass != null) {
-            println("")
             println("insert register code to file:" + ext.fileContainsInitClass?.absolutePath)
             if (ext.classList.isEmpty()) {
-                project.logger.error("No class implements found for interface:" + ext.interfaceName)
+                project.logger.error("No class implements found for interface:$INTERFACE_NAME_SCAN")
             } else {
                 ext.classList.forEach {
                     println(it)
@@ -119,21 +114,21 @@ internal class RegisterTransform constructor(
                 CodeInsertProcessor.insertInitCodeTo(ext)
             }
         } else {
-            project.logger.error("The specified register class not found:" + ext.registerClassName)
+            project.logger.error("The specified register class not found:$CLASS_NAME_CODE_INSERT_TO")
         }
         val finishTime = System.currentTimeMillis()
         project.logger.error("register insert code cost time: " + (finishTime - scanFinishTime) + " ms")
         project.logger.error("register cost time: " + (finishTime - time) + " ms")
     }
 
-    fun scanJar(
+   private fun scanJar(
         jarInput: JarInput,
         outputProvider: TransformOutputProvider,
         scanProcessor: CodeScanProcessor
     ) {
         val src = jarInput.file
         val dest = getDestFile(jarInput, outputProvider)
-        var time = System.currentTimeMillis()
+        val time = System.currentTimeMillis()
         if (!scanProcessor.scanJar(src, dest) //直接读取了缓存，没有执行实际的扫描
             //此jar文件中不需要被注入代码
             //为了避免增量编译时代码注入重复，被注入代码的jar包每次都重新复制
@@ -149,7 +144,7 @@ internal class RegisterTransform constructor(
     companion object {
         fun getDestFile(jarInput: JarInput, outputProvider: TransformOutputProvider): File {
             var destName = jarInput.name
-            var hexName = DigestUtils.md5Hex(jarInput.file.absolutePath)
+            val hexName = DigestUtils.md5Hex(jarInput.file.absolutePath)
             if (destName.endsWith(".jar")) {
                 destName = destName.substring(0, destName.length - 4)
             }

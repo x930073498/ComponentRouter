@@ -12,10 +12,6 @@ open class AutoRegisterConfig {
     var cacheEnabled = true
 
     fun convertConfig() {
-        info.interfaceName = INTERFACE_NAME_SCAN
-        info.initClassName = CLASS_NAME_CODE_INSERT_TO
-        info.initMethodName = METHOD_NAME_CODE_INSERT_TO
-        info.registerMethodName = METHOD_NAME_REGISTER
         info.init()
         if (cacheEnabled) {
             checkRegisterInfo()
@@ -51,7 +47,7 @@ open class AutoRegisterConfig {
 
     }
 
-    fun deleteFile(file: File) {
+    private fun deleteFile(file: File) {
         if (file.exists()) {
             file.delete()
         }
