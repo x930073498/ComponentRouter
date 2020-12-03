@@ -38,10 +38,10 @@ class TestFragment : Fragment(R.layout.fragment_test) {
     }
 
     @FactoryAnnotation
-    class Factory : FragmentActionDelegate.Factory<TestFragment> {
-        override suspend fun create(
+    class Factory : FragmentActionDelegate.Factory {
+        override  suspend fun create(
             contextHolder: ContextHolder,
-            clazz: Class<TestFragment>,
+            clazz: Class<*>,
             bundle: Bundle,
         ): TestFragment {
             return TestFragment().also {

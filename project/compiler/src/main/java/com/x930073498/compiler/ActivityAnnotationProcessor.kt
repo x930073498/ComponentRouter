@@ -49,10 +49,12 @@ class ActivityAnnotationProcessor : BaseProcessor() {
         val registerClassName = "_$$${moduleName.capitalize(Locale.getDefault())}_${
             registerString.toString().hashCode().absoluteValue
         }_ActivityRegisterGenerated"
-        createRegisterClass(registerClassName,
+        createRegisterClass(
+            registerClassName,
             centerClassName,
             registerFunction,
-            ActivityRegister::class)
+            ActivityRegister::class
+        )
         return false
     }
 
@@ -65,27 +67,41 @@ class ActivityAnnotationProcessor : BaseProcessor() {
         val registerClassType = ClassName("$generatePackageName.register", registerClassName)
         val registerType =
             TypeSpec.classBuilder(registerClassName)
-                .addProperty(PropertySpec.builder("keys",
-                    ArrayList::class.asTypeName()
-                        .parameterizedBy(ClassName("com.x930073498.router.action", "Key")),
-                    KModifier.PRIVATE)
-                    .initializer("arrayListOf()")
-                    .build())
-                .addType(TypeSpec.companionObjectBuilder()
-                    .addProperty(PropertySpec.builder("register", registerClassType)
-                        .addModifiers(KModifier.PRIVATE)
-                        .initializer("%T()", registerClassType)
-                        .build())
-                    .addFunction(FunSpec.builder("register").addStatement("register.register()")
-                        .build())
-                    .addFunction(FunSpec.builder("unregister").addStatement("register.unregister()")
-                        .build())
-                    .build())
+                .addProperty(
+                    PropertySpec.builder(
+                        "keys",
+                        ArrayList::class.asTypeName()
+                            .parameterizedBy(ClassName("com.x930073498.router.action", "Key")),
+                        KModifier.PRIVATE
+                    )
+                        .initializer("arrayListOf()")
+                        .build()
+                )
+                .addType(
+                    TypeSpec.companionObjectBuilder()
+                        .addProperty(
+                            PropertySpec.builder("register", registerClassType)
+                                .addModifiers(KModifier.PRIVATE)
+                                .initializer("%T()", registerClassType)
+                                .build()
+                        )
+                        .addFunction(
+                            FunSpec.builder("register").addStatement("register.register()")
+                                .build()
+                        )
+                        .addFunction(
+                            FunSpec.builder("unregister").addStatement("register.unregister()")
+                                .build()
+                        )
+                        .build()
+                )
                 .addAnnotation(annotationClazz)
-                .addFunction(FunSpec.builder("unregister")
-                    .addStatement("keys.forEach{%T.unregister(it)}", centerClassName)
-                    .addStatement("keys.clear()")
-                    .build())
+                .addFunction(
+                    FunSpec.builder("unregister")
+                        .addStatement("keys.forEach{%T.unregister(it)}", centerClassName)
+                        .addStatement("keys.clear()")
+                        .build()
+                )
                 .addFunction(registerFunction.build())
         FileSpec.get("$generatePackageName.register", registerType.build()).writeTo(filer)
     }
@@ -102,10 +118,14 @@ class ActivityAnnotationProcessor : BaseProcessor() {
         val typeSpec = TypeSpec.classBuilder(name)
         val fragmentDelegateType =
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME, "ActivityActionDelegate")
-                .parameterizedBy(element.asClassName())
         typeSpec.addSuperinterface(fragmentDelegateType)
         typeSpec.addAnnotation(ActivityRegister::class)
-        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction").parameterizedBy(element.asClassName()))
+        typeSpec.superclass(
+            ClassName(
+                ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
+                "AutoAction"
+            )
+        )
         typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
         buildInjectFunction(typeSpec, element, activityAnnotation)
         buildKeyProperty(typeSpec, element, activityAnnotation)
@@ -114,9 +134,11 @@ class ActivityAnnotationProcessor : BaseProcessor() {
         buildToStringFunction(element, typeSpec)
         val type = typeSpec.build()
         FileSpec.get(pkgName, type).writeTo(filer)
-        registerFunction.addStatement("%T.register(%T()).apply{keys.add(this)}",
+        registerFunction.addStatement(
+            "%T.register(%T()).apply{keys.add(this)}",
             centerClassName,
-            ClassName(pkgName, name))
+            ClassName(pkgName, name)
+        )
     }
 
     private fun buildInjectFunction(
@@ -127,25 +149,36 @@ class ActivityAnnotationProcessor : BaseProcessor() {
 
         val inject = FunSpec.builder("inject")
             .addModifiers(KModifier.OVERRIDE)
-            .addParameter(ParameterSpec("intent",
-                ClassName.bestGuess(ComponentConstants.ANDROID_INTENT)))
-            .addParameter(ParameterSpec.builder("activity", element.asClassName()).build())
+            .addParameter(
+                ParameterSpec(
+                    "intent",
+                    ClassName.bestGuess(ComponentConstants.ANDROID_INTENT)
+                )
+            )
+            .addParameter(
+                ParameterSpec.builder(
+                    "activity",
+                    ClassName.bestGuess(ComponentConstants.ANDROID_ACTIVITY)
+                ).build()
+            )
         buildInjectAttrFunction(inject, element)
         typeSpec.addFunction(inject.build())
     }
 
     private fun buildInjectAttrFunction(inject: FunSpec.Builder, element: TypeElement) {
-
+        inject.addStatement("activity as %T", element.asType())
         element.enclosedElements.mapNotNull {
             val annotation = it.getAnnotation(ValueAutowiredAnnotation::class.java)
             if (annotation != null) annotation to it
             else null
         }.forEach {
             messager.printMessage(Diagnostic.Kind.OTHER, "获取到注入元素$it \n")
-            generateParameterCodeForInject(it.second as VariableElement,
+            generateParameterCodeForInject(
+                it.second as VariableElement,
                 inject,
                 it.second.simpleName.toString(),
-                "intent", "activity")
+                "intent", "activity"
+            )
         }
 
 
@@ -158,8 +191,10 @@ class ActivityAnnotationProcessor : BaseProcessor() {
         activityAnnotation: ActivityAnnotation,
     ) {
         val info =
-            activityAnnotation.toInfo() ?: return messager.printMessage(Diagnostic.Kind.ERROR,
-                "获取信息出错")
+            activityAnnotation.toInfo() ?: return messager.printMessage(
+                Diagnostic.Kind.ERROR,
+                "获取信息出错"
+            )
         buildKeyProperty(typeSpec, info)
     }
 

@@ -20,14 +20,15 @@ internal object AutoTaskRegister {
         load()
     }
 
-    private fun getApplication(context: Context):Application{
-        if (context is Application)return context
-        val appContext=context.applicationContext
+    private fun getApplication(context: Context): Application {
+        if (context is Application) return context
+        val appContext = context.applicationContext
         return appContext as Application
     }
 
     @JvmStatic
     private fun load() {
+
     }
 
     @JvmStatic
@@ -43,6 +44,8 @@ internal object AutoTaskRegister {
         }
 
     }
+
+    private class TestAuto : IAuto
 }
 
 internal class FragmentAutoActivityLifecycle() : IActivityLifecycle {

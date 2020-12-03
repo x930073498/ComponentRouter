@@ -51,6 +51,7 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.Main) {
             val fragment = router.navigate<Fragment>()
             if (fragment != null) {
+                println("enter this line 18487")
                 supportFragmentManager.beginTransaction().add(R.id.container, fragment)
                     .commitAllowingStateLoss()
             }

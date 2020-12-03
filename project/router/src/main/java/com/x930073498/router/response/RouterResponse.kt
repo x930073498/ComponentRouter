@@ -33,12 +33,12 @@ fun RouterResponse.success(isSuccess: Boolean = true): RouterResponse {
 
 
 @Suppress("UNCHECKED_CAST")
-suspend fun <T> RouterResponse.navigate(context: Context? = null): T? {
-    return ActionCenter.getAction(uri).navigate(bundle, ContextHolder.create(context)) as? T
+suspend fun  RouterResponse.navigate(context: Context? = null): Any? {
+    return ActionCenter.getAction(uri).navigate(bundle, ContextHolder.create(context))
 }
 
 @Suppress("UNCHECKED_CAST")
 suspend fun RouterResponse.forward(context: Context? = null) {
-    navigate<Any?>(context)
+    navigate(context)
 }
 

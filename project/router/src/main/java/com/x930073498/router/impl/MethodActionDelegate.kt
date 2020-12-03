@@ -2,15 +2,16 @@ package com.x930073498.router.impl
 
 import android.os.Bundle
 import com.x930073498.router.action.ContextHolder
+import com.x930073498.router.action.Target
 
-interface MethodActionDelegate<R,T>: ActionDelegate<T> where R: MethodInvoker<T> {
+interface MethodActionDelegate: ActionDelegate {
 
-    fun factory(): Factory<R>? {
-        return null
-    }
+    suspend fun factory(): Factory
 
-     interface Factory<T> {
-      suspend  fun create(contextHolder: ContextHolder, clazz: Class<T>, bundle: Bundle): T?
+     suspend fun target(): Target.MethodTarget
+
+     interface Factory{
+      suspend  fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle): MethodInvoker
     }
 
 }

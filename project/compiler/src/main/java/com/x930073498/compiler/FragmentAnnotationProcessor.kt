@@ -107,10 +107,9 @@ class FragmentAnnotationProcessor : BaseProcessor() {
         val typeSpec = TypeSpec.classBuilder(name)
         val fragmentDelegateType =
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME, "FragmentActionDelegate")
-                .parameterizedBy(element.asClassName())
         typeSpec.addSuperinterface(fragmentDelegateType)
         typeSpec.addAnnotation(FragmentRegister::class)
-        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction").parameterizedBy(element.asClassName()))
+        typeSpec.superclass(ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"AutoAction"))
         typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
         buildInjectFunction(typeSpec, element, fragmentAnnotation)
         buildKeyProperty(typeSpec, element, fragmentAnnotation)
@@ -133,13 +132,13 @@ class FragmentAnnotationProcessor : BaseProcessor() {
             .addModifiers(KModifier.OVERRIDE)
             .addParameter(ParameterSpec("bundle",
                 ClassName.bestGuess(ComponentConstants.ANDROID_BUNDLE)))
-            .addParameter(ParameterSpec.builder("fragment", element.asClassName()).build())
+            .addParameter(ParameterSpec.builder("fragment", ClassName.bestGuess(ComponentConstants.ANDROID_FRAGMENT)).build())
         buildInjectAttrFunction(inject, element)
         typeSpec.addFunction(inject.build())
     }
 
     private fun buildInjectAttrFunction(inject: FunSpec.Builder, element: TypeElement) {
-
+inject.addStatement("fragment as %T",element.asType())
         element.enclosedElements.mapNotNull {
             val annotation = it.getAnnotation(ValueAutowiredAnnotation::class.java)
             if (annotation != null) annotation to it
@@ -186,11 +185,10 @@ class FragmentAnnotationProcessor : BaseProcessor() {
         val factoryClassName =
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
                 "FragmentActionDelegate.Factory")
-                .parameterizedBy(element.asClassName())
 
         val contextHolderClassName =
             ClassName(ComponentConstants.ROUTER_ACTION_PACKAGE_NAME, "ContextHolder")
-        val clazzClassName = Class::class.asClassName().parameterizedBy(element.asClassName())
+        val clazzClassName = Class::class.asClassName().parameterizedBy(STAR)
         val bundleClassName = ClassName.bestGuess(ComponentConstants.ANDROID_BUNDLE)
         val factoryObject = TypeSpec.anonymousClassBuilder()
             .addSuperinterface(factoryClassName)

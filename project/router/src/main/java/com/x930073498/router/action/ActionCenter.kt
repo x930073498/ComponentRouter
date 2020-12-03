@@ -12,15 +12,15 @@ object ActionCenter {
     /**
      * 存储所有的action
      */
-    private val map = mutableMapOf<Key, ActionDelegate<*>>()
+    private val map = mutableMapOf<Key, ActionDelegate>()
 
     /**
      * 存储可用的action
      */
-    private val mMap = mutableMapOf<Key, ActionDelegate<*>>()
+    private val mMap = mutableMapOf<Key, ActionDelegate>()
 
 
-    fun register(actionDelegate: ActionDelegate<*>): Key {
+    fun register(actionDelegate: ActionDelegate): Key {
         println("enter this line actionDelegate=$actionDelegate")
         val key = Key(actionDelegate.group, actionDelegate.path).also {
             println("enter this line actionDelegateKey=$it")
@@ -55,14 +55,14 @@ object ActionCenter {
     }
 
 
-    internal fun getAction(url: String): ActionDelegate<*> {
+    internal fun getAction(url: String): ActionDelegate{
         val key = Uri.parse(url).authorityAndPath()
         val group= getGroupFromPath(key.path)
         return mMap[Key(group, key.path)]?:SystemActionDelegate(key.path?:"")
     }
 
 
-    internal fun getAction(uri: Uri): ActionDelegate<*> {
+    internal fun getAction(uri: Uri): ActionDelegate {
         val key = uri.authorityAndPath()
         val group = getGroupFromPath(key.path)
         return mMap[Key(group, key.path)]?:SystemActionDelegate(key.path?:"")

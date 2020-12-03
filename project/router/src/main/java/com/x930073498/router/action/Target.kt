@@ -6,8 +6,8 @@ import android.content.pm.PackageManager
 import com.x930073498.router.impl.MethodInvoker
 
 @Suppress("UNCHECKED_CAST")
-sealed class Target<T>(
-    val targetClazz: Class<T>,
+sealed class Target(
+    val targetClazz: Class<*>,
 ) {
     companion object {
         private val providerMap = mutableMapOf<Class<*>, Any?>()
@@ -25,25 +25,25 @@ sealed class Target<T>(
 
         }
 
-        internal fun <T> getMethod(clazz: Class<T>): T? where T : MethodInvoker<*> {
-            return methodMap[clazz] as? T
+        internal fun  getMethod(clazz: Class<*>):Any?{
+            return methodMap[clazz]
         }
 
 
     }
 
-    class ServiceTarget<T>(targetClazz: Class<T>, val isSingleTon: Boolean) :
-        Target<T>(targetClazz)
+    class ServiceTarget(targetClazz: Class<*>, val isSingleTon: Boolean) :
+        Target(targetClazz)
 
-    class MethodTarget<T, R>(targetClazz: Class<T>, val methodInvokerType: Class<R>) :
-        Target<T>(targetClazz) where R : MethodInvoker<T>
+    class MethodTarget(targetClazz: Class<*>, val methodInvokerType: Class<*>) :
+        Target(targetClazz)
 
 
-    class ActivityTarget<T>(targetClazz: Class<T>) : Target<T>(targetClazz)
+    class ActivityTarget(targetClazz: Class<*>) : Target(targetClazz)
 
-    class FragmentTarget<T>(targetClazz: Class<T>) : Target<T>(targetClazz)
+    class FragmentTarget(targetClazz: Class<*>) : Target(targetClazz)
 
-    internal class SystemTarget internal constructor(val path: String?) : Target<Unit>(Unit::class.java) {
+    internal class SystemTarget internal constructor(val path: String?) : Target(Unit::class.java) {
 
         fun go(context: Context) {
             if (path.isNullOrEmpty()) return

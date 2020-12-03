@@ -2,17 +2,18 @@ package com.x930073498.router.impl
 
 import android.os.Bundle
 import com.x930073498.router.action.ContextHolder
+import com.x930073498.router.action.Target
 
-interface ServiceActionDelegate<T> : ActionDelegate<T> {
-    fun inject(bundle: Bundle, provider: T)
+interface ServiceActionDelegate : ActionDelegate {
+    fun inject(bundle: Bundle, provider: IService)
 
-   suspend fun factory(): Factory<T>? {
-        return null
-    }
-    fun autoInvoke():Boolean
+    suspend fun factory(): Factory
 
-     interface Factory<T> {
-       suspend fun create(contextHolder: ContextHolder, clazz: Class<T>, bundle: Bundle): T?
+    suspend fun target(): Target.ServiceTarget
+    fun autoInvoke(): Boolean
+
+    interface Factory {
+        suspend fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):IService?
     }
 
 }

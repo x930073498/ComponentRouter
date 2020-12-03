@@ -52,14 +52,13 @@ class ServiceAnnotationProcessor : BaseProcessor() {
         val typeSpec = TypeSpec.classBuilder(name)
         val serviceDelegateType =
             ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME, "ServiceActionDelegate")
-                .parameterizedBy(element.asClassName())
         typeSpec.addSuperinterface(serviceDelegateType)
         typeSpec.addAnnotation(ServiceRegister::class)
         typeSpec.superclass(
             ClassName(
                 ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
                 "AutoAction"
-            ).parameterizedBy(element.asClassName())
+            )
         )
         typeSpec.addSuperinterface(ClassName.bestGuess(ComponentConstants.AUTO_INTERFACE_NAME))
         buildInjectFunction(typeSpec, element, serviceAnnotation)
@@ -85,19 +84,19 @@ class ServiceAnnotationProcessor : BaseProcessor() {
                     ClassName.bestGuess(ComponentConstants.ANDROID_BUNDLE)
                 )
             )
-            .addParameter(ParameterSpec.builder("provider", element.asClassName()).build())
+            .addParameter(ParameterSpec.builder("provider", ClassName(ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,"IService")).build())
         buildInjectAttrFunction(inject, element)
         typeSpec.addFunction(inject.build())
     }
 
     private fun buildInjectAttrFunction(inject: FunSpec.Builder, element: TypeElement) {
 
+        inject.addStatement("provider as %T",element.asType())
         element.enclosedElements.mapNotNull {
             val annotation = it.getAnnotation(ValueAutowiredAnnotation::class.java)
             if (annotation != null) annotation to it
             else null
         }.forEach {
-            messager.printMessage(Diagnostic.Kind.OTHER, "获取到注入元素$it \n")
             generateParameterCodeForInject(
                 it.second as VariableElement,
                 inject,
@@ -155,11 +154,10 @@ class ServiceAnnotationProcessor : BaseProcessor() {
                 ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
                 "ServiceActionDelegate.Factory"
             )
-                .parameterizedBy(element.asClassName())
 
         val contextHolderClassName =
             ClassName(ComponentConstants.ROUTER_ACTION_PACKAGE_NAME, "ContextHolder")
-        val clazzClassName = Class::class.asClassName().parameterizedBy(element.asClassName())
+        val clazzClassName = Class::class.asClassName().parameterizedBy(STAR)
         val bundleClassName = ClassName.bestGuess(ComponentConstants.ANDROID_BUNDLE)
         val factoryObject = TypeSpec.anonymousClassBuilder()
             .addSuperinterface(factoryClassName)

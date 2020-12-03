@@ -9,22 +9,48 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import com.x930073498.router.interceptor.*
 import com.x930073498.router.action.ActionCenter
-import com.x930073498.router.impl.*
+import com.x930073498.router.impl.ActivityActionDelegate
+import com.x930073498.router.impl.FragmentActionDelegate
+import com.x930073498.router.impl.IService
+import com.x930073498.router.impl.ServiceActionDelegate
+import com.x930073498.router.interceptor.onInterceptors
 import com.x930073498.router.request.routerRequest
 import com.x930073498.router.response.RouterResponse
 import com.x930073498.router.response.forward
 import com.x930073498.router.response.navigate
 import com.x930073498.router.response.routerResponse
-import com.x930073498.router.util.*
+import com.x930073498.router.util.ParameterSupport
+import com.zx.common.auto.IActivityLifecycle
+import com.zx.common.auto.IApplicationLifecycle
+import com.zx.common.auto.IAuto
+import com.zx.common.auto.IFragmentLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.properties.Delegates
 
+
+class RouterInjectTask : IAuto, IFragmentLifecycle, IActivityLifecycle, IApplicationLifecycle {
+    override fun onApplicationCreated(app: Application) {
+        Router.init(app)
+    }
+
+    override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
+        Router.inject(activity)
+    }
+
+    override fun onFragmentPreCreated(
+        fm: FragmentManager,
+        f: Fragment,
+        savedInstanceState: Bundle?
+    ) {
+        Router.inject(f)
+    }
+
+
+}
 
 class Router(uri: Uri = Uri.EMPTY) {
     private var uriBuilder = uri.buildUpon()
@@ -79,16 +105,14 @@ class Router(uri: Uri = Uri.EMPTY) {
     }
 
 
-    suspend fun <T> navigate(context: Context? = null): T? {
-        return withContext(Dispatchers.Main) {
-            withContext(Dispatchers.IO) {
-                request()
-            }.navigate(context)
-        }
+    suspend inline fun <reified T> navigate(context: Context? = null): T? {
+        val result = request().navigate(context)
+        return if (result is T) return result else null
     }
 
+
     @ExperimentalStdlibApi
-    fun <T> syncNavigation(context: Context? = null): T? {
+    inline fun <reified T> syncNavigation(context: Context? = null): T? {
         return runBlocking {
             runCatching { navigate<T>(context) }
                 .onFailure { it.printStackTrace() }
@@ -115,76 +139,26 @@ class Router(uri: Uri = Uri.EMPTY) {
     }
 
 
-    internal object RouterActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks,
-        FragmentManager.FragmentLifecycleCallbacks() {
-        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            inject(activity)
-            if (activity is FragmentActivity) {
-                activity.supportFragmentManager.registerFragmentLifecycleCallbacks(this, true)
-            }
-        }
-
-
-        override fun onFragmentPreCreated(
-            fm: FragmentManager,
-            f: Fragment,
-            savedInstanceState: Bundle?,
-        ) {
-            super.onFragmentPreCreated(fm, f, savedInstanceState)
-            inject(f)
-        }
-
-
-        override fun onActivityStarted(activity: Activity) {
-
-        }
-
-        override fun onActivityResumed(activity: Activity) {
-
-        }
-
-        override fun onActivityPaused(activity: Activity) {
-
-        }
-
-        override fun onActivityStopped(activity: Activity) {
-
-        }
-
-        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-
-        }
-
-        override fun onActivityDestroyed(activity: Activity) {
-            if (activity is FragmentActivity) {
-                activity.supportFragmentManager.unregisterFragmentLifecycleCallbacks(this)
-            }
-
-        }
-
-    }
-
-
     companion object Init : InitI {
 
         internal fun <T> inject(activity: T) where T : Activity {
             val intent = activity.intent ?: return
             val key = ParameterSupport.getCenterKey(intent) ?: return
             val center = ActionCenter.getAction(key)
-            (center as? ActivityActionDelegate<T>)?.inject(intent, activity)
+            (center as? ActivityActionDelegate)?.inject(intent, activity)
         }
 
         internal fun <T> inject(fragment: T) where T : Fragment {
             val bundle = fragment.arguments ?: return
             val key = ParameterSupport.getCenterKey(bundle) ?: return
             val center = ActionCenter.getAction(key)
-            (center as? FragmentActionDelegate<T>)?.inject(bundle, fragment)
+            (center as? FragmentActionDelegate)?.inject(bundle, fragment)
         }
 
         internal suspend fun <T> inject(provider: T, bundle: Bundle) where T : IService {
             val key = ParameterSupport.getCenterKey(bundle) ?: return
             val center = ActionCenter.getAction(key)
-            (center as? ServiceActionDelegate<T>)?.inject(bundle, provider)
+            (center as? ServiceActionDelegate)?.inject(bundle, provider)
         }
 
         internal var app by Delegates.notNull<Application>()
@@ -194,7 +168,6 @@ class Router(uri: Uri = Uri.EMPTY) {
         override fun init(app: Application): InitI {
             if (hasInit) return this
             this.app = app
-            app.registerActivityLifecycleCallbacks(RouterActivityLifecycleCallbacks)
             hasInit = true
             return this
         }

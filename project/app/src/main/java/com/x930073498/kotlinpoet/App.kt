@@ -16,10 +16,9 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         foo.test()
-        Router.init(this).checkRouteUnique(true)
 
     }
     fun a(){
-        println("enter this line App")
+        println("enter this line App ")
     }
 }

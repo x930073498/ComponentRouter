@@ -9,7 +9,7 @@ import javax.lang.model.element.TypeElement
 import javax.lang.model.element.VariableElement
 import javax.lang.model.type.ArrayType
 import javax.lang.model.type.DeclaredType
-import javax.tools.Diagnostic
+import javax.lang.model.type.TypeMirror
 
 
 fun buildTargetFunction(
@@ -19,9 +19,11 @@ fun buildTargetFunction(
 ) {
     val target = FunSpec.builder("target")
         .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-        .addStatement("return %T(%T::class.java)",
+        .addStatement(
+            "return %T(%T::class.java)",
             targetClassName,
-            element.asClassName())
+            element.asClassName()
+        )
     typeSpec.addFunction(target.build())
 }
 
@@ -31,7 +33,10 @@ fun buildToStringFunction(
 ) {
     val target = FunSpec.builder("toString")
         .addModifiers(KModifier.OVERRIDE)
-        .addStatement("return \"path=\$path,group=\$group,targetClass=\${%T::class.java}\"",element.asClassName() )
+        .addStatement(
+            "return \"path=\$path,group=\$group,targetClass=\${%T::class.java}\"",
+            element.asClassName()
+        )
     typeSpec.addFunction(target.build())
 }
 
@@ -43,7 +48,8 @@ fun buildTargetFunction(
 ) {
     val target = FunSpec.builder("target")
         .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-        .addStatement("return %T(%T::class.java,%L)",
+        .addStatement(
+            "return %T(%T::class.java,%L)",
             fragmentTargetClassName,
             element.asClassName(),
             serviceAnnotation.singleton
@@ -86,55 +92,103 @@ fun BaseProcessor.generateParameterCodeForInject(
 ) {
     val annotation: ValueAutowiredAnnotation =
         variableElement.getAnnotation(ValueAutowiredAnnotation::class.java)
+    val methodName = getParameterMethodName(variableElement)
+    if (methodName.isNotEmpty())
+        methodBuilder.addStatement(
+            "%L.%N = %T.%L(%N,%S)?:%L.%N",
+            fragmentCallStr,
+            parameterName,
+            parameterSupportTypeMirror,
+            methodName,
+            bundleCallStr,
+            annotation.name.ifEmpty { parameterName },
+            fragmentCallStr,
+            parameterName,
+        )
+
+}
+
+fun BaseProcessor.getParameterMethodName(variableElement: VariableElement): String {
     val variableTypeMirror = variableElement.asType()
-    val parameterClassName: TypeName = variableElement.asType().asTypeName()
+    return getParameterMethodName(variableElement, variableTypeMirror)
+}
+
+fun BaseProcessor.getParameterMethodName(
+    variableElement: VariableElement,
+    variableTypeMirror: TypeMirror?
+): String {
+    val parameterClassName: TypeName = variableElement.javaToKotlinType()
     val isSubParcelableType: Boolean = types.isSubtype(variableTypeMirror, parcelableTypeMirror)
 
     val isSubSerializableType: Boolean =
         types.isSubtype(variableTypeMirror, serializableTypeMirror)
-    val methodName = if (parameterClassName == mClassNameString) { // 如果是一个 String
+    return getParameterMethodName(
+        parameterClassName,
+        variableTypeMirror,
+        isSubParcelableType,
+        isSubSerializableType
+    )
+}
+
+private fun BaseProcessor.getParameterMethodName(
+    parameterClassName: TypeName,
+    variableTypeMirror: TypeMirror?,
+    isSubParcelableType: Boolean,
+    isSubSerializableType: Boolean
+): String {
+    val noNullParameterClassName = parameterClassName.copy(false)
+    return if (noNullParameterClassName == mTypeNameString) { // 如果是一个 String
         "getString"
-    } else if (parameterClassName == charSequenceTypeName) { // 如果是一个 charsequence
+    } else if (noNullParameterClassName == charSequenceTypeName) { // 如果是一个 charsequence
         "getCharSequence"
-    } else if (parameterClassName == CHAR) { // 如果是一个 char or Char
+    } else if (noNullParameterClassName == CHAR) { // 如果是一个 char or Char
         "getChar"
-    } else if (parameterClassName == BYTE) { // 如果是一个byte or Byte
+    } else if (noNullParameterClassName == BYTE) { // 如果是一个byte or Byte
         "getByte"
-    } else if (parameterClassName == SHORT) { // 如果是一个short or Short
+    } else if (noNullParameterClassName == SHORT) { // 如果是一个short or Short
         "getShort"
-    } else if (parameterClassName == INT) { // 如果是一个int or Integer
+    } else if (noNullParameterClassName == INT) { // 如果是一个int or Integer
         "getInt"
-    } else if (parameterClassName == LONG) { // 如果是一个long or Long
+    } else if (noNullParameterClassName == LONG) { // 如果是一个long or Long
         "getLong"
-    } else if (parameterClassName == FLOAT) { // 如果是一个float or Float
+    } else if (noNullParameterClassName == FLOAT) { // 如果是一个float or Float
         "getFloat"
-    } else if (parameterClassName == DOUBLE) { // 如果是一个double or Double
+    } else if (noNullParameterClassName == DOUBLE) { // 如果是一个double or Double
         "getDouble"
-    } else if (parameterClassName == BOOLEAN) { // 如果是一个boolean or Boolean
+    } else if (noNullParameterClassName == BOOLEAN) { // 如果是一个boolean or Boolean
         "getBoolean"
     } else if (variableTypeMirror is DeclaredType) {
         if (variableTypeMirror.asElement() is TypeElement) {
-            val typeElement = variableTypeMirror.asElement() as TypeElement
-            val className: ClassName = typeElement.asClassName()
+            val className: TypeName =
+                (variableTypeMirror.asElement() as TypeElement).javaToKotlinType()
             if (arrayListClassName == className) { // 如果外面是 ArrayList
                 val typeArguments = variableTypeMirror.typeArguments
                 if (typeArguments.size == 1) { // 处理泛型个数是一个的
                     when {
-                        types.isSubtype(typeArguments[0],
-                            parcelableTypeMirror) -> { // 如果是 Parcelable 及其子类
+                        types.isSubtype(
+                            typeArguments[0],
+                            parcelableTypeMirror
+                        ) -> { // 如果是 Parcelable 及其子类
                             "getParcelableArrayList"
                         }
-                        types.isSubtype(typeArguments[0],
-                            serializableTypeMirror) -> { // 如果是 Serializable 及其子类
+                        types.isSubtype(
+                            typeArguments[0],
+                            serializableTypeMirror
+                        ) -> { // 如果是 Serializable 及其子类
                             "getSerializable"
                         }
-                        mTypeElementString.asType() == typeArguments[0] -> {
+                        mTypeElementString.javaToKotlinType() == typeArguments[0].asTypeName()
+                            .javaToKotlinType() -> {
                             "getStringArrayList"
                         }
-                        charSequenceTypeMirror == typeArguments[0] -> {
+                        charSequenceTypeMirror.asTypeName()
+                            .javaToKotlinType() == typeArguments[0].asTypeName()
+                            .javaToKotlinType() -> {
                             "getCharSequenceArrayList"
                         }
-                        mTypeElementInteger.asType().equals(typeArguments[0]) -> {
+                        mTypeElementInteger.asClassName()
+                            .javaToKotlinType() == typeArguments[0].asTypeName()
+                            .javaToKotlinType() -> {
                             "getIntegerArrayList"
                         }
                         else -> {
@@ -144,11 +198,13 @@ fun BaseProcessor.generateParameterCodeForInject(
                 } else {
                     ""
                 }
-            } else if (mClassNameSparseArray == className) { // 如果是 SparseArray
+            } else if (mTypeNameSparseArray == className) { // 如果是 SparseArray
                 val typeArguments = variableTypeMirror.typeArguments
                 if (typeArguments.size == 1) { // 处理泛型个数是一个的
-                    if (types.isSubtype(typeArguments[0],
-                            parcelableTypeMirror)
+                    if (types.isSubtype(
+                            typeArguments[0],
+                            parcelableTypeMirror
+                        )
                     ) { // 如果是 Parcelable 及其子类
                         "getSparseParcelableArray"
                     } else {
@@ -178,16 +234,19 @@ fun BaseProcessor.generateParameterCodeForInject(
             }
         } else if (variableTypeMirror is ArrayType) { // 如果是数组
             val parameterComponentTypeName: TypeName =
-                variableTypeMirror.componentType.asTypeName()
+                variableTypeMirror.componentType.asTypeName().javaToKotlinType()
             // 如果是一个 String[]
             when {
-                variableTypeMirror.componentType == mTypeElementString.asType() -> {
+                variableTypeMirror.componentType.asTypeName()
+                    .javaToKotlinType() == mTypeNameString -> {
                     "getStringArray"
                 }
-                variableTypeMirror.componentType == charSequenceTypeElement.asType() -> {
+                variableTypeMirror.componentType.asTypeName()
+                    .javaToKotlinType() == charSequenceTypeName -> {
                     "getCharSequenceArray"
                 }
-                variableTypeMirror.componentType == mTypeElementString.asType() -> {
+                variableTypeMirror.componentType.asTypeName()
+                    .javaToKotlinType() == mTypeNameString -> {
                     "getStringArray"
                 }
                 parameterComponentTypeName == BYTE -> { // 如果是 byte
@@ -214,8 +273,10 @@ fun BaseProcessor.generateParameterCodeForInject(
                 parameterComponentTypeName == BOOLEAN -> { // 如果是 boolean
                     "getBooleanArray"
                 }
-                types.isSameType(variableTypeMirror.componentType,
-                    parcelableTypeMirror) -> {  // 如果是 Parcelable
+                types.isSameType(
+                    variableTypeMirror.componentType,
+                    parcelableTypeMirror
+                ) -> {  // 如果是 Parcelable
                     "getParcelableArray"
                 }
                 else -> {
@@ -237,17 +298,4 @@ fun BaseProcessor.generateParameterCodeForInject(
     } else {
         ""
     }
-    if (methodName.isNotEmpty())
-        methodBuilder.addStatement(
-            "%L.%N = %T.%L(%N,%S)?:%L.%N",
-            fragmentCallStr,
-            parameterName,
-            parameterSupportTypeMirror,
-            methodName,
-            bundleCallStr,
-            annotation.name.ifEmpty { parameterName },
-            fragmentCallStr,
-            parameterName,
-        )
-
 }

@@ -13,9 +13,9 @@ import com.zx.common.auto.IAuto
 class TestModuleRegister : ModuleRegister{
 
     override fun register() {
-        ActionCenter.register(`_$$TestFragmentFragmentActionDelegateGenerated`())
-        ActionCenter.register(com.x930073498.module1.`_$$TestFragmentFragmentActionDelegateGenerated`())
-        ActionCenter.register(`_$$TestServiceImplServiceActionDelegateGenerated`())
+//        ActionCenter.register(`_$$TestFragmentFragmentActionDelegateGenerated`())
+//        ActionCenter.register(com.x930073498.module1.`_$$TestFragmentFragmentActionDelegateGenerated`())
+//        ActionCenter.register(`_$$TestServiceImplServiceActionDelegateGenerated`())
     }
 
 //    override fun onApplicationCreated(app: Application) {

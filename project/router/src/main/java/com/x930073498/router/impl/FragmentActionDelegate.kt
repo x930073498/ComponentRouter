@@ -1,19 +1,21 @@
 package com.x930073498.router.impl
 
 import android.os.Bundle
+import androidx.fragment.app.Fragment
 import com.x930073498.router.action.ContextHolder
+import com.x930073498.router.action.Target
 
 
-interface FragmentActionDelegate<T> : ActionDelegate<T> {
+interface FragmentActionDelegate: ActionDelegate{
 
-    fun inject(bundle: Bundle, fragment: T)
+    fun inject(bundle: Bundle, fragment: Fragment)
 
-    suspend fun factory(): Factory<T>? {
-        return null
-    }
+    suspend fun factory(): Factory
 
-     interface Factory<T> {
-       suspend fun create(contextHolder: ContextHolder, clazz: Class<T>, bundle: Bundle): T?
+    suspend fun target(): Target.FragmentTarget
+
+    interface Factory {
+        suspend fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):  Fragment
     }
 
 }

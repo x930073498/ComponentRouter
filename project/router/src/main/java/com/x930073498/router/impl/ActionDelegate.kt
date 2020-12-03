@@ -16,19 +16,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 
-interface ActionDelegate<T> {
+interface ActionDelegate {
     val path: String
 
     val group: String
         get() = ""
 
-    suspend fun target(): Target<T>
-
 
 }
 
-internal class SystemActionDelegate(override val path: String) : ActionDelegate<Unit> {
-    override suspend fun target(): Target<Unit> {
+internal class SystemActionDelegate(override val path: String) : ActionDelegate {
+    suspend fun target(): Target.SystemTarget {
         return Target.SystemTarget(path)
     }
 
@@ -36,35 +34,22 @@ internal class SystemActionDelegate(override val path: String) : ActionDelegate<
 
 
 @Suppress("UNCHECKED_CAST")
-suspend fun <T> ActionDelegate<T>.navigate(bundle: Bundle, contextHolder: ContextHolder): T? {
-    val target = target()
+suspend fun  ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolder): Any? {
+
     ParameterSupport.putCenter(bundle, path)
     return withContext(Dispatchers.Main) {
         when (this@navigate) {
             is SystemActionDelegate -> {
-                target as Target.SystemTarget
+                val target = target()
                 target.go(contextHolder.getContext())
                 null
             }
-            is FragmentActionDelegate<T> -> {
-                val factory = factory() ?: object : FragmentActionDelegate.Factory<T> {
-                    override suspend fun create(
-                        contextHolder: ContextHolder,
-                        clazz: Class<T>,
-                        bundle: Bundle,
-                    ): T? {
-                        val t = target.targetClazz.newInstance()
-                        if (t is Fragment) {
-                            t.arguments = bundle
-                        }
-                        return t
-                    }
-                }
-                factory.create(contextHolder, target.targetClazz, bundle)
+            is FragmentActionDelegate-> {
+                factory().create(contextHolder, target().targetClazz, bundle)
             }
-            is ActivityActionDelegate<T> -> {
+            is ActivityActionDelegate -> {
                 val context = contextHolder.getContext()
-                val intent = Intent(context, target.targetClazz)
+                val intent = Intent(context, target().targetClazz)
                 if (context is Application) {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
@@ -72,18 +57,9 @@ suspend fun <T> ActionDelegate<T>.navigate(bundle: Bundle, contextHolder: Contex
                 context.startActivity(intent)
                 null
             }
-            is ServiceActionDelegate<T> -> {
-                target as? Target.ServiceTarget<T> ?: return@withContext null
-                val factory = factory() ?: object : ServiceActionDelegate.Factory<T> {
-                    override suspend fun create(
-                        contextHolder: ContextHolder,
-                        clazz: Class<T>,
-                        bundle: Bundle,
-                    ): T? {
-                        return clazz.newInstance()
-                    }
-
-                }
+            is ServiceActionDelegate -> {
+                val target = target()
+                val factory = factory()
                 val result = if (target.isSingleTon) {
                     Target.getProviderSingleton(target.targetClazz) ?: run {
                         factory.create(contextHolder, target.targetClazz, bundle).also {
@@ -93,6 +69,7 @@ suspend fun <T> ActionDelegate<T>.navigate(bundle: Bundle, contextHolder: Contex
                 } else {
                     factory.create(contextHolder, target.targetClazz, bundle)
                 }
+
                 if (result is IService) {
                     result.init(contextHolder, bundle)
                     Router.inject(result, bundle)
@@ -101,26 +78,19 @@ suspend fun <T> ActionDelegate<T>.navigate(bundle: Bundle, contextHolder: Contex
                 }
                 result
             }
-            else -> {
-                this@navigate as? MethodActionDelegate<MethodInvoker<T>, T>
-                    ?: return@withContext null
-                target as? Target.MethodTarget<T, MethodInvoker<T>> ?: return@withContext null
+            is MethodActionDelegate  -> {
+                val target=target()
                 var invoker = Target.getMethod(target.methodInvokerType)
-                val factory = factory() ?: object : MethodActionDelegate.Factory<MethodInvoker<T>> {
-                    override suspend fun create(
-                        contextHolder: ContextHolder,
-                        clazz: Class<MethodInvoker<T>>,
-                        bundle: Bundle,
-                    ): MethodInvoker<T> {
-                        return clazz.newInstance()
-                    }
-                }
+                val factory = factory()
                 if (invoker == null) {
                     invoker = factory.create(contextHolder, target.methodInvokerType, bundle)
                     Target.putMethod(target.methodInvokerType, invoker)
                 }
-                invoker?.invoke(contextHolder, bundle)
+                if (invoker is MethodInvoker)
+                    invoker.invoke(contextHolder, bundle)
+                else null
             }
+            else -> null
         }
     }
 }
