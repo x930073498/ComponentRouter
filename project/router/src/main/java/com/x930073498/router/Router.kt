@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
 import kotlin.properties.Delegates
 
 
-class RouterInjectTask : IAuto, IFragmentLifecycle, IActivityLifecycle, IApplicationLifecycle {
+class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
     override fun onApplicationCreated(app: Application) {
         Router.init(app)
     }
@@ -41,13 +41,6 @@ class RouterInjectTask : IAuto, IFragmentLifecycle, IActivityLifecycle, IApplica
         Router.inject(activity)
     }
 
-    override fun onFragmentPreCreated(
-        fm: FragmentManager,
-        f: Fragment,
-        savedInstanceState: Bundle?
-    ) {
-        Router.inject(f)
-    }
 
 
 }
@@ -145,21 +138,12 @@ class Router(uri: Uri = Uri.EMPTY) {
             val intent = activity.intent ?: return
             val key = ParameterSupport.getCenterKey(intent) ?: return
             val center = ActionCenter.getAction(key)
-            (center as? ActivityActionDelegate)?.inject(intent, activity)
+            val bundle=intent.extras?:return
+            (center as? ActivityActionDelegate)?.inject(bundle, activity)
         }
 
-        internal fun <T> inject(fragment: T) where T : Fragment {
-            val bundle = fragment.arguments ?: return
-            val key = ParameterSupport.getCenterKey(bundle) ?: return
-            val center = ActionCenter.getAction(key)
-            (center as? FragmentActionDelegate)?.inject(bundle, fragment)
-        }
 
-        internal suspend fun <T> inject(provider: T, bundle: Bundle) where T : IService {
-            val key = ParameterSupport.getCenterKey(bundle) ?: return
-            val center = ActionCenter.getAction(key)
-            (center as? ServiceActionDelegate)?.inject(bundle, provider)
-        }
+
 
         internal var app by Delegates.notNull<Application>()
         private var hasInit = false

@@ -45,7 +45,9 @@ suspend fun  ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolde
                 null
             }
             is FragmentActionDelegate-> {
-                factory().create(contextHolder, target().targetClazz, bundle)
+                factory().create(contextHolder, target().targetClazz, bundle).apply {
+                    inject(bundle,this)
+                }
             }
             is ActivityActionDelegate -> {
                 val context = contextHolder.getContext()
@@ -72,7 +74,7 @@ suspend fun  ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolde
 
                 if (result is IService) {
                     result.init(contextHolder, bundle)
-                    Router.inject(result, bundle)
+                    inject(bundle,result)
                     if (autoInvoke())
                         result.invoke()
                 }
@@ -80,11 +82,11 @@ suspend fun  ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolde
             }
             is MethodActionDelegate  -> {
                 val target=target()
-                var invoker = Target.getMethod(target.methodInvokerType)
+                var invoker = Target.getMethod(target.targetClazz)
                 val factory = factory()
                 if (invoker == null) {
-                    invoker = factory.create(contextHolder, target.methodInvokerType, bundle)
-                    Target.putMethod(target.methodInvokerType, invoker)
+                    invoker = factory.create(contextHolder, target.targetClazz, bundle)
+                    Target.putMethod(target.targetClazz, invoker)
                 }
                 if (invoker is MethodInvoker)
                     invoker.invoke(contextHolder, bundle)

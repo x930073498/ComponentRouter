@@ -18,8 +18,9 @@ import javax.lang.model.util.Types
 import javax.tools.Diagnostic
 import kotlin.properties.Delegates
 
+
 abstract class BaseProcessor : AbstractProcessor() {
-    protected var filer: Filer by Delegates.notNull()
+     var filer: Filer by Delegates.notNull()
     var messager: Messager by Delegates.notNull()
     var types: Types by Delegates.notNull()
 
@@ -90,14 +91,14 @@ abstract class BaseProcessor : AbstractProcessor() {
         val contextTypeElement = elements.getTypeElement(ComponentConstants.ANDROID_CONTEXT)
         contextTypeMirror = contextTypeElement.asType()
         val parameterSupportTypeElement: TypeElement =
-            elements.getTypeElement(ComponentConstants.PARAMETERSUPPORT_CLASS_NAME)
+            elements.getTypeElement(ComponentConstants.PARAMETER_SUPPORT_CLASS_NAME)
         parameterSupportTypeMirror = parameterSupportTypeElement.asType()
         charSequenceTypeElement = elements.getTypeElement(ComponentConstants.JAVA_CHARSEQUENCE)
         charSequenceTypeMirror = charSequenceTypeElement.asType()
         charSequenceTypeName = charSequenceTypeMirror.asTypeName().javaToKotlinType()
         arrayListTypeElement = elements.getTypeElement(ComponentConstants.JAVA_ARRAYLIST)
         arrayListClassName = arrayListTypeElement.javaToKotlinType()
-        messager.printMessage(Diagnostic.Kind.WARNING, "host=$moduleName")
+        messager.printMessage(Diagnostic.Kind.WARNING, "host=$moduleName\n")
     }
 
     protected fun TypeMirror.javaToKotlinType(): TypeName {

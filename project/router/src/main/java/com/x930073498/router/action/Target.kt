@@ -35,7 +35,7 @@ sealed class Target(
     class ServiceTarget(targetClazz: Class<*>, val isSingleTon: Boolean) :
         Target(targetClazz)
 
-    class MethodTarget(targetClazz: Class<*>, val methodInvokerType: Class<*>) :
+    class MethodTarget(targetClazz: Class<*>) :
         Target(targetClazz)
 
 

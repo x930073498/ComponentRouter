@@ -1,77 +1,248 @@
 package com.x930073498.util
 
 import com.squareup.kotlinpoet.*
-import com.x930073498.annotations.ServiceAnnotation
-import com.x930073498.annotations.ValueAutowiredAnnotation
+import com.x930073498.annotations.*
 import com.x930073498.bean.RouterInfo
 import com.x930073498.compiler.BaseProcessor
-import javax.lang.model.element.TypeElement
-import javax.lang.model.element.VariableElement
+import org.jetbrains.annotations.Nullable
+import java.lang.StringBuilder
+import java.util.*
+import javax.lang.model.element.*
 import javax.lang.model.type.ArrayType
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
+import javax.lang.model.util.Elements
+import kotlin.coroutines.Continuation
+
+private var _emptyInfo: TypeInfo? = null
+
+val BaseProcessor.emptyTypeInfo: TypeInfo
+    get() {
+        return _emptyInfo.let {
+            it ?: TypeInfo.Empty(this).apply {
+                _emptyInfo = this
+            }
+        }
+    }
 
 
-fun buildTargetFunction(
-    targetClassName: ClassName,
-    element: TypeElement,
-    typeSpec: TypeSpec.Builder,
-) {
-    val target = FunSpec.builder("target")
-        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-        .addStatement(
-            "return %T(%T::class.java)",
-            targetClassName,
-            element.asClassName()
-        )
-    typeSpec.addFunction(target.build())
+internal fun BaseProcessor.getInfo(element: Element): Generator {
+    var info = getFragmentInfo(element)
+    if (info != emptyTypeInfo) return info.getGenerator()
+    info = getActivityInfo(element)
+    if (info != emptyTypeInfo) return info.getGenerator()
+    info = getServiceInfo(element)
+    if (info != emptyTypeInfo) return info.getGenerator()
+    return getMethodInfo(element).getGenerator()
 }
 
-fun buildToStringFunction(
-    element: TypeElement,
-    typeSpec: TypeSpec.Builder,
-) {
-    val target = FunSpec.builder("toString")
-        .addModifiers(KModifier.OVERRIDE)
-        .addStatement(
-            "return \"path=\$path,group=\$group,targetClass=\${%T::class.java}\"",
-            element.asClassName()
-        )
-    typeSpec.addFunction(target.build())
+internal fun BaseProcessor.generate(element: Element) {
+    getInfo(element).generate()
 }
 
-fun buildTargetFunction(
-    fragmentTargetClassName: ClassName,
-    element: TypeElement,
-    serviceAnnotation: ServiceAnnotation,
-    typeSpec: TypeSpec.Builder,
-) {
-    val target = FunSpec.builder("target")
-        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-        .addStatement(
-            "return %T(%T::class.java,%L)",
-            fragmentTargetClassName,
-            element.asClassName(),
-            serviceAnnotation.singleton
-        )
-    typeSpec.addFunction(target.build())
+internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
+    if (element.kind != ElementKind.CLASS) return emptyTypeInfo
+    val annotation = element.getAnnotation(FragmentAnnotation::class.java) ?: return emptyTypeInfo
+    val annotationGroup = annotation.group
+    val annotationPath = annotation.path
+    val group: String
+    val path: String
+    if (annotationGroup.isEmpty()) {
+        group = getGroupFromPath(annotationPath) ?: ""
+        path = annotationPath
+    } else {
+        group = annotationGroup
+        path = "/${group}$annotationPath"
+    }
+    val classPrefixName = "_${pathCapitalize(path)}"
+    val className = "${classPrefixName}FragmentActionDelegate"
+    val packageName = elements.getPackageOf(element).qualifiedName.toString()
+    val typeName = element.asType().asTypeName()
+    return FragmentInfo(
+        this,
+        path,
+        group,
+        classPrefixName,
+        className,
+        packageName,
+        typeName,
+        element = element,
+        factoryTypeName = FragmentConstants.FRAGMENT_ACTION_DELEGATE_FACTORY_NAME,
+        injectTargetTypeName = FragmentConstants.FRAGMENT_NAME,
+        superClassName = AUTO_ACTION_NAME,
+        supperInterfaces = arrayListOf(FragmentConstants.FRAGMENT_ACTION_DELEGATE_NAME, I_AUTO_NAME)
+    ).apply {
+        autoInjectList.addAll(element.enclosedElements.mapNotNull {
+            val injectAnnotation = it.getAnnotation(ValueAutowiredAnnotation::class.java)
+                ?: return@mapNotNull null
+            val elementName = it.simpleName.toString()
+            val name = injectAnnotation.name.ifEmpty { elementName }
+            if (it is VariableElement) {
+                return@mapNotNull ValueAutowired(it, injectAnnotation, name, elementName, this)
+            } else {
+                return@mapNotNull null
+            }
+        })
+    }
 }
 
-fun BaseProcessor.buildKeyProperty(
-    typeSpec: TypeSpec.Builder,
-    info: RouterInfo,
-) {
+internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
+    if (element.kind != ElementKind.CLASS) return emptyTypeInfo
+    val annotation = element.getAnnotation(ServiceAnnotation::class.java) ?: return emptyTypeInfo
+    val annotationGroup = annotation.group
+    val annotationPath = annotation.path
+    val group: String
+    val path: String
+    if (annotationGroup.isEmpty()) {
+        group = getGroupFromPath(annotationPath) ?: ""
+        path = annotationPath
+    } else {
+        group = annotationGroup
+        path = "/${group}$annotationPath"
+    }
+    val classPrefixName = "_${pathCapitalize(path)}"
+    val className = "${classPrefixName}ServiceActionDelegate"
+    val packageName = elements.getPackageOf(element).qualifiedName.toString()
+    val typeName = element.asType().asTypeName()
+    return ServiceInfo(
+        this,
+        path,
+        group,
+        classPrefixName,
+        className,
+        packageName,
+        typeName,
+        element = element,
+        isAutoInvoke = annotation.autoInvoke,
+        isSingleTone = annotation.singleton,
+        factoryTypeName = ServiceConstants.SERVICE_ACTION_DELEGATE_FACTORY_NAME,
+        injectTargetTypeName = ServiceConstants.SERVICE_NAME,
+        superClassName = AUTO_ACTION_NAME,
+        supperInterfaces = arrayListOf(ServiceConstants.SERVICE_ACTION_DELEGATE_NAME, I_AUTO_NAME)
+    ).apply {
+        autoInjectList.addAll(element.enclosedElements.mapNotNull {
+            val injectAnnotation = it.getAnnotation(ValueAutowiredAnnotation::class.java)
+                ?: return@mapNotNull null
+            val elementName = it.simpleName.toString()
+            val name = injectAnnotation.name.ifEmpty { elementName }
+            if (it is VariableElement) {
+                return@mapNotNull ValueAutowired(it, injectAnnotation, name, elementName, this)
+            } else {
+                return@mapNotNull null
+            }
+        })
+    }
+}
 
-    val key = PropertySpec.builder("path", String::class)
-        .addModifiers(KModifier.OVERRIDE)
-        .mutable(false)
-        .initializer("%S", info.path)
-    val authorityProperty = PropertySpec.builder("group", String::class)
-        .addModifiers(KModifier.OVERRIDE)
-        .mutable(false)
-        .initializer("%S", info.group)
-    typeSpec.addProperty(key.build())
-    typeSpec.addProperty(authorityProperty.build())
+internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
+    if (element.kind != ElementKind.CLASS) return emptyTypeInfo
+    val annotation = element.getAnnotation(ActivityAnnotation::class.java) ?: return emptyTypeInfo
+    val annotationGroup = annotation.group
+    val annotationPath = annotation.path
+    val group: String
+    val path: String
+    if (annotationGroup.isEmpty()) {
+        group = getGroupFromPath(annotationPath) ?: ""
+        path = annotationPath
+    } else {
+        group = annotationGroup
+        path = "/${group}$annotationPath"
+    }
+    val classPrefixName = "_${pathCapitalize(path)}"
+    val className = "${classPrefixName}ActivityActionDelegate"
+    val packageName = elements.getPackageOf(element).qualifiedName.toString()
+    val typeName = element.asType().asTypeName()
+    return ActivityInfo(
+        this,
+        path,
+        group,
+        classPrefixName,
+        className,
+        packageName,
+        typeName,
+        element = element,
+        injectTargetTypeName = ActivityConstants.ACTIVITY_NAME,
+        superClassName = AUTO_ACTION_NAME,
+        supperInterfaces = arrayListOf(ActivityConstants.ACTIVITY_ACTION_DELEGATE_NAME, I_AUTO_NAME)
+    ).apply {
+        autoInjectList.addAll(element.enclosedElements.mapNotNull {
+            val injectAnnotation = it.getAnnotation(ValueAutowiredAnnotation::class.java)
+                ?: return@mapNotNull null
+            val elementName = it.simpleName.toString()
+            val name = injectAnnotation.name.ifEmpty { elementName }
+            if (it is VariableElement) {
+                return@mapNotNull ValueAutowired(it, injectAnnotation, name, elementName, this)
+            } else {
+                return@mapNotNull null
+            }
+        })
+    }
+}
+
+internal fun BaseProcessor.getMethodInfo(element: Element): MethodInfo {
+    if (element.kind != ElementKind.METHOD) return MethodInfo(emptyTypeInfo)
+    element as ExecutableElement
+    val annotation =
+        element.getAnnotation(MethodAnnotation::class.java) ?: return MethodInfo(emptyTypeInfo)
+    val annotationGroup = annotation.group
+    val annotationPath = annotation.path
+    val group: String
+    val path: String
+    if (annotationGroup.isEmpty()) {
+        group = getGroupFromPath(annotationPath) ?: ""
+        path = annotationPath
+    } else {
+        group = annotationGroup
+        path = "/${group}$annotationPath"
+    }
+    val classPrefixName = "_${pathCapitalize(path)}"
+    val className = "${classPrefixName}MethodActionDelegate"
+    val packageName = elements.getPackageOf(element).qualifiedName.toString()
+    val methodInvokerInfo = MethodInvokerInfo(
+        this,
+        path,
+        group,
+        classPrefixName,
+        className,
+        packageName,
+        ANY,
+        element = element,
+        factoryTypeName = MethodConstants.METHOD_ACTION_DELEGATE_FACTORY_NAME,
+        injectTargetTypeName = null,
+        superClassName = AUTO_ACTION_NAME,
+        supperInterfaces = arrayListOf(MethodConstants.METHOD_ACTION_DELEGATE_NAME, I_AUTO_NAME)
+    )
+    val parameters = element.parameters
+    val list = parameters.mapIndexedNotNull { index, it ->
+        val type = it.asType()
+        val typeName = type.asTypeName().javaToKotlinType()
+        val isNullable = it.getAnnotation(Nullable::class.java) != null
+        if (typeName is ParameterizedTypeName && typeName.rawType == Continuation::class.asTypeName() && index == parameters.size - 1) {
+            return@mapIndexedNotNull null
+        }
+        val methodBundleNameAnnotation =
+            it.getAnnotation(MethodBundleNameAnnotation::class.java)
+        val parameterMethodName = getParameterMethodName(it)
+        val isContext = types.isSubtype(type, contextTypeMirror)
+        ParameterInfo(
+            methodBundleNameAnnotation?.name ?: it.simpleName.toString(),
+            parameterMethodName,
+            typeName,
+            isNullable,
+            isContext
+        )
+    }
+    return MethodInfo(
+        methodInvokerInfo, MemberName(packageName, element.simpleName.toString()),
+        list
+    )
+}
+
+
+internal fun pathCapitalize(path: String): String {
+    return path.split("/").fold(StringBuilder()) { builder, it ->
+        builder.append(it.capitalize(Locale.getDefault()))
+    }.toString()
 }
 
 fun getGroupFromPath(path: String?): String? {
@@ -82,6 +253,7 @@ fun getGroupFromPath(path: String?): String? {
     if (group.isEmpty()) return null
     return group
 }
+
 
 fun BaseProcessor.generateParameterCodeForInject(
     variableElement: VariableElement,

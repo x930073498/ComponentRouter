@@ -8,7 +8,7 @@ import com.x930073498.router.action.Target
 
 interface FragmentActionDelegate: ActionDelegate{
 
-    fun inject(bundle: Bundle, fragment: Fragment)
+    fun inject(bundle: Bundle, target: Fragment)
 
     suspend fun factory(): Factory
 

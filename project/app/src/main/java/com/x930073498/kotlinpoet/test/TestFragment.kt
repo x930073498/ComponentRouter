@@ -29,7 +29,7 @@ class TestFragment : Fragment(R.layout.fragment_test) {
         requireView().findViewById<TextView>(R.id.tv)?.text = name
         requireView().setOnClickListener {
             GlobalScope.launch {
-                Router.from("/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
+                Router.from("/a/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
                     println(it)
                 }
 //                Router.from("/test/service?testA=8484848&b=4&c=5").navigate<TestService>()
