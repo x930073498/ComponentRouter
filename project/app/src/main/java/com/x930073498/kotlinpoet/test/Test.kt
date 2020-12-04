@@ -25,8 +25,8 @@ suspend fun testMethod(
     println("enter this line 897 ${a + b + c}$context")
 
 }
-@MethodAnnotation(path = "/test/test4", group = "a")
-//@MethodAnnotation(path = "/test/method/test1")
+//@MethodAnnotation(path = "/test/test4", group = "a")
+@MethodAnnotation(path = "/test/method/test1")
 suspend fun testMethod2(context: Context) {
     delay(1000)
     println("enter this line 877 $context")
