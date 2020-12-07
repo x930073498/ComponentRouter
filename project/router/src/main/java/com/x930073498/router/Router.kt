@@ -9,23 +9,23 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import com.x930073498.router.action.ActionCenter
-import com.x930073498.router.impl.*
+import com.x930073498.router.impl.ActionDelegateRouterInterceptor
+import com.x930073498.router.impl.ActivityActionDelegate
+import com.x930073498.router.impl.FragmentActionDelegate
 import com.x930073498.router.interceptor.onInterceptors
 import com.x930073498.router.request.routerRequest
 import com.x930073498.router.response.RouterResponse
-import com.x930073498.router.response.forward
 import com.x930073498.router.response.navigate
 import com.x930073498.router.response.routerResponse
 import com.x930073498.router.util.ParameterSupport
 import com.zx.common.auto.IActivityLifecycle
 import com.zx.common.auto.IApplicationLifecycle
 import com.zx.common.auto.IAuto
-import com.zx.common.auto.IFragmentLifecycle
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.properties.Delegates
 
 
@@ -95,38 +95,40 @@ class Router(uri: Uri = Uri.EMPTY) {
     }
 
 
-    suspend inline fun <reified T> navigate(context: Context? = null): T? {
-        val result = withContext(Dispatchers.Main) {
-                withContext(Dispatchers.IO) {
-                    request(context)
-                }
-            }.navigate()
-        return if (result is T) return result else null
+    suspend fun <T> navigate(context: Context? = null): T? {
+        return forward(context) as? T
     }
 
 
-    @ExperimentalStdlibApi
+    /**
+     * 创建
+     */
     inline fun <reified T> syncNavigation(context: Context? = null): T? {
-        return runBlocking {
-            runCatching { navigate<T>(context) }
-                .onFailure { it.printStackTrace() }
-                .getOrNull()
+        val resultRef = AtomicReference<T>()
+        val flagRef = AtomicReference(0)
+        GlobalScope.launch(Dispatchers.IO) {
+            runCatching {
+                val result = forward(context)
+                resultRef.set(result as? T)
+            }
+            flagRef.set(1)
         }
+        while (flagRef.get() == 0) {
+            //do nothing,Thread loop
+        }
+        return resultRef.get()
     }
 
-    suspend fun forward(context: Context? = null) {
-        return withContext(Dispatchers.Main) {
-            withContext(Dispatchers.IO) {
-                request(context)
-            }.forward()
-        }
+    suspend fun forward(context: Context? = null): Any? {
+        return request(context).navigate()
     }
+
 
     suspend fun request(context: Context?): RouterResponse {
-        return routerRequest(uriBuilder.build(), mBundle,context)
+        return routerRequest(uriBuilder.build(), mBundle, context)
             .onInterceptors {
                 val request = request()
-                routerResponse(request.uri, request.bundle,request.contextHolder)
+                routerResponse(request.uri, request.bundle, request.contextHolder)
             }.beforeIntercept {
                 request().syncUriToBundle()
             }.add(ActionDelegateRouterInterceptor())
@@ -134,17 +136,32 @@ class Router(uri: Uri = Uri.EMPTY) {
     }
 
 
-
-
-
     companion object Init : InitI {
+
+
+        private fun ActivityActionDelegate.injectInternal(bundle: Bundle, activity: Activity) {
+            inject(bundle, activity)
+            var parentPath = parentPath()
+            var action: ActivityActionDelegate?
+            while (parentPath.isNotEmpty()) {
+                action = ActionCenter.getAction(parentPath) as? ActivityActionDelegate
+                if (action != null) {
+                    parentPath = action.parentPath()
+                    action.inject(bundle, activity)
+                } else {
+                    parentPath = ""
+                }
+            }
+        }
 
         internal fun <T> inject(activity: T) where T : Activity {
             val intent = activity.intent ?: return
             val key = ParameterSupport.getCenterKey(intent) ?: return
             val center = ActionCenter.getAction(key)
             val bundle = intent.extras ?: return
-            (center as? ActivityActionDelegate)?.inject(bundle, activity)
+            (center as? ActivityActionDelegate)?.apply {
+                injectInternal(bundle, activity)
+            }
         }
 
 

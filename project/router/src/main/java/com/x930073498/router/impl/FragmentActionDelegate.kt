@@ -7,6 +7,9 @@ import com.x930073498.router.action.Target
 
 
 interface FragmentActionDelegate: ActionDelegate{
+    override fun type(): ActionType {
+        return ActionType.FRAGMENT
+    }
 
     fun inject(bundle: Bundle, target: Fragment)
 

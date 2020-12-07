@@ -25,7 +25,8 @@ sealed class TypeInfo constructor(
     private val supperInterfaces: List<TypeName>,//父接口
     private val injectTargetTypeName: TypeName?,//注入方法中注入属性的目标类
     val factoryTypeName: TypeName?,//factory类
-    private val element: Element? = null,
+    private val element: Element? = null,//元素
+    private val parentPath: String,
     private val interceptors: Array<String> = arrayOf(),
     val autoInjectList: MutableList<ValueAutowired> = arrayListOf()//属性注入元素信息列表
 ) : Generator {
@@ -41,7 +42,7 @@ sealed class TypeInfo constructor(
     }
 
     class Empty(processor: BaseProcessor) : TypeInfo(
-        processor, "", "", "", "", "", ANY, ANY, emptyList(), null, null
+        processor, "", "", "", "", "", ANY, ANY, emptyList(), null, null, parentPath = ""
     ) {
         override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         }
@@ -112,6 +113,7 @@ sealed class TypeInfo constructor(
                         injectTargetTypeName
                     ).build()
                 )
+//                .addParameter(ParameterSpec.builder("parent",ClassName(packageName,className)).build())
                 .addStatement("target as %T", type)
                 .apply {
                     autoInjectList.forEach {
@@ -200,12 +202,20 @@ sealed class TypeInfo constructor(
     protected open fun generateOtherCode(typeSpec: TypeSpec.Builder) {
 
     }
+    protected open fun generateParentCode(typeSpec: TypeSpec.Builder){
+        if (parentPath.isEmpty())return
+        typeSpec.addFunction(FunSpec.builder("parentPath")
+            .addModifiers(KModifier.OVERRIDE)
+            .addStatement("return %S",parentPath)
+            .build())
+    }
 
     protected open fun generate(typeSpec: TypeSpec.Builder) {
         generateSuper(typeSpec)
         generatePathCode(typeSpec)
         generateGroupCode(typeSpec)
         generateInterceptorsCode(typeSpec)
+        generateParentCode(typeSpec)
         generateInjectCode(typeSpec)
         generateTargetCode(typeSpec)
         generateOtherCode(typeSpec)
@@ -247,7 +257,8 @@ class InterceptorInfo(
     factoryTypeName: TypeName?,
     element: Element? = null,
     interceptors: Array<String> = arrayOf(),
-    autoInjectList: MutableList<ValueAutowired> = arrayListOf()
+    autoInjectList: MutableList<ValueAutowired> = arrayListOf(),
+    parentPath: String
 ) : TypeInfo(
     processor,
     path,
@@ -261,8 +272,9 @@ class InterceptorInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
+    parentPath=parentPath,
     interceptors,
-    autoInjectList
+    autoInjectList,
 ) {
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
@@ -315,7 +327,8 @@ class ServiceInfo(
     factoryTypeName: TypeName?,
     element: Element? = null,
     interceptors: Array<String>,
-    autoInjectList: MutableList<ValueAutowired> = arrayListOf()
+    autoInjectList: MutableList<ValueAutowired> = arrayListOf(),
+    parentPath: String
 ) : TypeInfo(
     processor,
     path,
@@ -329,6 +342,7 @@ class ServiceInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
+    parentPath=parentPath,
     interceptors,
     autoInjectList
 ) {
@@ -366,7 +380,8 @@ class ActivityInfo(
     injectTargetTypeName: TypeName,
     element: Element?,
     interceptors: Array<String>,
-    autoInjectList: MutableList<ValueAutowired> = arrayListOf()
+    autoInjectList: MutableList<ValueAutowired> = arrayListOf(),
+    parentPath: String
 ) : TypeInfo(
     processor,
     path,
@@ -380,6 +395,7 @@ class ActivityInfo(
     injectTargetTypeName,
     factoryTypeName = null,
     element,
+    parentPath=parentPath,
     interceptors,
     autoInjectList
 ) {
@@ -410,7 +426,8 @@ class FragmentInfo(
     factoryTypeName: TypeName,
     element: Element? = null,
     interceptors: Array<String>,
-    autoInjectList: MutableList<ValueAutowired> = arrayListOf()
+    autoInjectList: MutableList<ValueAutowired> = arrayListOf(),
+    parentPath: String
 ) : TypeInfo(
     processor,
     path,
@@ -424,6 +441,7 @@ class FragmentInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
+    parentPath=parentPath,
     interceptors,
     autoInjectList
 ) {
@@ -456,7 +474,8 @@ class MethodInvokerInfo(
     factoryTypeName: TypeName?,
     element: Element? = null,
     interceptors: Array<String>,
-    autoInjectList: MutableList<ValueAutowired> = arrayListOf()
+    autoInjectList: MutableList<ValueAutowired> = arrayListOf(),
+    parentPath: String,
 ) : TypeInfo(
     processor,
     path,
@@ -470,6 +489,7 @@ class MethodInvokerInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
+    parentPath=parentPath,
     interceptors,
     autoInjectList
 ) {

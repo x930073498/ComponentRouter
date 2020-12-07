@@ -7,7 +7,7 @@ import com.x930073498.router.util.authorityAndPath
 
 object ActionCenter {
 
-    var checkKeyUnique = false
+    internal var checkKeyUnique = false
 
     /**
      * 存储所有的action
@@ -18,8 +18,6 @@ object ActionCenter {
      * 存储可用的action
      */
     private val mMap = mutableMapOf<Key, ActionDelegate>()
-
-
 
 
     fun register(actionDelegate: ActionDelegate): Key {
@@ -51,17 +49,17 @@ object ActionCenter {
     }
 
 
-    internal fun getAction(url: String): ActionDelegate{
+    internal fun getAction(url: String): ActionDelegate {
         val key = Uri.parse(url).authorityAndPath()
-        val group= getGroupFromPath(key.path)
-        return mMap[Key(group, key.path)]?:SystemActionDelegate(key.path?:"")
+        val group = getGroupFromPath(key.path)
+        return mMap[Key(group, key.path)] ?: SystemActionDelegate
     }
 
 
     internal fun getAction(uri: Uri): ActionDelegate {
         val key = uri.authorityAndPath()
         val group = getGroupFromPath(key.path)
-        return mMap[Key(group, key.path)]?:SystemActionDelegate(key.path?:"")
+        return mMap[Key(group, key.path)] ?: SystemActionDelegate
     }
 
     private fun getGroupFromPath(path: String?): String? {

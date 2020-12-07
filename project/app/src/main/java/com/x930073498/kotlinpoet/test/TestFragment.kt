@@ -20,43 +20,15 @@ import java.io.Serializable
 
 
 @FragmentAnnotation(path = "/test/a")
-class TestFragment : Fragment(R.layout.fragment_test) {
+class TestFragment : TestParentFragment() {
     @ValueAutowiredAnnotation
-    var name = ""
+    var title = ""
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        requireView().findViewById<TextView>(R.id.tv)?.text = name
-        requireView().setOnClickListener {
-            GlobalScope.launch {
-                Router.from("/a/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
-                    println(it)
-                }
-//                Router.from("/test/service?testA=8484848&b=4&c=5").navigate<TestService>()
-            }
-        }
+        requireView().findViewById<TextView>(R.id.tvTitle)?.text = title
     }
 
-    @FactoryAnnotation
-    class Factory : FragmentActionDelegate.Factory {
-        override  suspend fun create(
-            contextHolder: ContextHolder,
-            clazz: Class<*>,
-            bundle: Bundle,
-        ): TestFragment {
-            return TestFragment().also {
-                it.arguments = bundle
-            }
-        }
-    }
-
-    companion object {
-
-        @FactoryAnnotation
-        fun create(bundle: Bundle): TestFragment {
-            return TestFragment().also { it.arguments = bundle }
-        }
-    }
 }
 
 

@@ -10,6 +10,7 @@ import javax.lang.model.element.*
 import javax.lang.model.type.ArrayType
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
+import javax.tools.Diagnostic
 import kotlin.coroutines.Continuation
 
 private var _emptyInfo: TypeInfo? = null
@@ -76,9 +77,36 @@ internal fun BaseProcessor.getInterceptorInfo(element: Element): TypeInfo {
         supperInterfaces = arrayListOf(
             InterceptorConstants.INTERCEPTOR_ACTION_DELEGATE_NAME,
             I_AUTO_NAME
-        )
+        ),
+        parentPath = ""
     )
 
+}
+
+private fun <T> BaseProcessor.findParentAnnotation(
+    type: TypeMirror,
+    boundType: TypeMirror,
+    clazz: Class<T>,
+    path: String=""
+): T? where T : Annotation {
+//return null
+    var current: TypeMirror = type
+    while (types.isSubtype(current, boundType)) {
+        val temp = types.directSupertypes(current).firstOrNull {
+            types.asElement(it).kind == ElementKind.CLASS
+        }
+        if (path=="/test/a"){
+            messager.printMessage(Diagnostic.Kind.NOTE,"temp=$temp")
+        }
+        if (temp != null) {
+            val annotation = types.asElement(temp).getAnnotation(clazz)
+            if (annotation != null) return annotation
+            else current = temp
+        } else {
+            return null
+        }
+    }
+    return null
 }
 
 internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
@@ -86,7 +114,7 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
     val annotation = element.getAnnotation(FragmentAnnotation::class.java) ?: return emptyTypeInfo
     if (!types.isSubtype(
             element.asType(),
-            elements.getTypeElement(ComponentConstants.ANDROID_FRAGMENT).asType()
+            fragmentTypeMirror
         )
     ) return emptyTypeInfo
     val interceptors = annotation.interceptors
@@ -104,7 +132,12 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}FragmentActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
-    val typeName = element.asType().asTypeName()
+    val type = element.asType();
+    val typeName = type.asTypeName()
+
+    val parentAnnotation =
+        findParentAnnotation(type, fragmentTypeMirror, FragmentAnnotation::class.java,path)
+    messager.printMessage(Diagnostic.Kind.NOTE, "path=$path,parentAnnotation=$parentAnnotation")
     return FragmentInfo(
         this,
         path,
@@ -118,6 +151,7 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
         injectTargetTypeName = FragmentConstants.FRAGMENT_NAME,
         superClassName = AUTO_ACTION_NAME,
         interceptors = interceptors,
+        parentPath = parentAnnotation?.path ?: "",
         supperInterfaces = arrayListOf(FragmentConstants.FRAGMENT_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     ).apply {
         autoInjectList.addAll(element.enclosedElements.mapNotNull {
@@ -138,7 +172,6 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation = element.getAnnotation(ServiceAnnotation::class.java) ?: return emptyTypeInfo
     val annotationGroup = annotation.group
-    val interceptors = annotation.interceptors
     val annotationPath = annotation.path
     val group: String
     val path: String
@@ -152,7 +185,8 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}ServiceActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
-    val typeName = element.asType().asTypeName()
+    val type = element.asType()
+    val typeName = type.asTypeName()
     return ServiceInfo(
         this,
         path,
@@ -168,6 +202,7 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
         injectTargetTypeName = ServiceConstants.SERVICE_NAME,
         interceptors = annotation.interceptors,
         superClassName = AUTO_ACTION_NAME,
+        parentPath = "",
         supperInterfaces = arrayListOf(ServiceConstants.SERVICE_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     ).apply {
         autoInjectList.addAll(element.enclosedElements.mapNotNull {
@@ -201,7 +236,11 @@ internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}ActivityActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
-    val typeName = element.asType().asTypeName()
+    val type = element.asType()
+    val typeName = type.asTypeName()
+    val parentAnnotation =
+        findParentAnnotation(type, activityTypeMirror, ActivityAnnotation::class.java)
+    messager.printMessage(Diagnostic.Kind.NOTE, "path=$path,parentAnnotation=$parentAnnotation")
     return ActivityInfo(
         this,
         path,
@@ -214,6 +253,7 @@ internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
         injectTargetTypeName = ActivityConstants.ACTIVITY_NAME,
         superClassName = AUTO_ACTION_NAME,
         interceptors = annotation.interceptors,
+        parentPath = parentAnnotation?.path ?: "",
         supperInterfaces = arrayListOf(ActivityConstants.ACTIVITY_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     ).apply {
         autoInjectList.addAll(element.enclosedElements.mapNotNull {
@@ -262,6 +302,7 @@ internal fun BaseProcessor.getMethodInfo(element: Element): MethodInfo {
         injectTargetTypeName = null,
         superClassName = AUTO_ACTION_NAME,
         interceptors = annotation.interceptors,
+        parentPath = "",
         supperInterfaces = arrayListOf(MethodConstants.METHOD_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     )
     val parameters = element.parameters

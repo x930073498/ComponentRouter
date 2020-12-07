@@ -5,6 +5,9 @@ import com.x930073498.router.action.ContextHolder
 import com.x930073498.router.action.Target
 
 interface ServiceActionDelegate : ActionDelegate {
+    override fun type(): ActionType {
+        return ActionType.SERVICE
+    }
     fun inject(bundle: Bundle, target: IService)
 
     suspend fun factory(): Factory

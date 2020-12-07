@@ -42,8 +42,5 @@ suspend fun RouterResponse.navigate(): Any? {
     return ActionCenter.getAction(uri).navigate(bundle, contextHolder)
 }
 
-@Suppress("UNCHECKED_CAST")
-suspend fun RouterResponse.forward() {
-    navigate()
-}
+
 

@@ -22,6 +22,7 @@ import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 import javax.inject.Inject
 
 
@@ -46,16 +47,24 @@ class MainActivity : AppCompatActivity() {
         foo.test()
         viewModel.test()
         setContentView(R.layout.activity_main)
-        val uri = Uri.parse("/test/a?name=24254")
-        val router = Router.from(uri)
-        GlobalScope.launch(Dispatchers.Main) {
-            val fragment = router.navigate<Fragment>()
+        val uri = Uri.parse("/test/a?name=24254&title=测试")
+//        val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
+        Executors.newSingleThreadExecutor().submit {
+            val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
             if (fragment != null) {
                 println("enter this line 18487")
                 supportFragmentManager.beginTransaction().add(R.id.container, fragment)
                     .commitAllowingStateLoss()
             }
         }
+//        GlobalScope.launch(Dispatchers.IO) {
+//            val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
+//            if (fragment != null) {
+//                println("enter this line 18487")
+//                supportFragmentManager.beginTransaction().add(R.id.container, fragment)
+//                    .commitAllowingStateLoss()
+//            }
+//        }
 //
 
     }

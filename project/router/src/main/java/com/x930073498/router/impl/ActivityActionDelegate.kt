@@ -6,6 +6,9 @@ import android.os.Bundle
 import com.x930073498.router.action.Target
 
 interface ActivityActionDelegate : ActionDelegate {
+    override fun type(): ActionType {
+        return ActionType.ACTIVITY
+    }
     suspend fun target(): Target.ActivityTarget
     fun inject(bundle: Bundle, target: Activity)
 }

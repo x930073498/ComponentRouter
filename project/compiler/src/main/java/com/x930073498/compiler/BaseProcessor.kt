@@ -37,6 +37,8 @@ abstract class BaseProcessor : AbstractProcessor() {
     var serializableTypeMirror: TypeMirror by Delegates.notNull()
     var parcelableTypeMirror: TypeMirror by Delegates.notNull()
     var contextTypeMirror: TypeMirror by Delegates.notNull()
+    var fragmentTypeMirror:TypeMirror by Delegates.notNull()
+    var activityTypeMirror:TypeMirror by Delegates.notNull()
 
     var parameterSupportTypeMirror: TypeMirror by Delegates.notNull()
     var charSequenceTypeName: TypeName by Delegates.notNull()
@@ -66,6 +68,8 @@ abstract class BaseProcessor : AbstractProcessor() {
         parameterSupportTypeMirror = parameterSupportTypeElement.asType()
         charSequenceTypeElement = elements.getTypeElement(ComponentConstants.JAVA_CHARSEQUENCE)
         charSequenceTypeMirror = charSequenceTypeElement.asType()
+        fragmentTypeMirror=elements.getTypeElement(ComponentConstants.ANDROID_FRAGMENT).asType()
+        activityTypeMirror=elements.getTypeElement(ComponentConstants.ANDROID_ACTIVITY).asType()
         charSequenceTypeName = charSequenceTypeMirror.asTypeName().javaToKotlinType()
         arrayListTypeElement = elements.getTypeElement(ComponentConstants.JAVA_ARRAYLIST)
         arrayListClassName = arrayListTypeElement.javaToKotlinType()
