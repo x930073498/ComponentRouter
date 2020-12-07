@@ -22,6 +22,16 @@ interface ActionDelegate {
     val group: String
         get() = ""
 
+    fun interceptors():List<String> = arrayListOf<String>()
+
+
+
+}
+
+internal object EmptyDelegate : ActionDelegate {
+    override val path: String
+        get() = ""
+
 
 }
 
@@ -34,19 +44,22 @@ internal class SystemActionDelegate(override val path: String) : ActionDelegate 
 
 
 @Suppress("UNCHECKED_CAST")
-suspend fun  ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolder): Any? {
+suspend fun ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolder): Any? {
 
     ParameterSupport.putCenter(bundle, path)
     return withContext(Dispatchers.Main) {
         when (this@navigate) {
+            EmptyDelegate -> {
+                return@withContext null
+            }
             is SystemActionDelegate -> {
                 val target = target()
                 target.go(contextHolder.getContext())
                 null
             }
-            is FragmentActionDelegate-> {
+            is FragmentActionDelegate -> {
                 factory().create(contextHolder, target().targetClazz, bundle).apply {
-                    inject(bundle,this)
+                    inject(bundle, this)
                 }
             }
             is ActivityActionDelegate -> {
@@ -74,14 +87,14 @@ suspend fun  ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolde
 
                 if (result is IService) {
                     result.init(contextHolder, bundle)
-                    inject(bundle,result)
+                    inject(bundle, result)
                     if (autoInvoke())
                         result.invoke()
                 }
                 result
             }
-            is MethodActionDelegate  -> {
-                val target=target()
+            is MethodActionDelegate -> {
+                val target = target()
                 var invoker = Target.getMethod(target.targetClazz)
                 val factory = factory()
                 if (invoker == null) {
@@ -91,6 +104,9 @@ suspend fun  ActionDelegate.navigate(bundle: Bundle, contextHolder: ContextHolde
                 if (invoker is MethodInvoker)
                     invoker.invoke(contextHolder, bundle)
                 else null
+            }
+            is InterceptorActionDelegate->{
+                factory().create(contextHolder,target().targetClazz)
             }
             else -> null
         }

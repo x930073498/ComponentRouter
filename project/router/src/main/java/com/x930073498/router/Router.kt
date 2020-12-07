@@ -11,10 +11,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.x930073498.router.action.ActionCenter
-import com.x930073498.router.impl.ActivityActionDelegate
-import com.x930073498.router.impl.FragmentActionDelegate
-import com.x930073498.router.impl.IService
-import com.x930073498.router.impl.ServiceActionDelegate
+import com.x930073498.router.impl.*
 import com.x930073498.router.interceptor.onInterceptors
 import com.x930073498.router.request.routerRequest
 import com.x930073498.router.response.RouterResponse
@@ -39,8 +36,8 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
 
     override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
         Router.inject(activity)
+        println("enter this line onActivityPreCreated")
     }
-
 
 
 }
@@ -99,7 +96,11 @@ class Router(uri: Uri = Uri.EMPTY) {
 
 
     suspend inline fun <reified T> navigate(context: Context? = null): T? {
-        val result = request().navigate(context)
+        val result = withContext(Dispatchers.Main) {
+                withContext(Dispatchers.IO) {
+                    request(context)
+                }
+            }.navigate()
         return if (result is T) return result else null
     }
 
@@ -116,20 +117,24 @@ class Router(uri: Uri = Uri.EMPTY) {
     suspend fun forward(context: Context? = null) {
         return withContext(Dispatchers.Main) {
             withContext(Dispatchers.IO) {
-                request()
-            }.forward(context)
+                request(context)
+            }.forward()
         }
     }
 
-    suspend fun request(): RouterResponse {
-        return routerRequest(uriBuilder.build(), mBundle)
+    suspend fun request(context: Context?): RouterResponse {
+        return routerRequest(uriBuilder.build(), mBundle,context)
             .onInterceptors {
-                routerResponse(request().uri, request().bundle)
+                val request = request()
+                routerResponse(request.uri, request.bundle,request.contextHolder)
             }.beforeIntercept {
                 request().syncUriToBundle()
-            }
+            }.add(ActionDelegateRouterInterceptor())
             .start()
     }
+
+
+
 
 
     companion object Init : InitI {
@@ -138,11 +143,9 @@ class Router(uri: Uri = Uri.EMPTY) {
             val intent = activity.intent ?: return
             val key = ParameterSupport.getCenterKey(intent) ?: return
             val center = ActionCenter.getAction(key)
-            val bundle=intent.extras?:return
+            val bundle = intent.extras ?: return
             (center as? ActivityActionDelegate)?.inject(bundle, activity)
         }
-
-
 
 
         internal var app by Delegates.notNull<Application>()

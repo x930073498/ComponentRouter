@@ -7,7 +7,7 @@ import com.x930073498.kotlinpoet.R
 import com.x930073498.router.Router
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-@ActivityAnnotation(path = "/test/second")
+@ActivityAnnotation(path = "/test/second",interceptors = ["/test/interceptors/test1"])
 class SecondActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

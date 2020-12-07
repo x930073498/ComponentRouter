@@ -20,6 +20,8 @@ object ActionCenter {
     private val mMap = mutableMapOf<Key, ActionDelegate>()
 
 
+
+
     fun register(actionDelegate: ActionDelegate): Key {
         val key = Key(actionDelegate.group, actionDelegate.path)
         if (checkKeyUnique) {
@@ -41,9 +43,6 @@ object ActionCenter {
         mMap.remove(key)
     }
 
-    fun unregister(authority: String, path: String) {
-        unregister(Key(authority, path))
-    }
 
     fun unloadGroup(group: String) {
         mMap.keys.filter { it.group == group }.forEach {

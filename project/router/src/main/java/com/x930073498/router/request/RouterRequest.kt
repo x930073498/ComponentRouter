@@ -5,11 +5,16 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.core.os.bundleOf
+import com.x930073498.router.action.ContextHolder
+import com.x930073498.router.impl.RouterInterceptor
+import com.x930073498.router.interceptor.Chain
 import com.x930073498.router.interceptor.Request
+import com.x930073498.router.response.RouterResponse
 
-interface RouterRequest : Request, Parcelable {
+interface RouterRequest : Request {
     val uri: Uri
     val bundle: Bundle
+    val contextHolder:ContextHolder
     suspend fun buildUpon(): Builder
     suspend fun syncUriToBundle()
     interface Builder {
@@ -23,6 +28,8 @@ interface RouterRequest : Request, Parcelable {
             override val uri: Uri = Uri.EMPTY
 
             override val bundle: Bundle = bundleOf()
+            override val contextHolder: ContextHolder
+                get() = ContextHolder.create()
 
 
             override suspend fun buildUpon(): Builder {
@@ -32,14 +39,10 @@ interface RouterRequest : Request, Parcelable {
             override suspend fun syncUriToBundle() {
             }
 
-            override fun describeContents(): Int {
-                return 0
-            }
 
-            override fun writeToParcel(dest: Parcel?, flags: Int) {
-
-            }
 
         }
     }
 }
+
+

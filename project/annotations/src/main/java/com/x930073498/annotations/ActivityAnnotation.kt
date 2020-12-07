@@ -7,6 +7,5 @@ import kotlin.reflect.KClass
 annotation class ActivityAnnotation(
     val group: String = "",
     val path: String,
-    val interceptors: Array<KClass<*>> = [],
-    val interceptorsPath: Array<String> = [],
+    val interceptors: Array<String> = [],
 )

@@ -9,6 +9,5 @@ annotation class ServiceAnnotation(
     val path: String,
     val singleton: Boolean = true,
     val autoInvoke: Boolean = true,
-    val interceptors: Array<KClass<*>> = [],
-    val interceptorsPath: Array<String> = [],
+    val interceptors: Array<String> = [],
 )

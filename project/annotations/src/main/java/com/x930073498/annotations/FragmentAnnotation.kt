@@ -7,6 +7,6 @@ import kotlin.reflect.KClass
 annotation class FragmentAnnotation(
     val group: String = "",
     val path: String,
-    val interceptor: Array<KClass<*>> = [],
-    val interceptorPath: Array<String> = []
+
+    val interceptors: Array<String> = []
 )

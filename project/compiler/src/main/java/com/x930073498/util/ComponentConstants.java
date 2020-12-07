@@ -10,6 +10,7 @@ public class ComponentConstants {
     public static final String SERVICE_ROUTER_ANNOTATION_NAME = "com.x930073498.annotations.ServiceAnnotation";
     public static final String FRAGMENT_ROUTER_ANNOTATION_NAME = "com.x930073498.annotations.FragmentAnnotation";
     public static final String ACTIVITY_ROUTER_ANNOTATION_NAME = "com.x930073498.annotations.ActivityAnnotation";
+    public static final String INTERCEPTOR_ROUTER_ANNOTATION_NAME = "com.x930073498.annotations.InterceptorAnnotation";
 
 
     public static final String ROUTER_ACTION_PACKAGE_NAME = "com.x930073498.router.action";
@@ -18,10 +19,12 @@ public class ComponentConstants {
     public static final String FRAGMENT_TARGET_NAME = "FragmentTarget";
     public static final String ACTIVITY_TARGET_NAME = "ActivityTarget";
     public static final String SERVICE_TARGET_NAME = "ServiceTarget";
+    public static final String INTERCEPTOR_TARGET_NAME = "InterceptorTarget";
     public static final String METHOD_TARGET_NAME = "MethodTarget";
     public static final String FRAGMENT_ACTION_DELEGATE = "FragmentActionDelegate";
     public static final String ACTIVITY_ACTION_DELEGATE = "ActivityActionDelegate";
     public static final String SERVICE_ACTION_DELEGATE = "ServiceActionDelegate";
+    public static final String INTERCEPTOR_ACTION_DELEGATE = "InterceptorActionDelegate";
     public static final String METHOD_ACTION_DELEGATE = "MethodActionDelegate";
     public static final String FACTORY_NAME = "Factory";
     public static final String SERVICE_NAME = "IService";
@@ -42,10 +45,7 @@ public class ComponentConstants {
 
     public static final String JAVA_STRING = "java.lang.String";
     public static final String JAVA_INTEGER = "java.lang.Integer";
-    public static final String JAVA_LIST = "java.util.List";
     public static final String JAVA_ARRAYLIST = "java.util.ArrayList";
-    public static final String JAVA_HASHMAP = "java.util.HashMap";
-    public static final String JAVA_HASHSET = "java.util.HashSet";
     public static final String JAVA_SERIALIZABLE = "java.io.Serializable";
     public static final String JAVA_CHARSEQUENCE = "java.lang.CharSequence";
 

@@ -16,6 +16,7 @@ import javax.lang.model.element.TypeElement
     ComponentConstants.SERVICE_ROUTER_ANNOTATION_NAME,
     ComponentConstants.METHOD_ROUTER_ANNOTATION_NAME,
     ComponentConstants.FRAGMENT_ROUTER_ANNOTATION_NAME,
+    ComponentConstants.INTERCEPTOR_ROUTER_ANNOTATION_NAME,
 )
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 class RouterAnnotationProcessor : BaseProcessor() {

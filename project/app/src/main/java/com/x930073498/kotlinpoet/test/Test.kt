@@ -14,7 +14,7 @@ import com.zx.common.auto.IAuto
 import kotlinx.coroutines.delay
 
 
-@MethodAnnotation(path = "/test/test4", group = "a")
+@MethodAnnotation(path = "/test/test4", group = "a",interceptors = ["/test/interceptors/test1"])
 suspend fun testMethod(
     @MethodBundleNameAnnotation("context") context: Context,
     @MethodBundleNameAnnotation("a") a: String?,

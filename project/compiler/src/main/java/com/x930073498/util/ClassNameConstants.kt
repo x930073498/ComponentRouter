@@ -65,6 +65,24 @@ object ServiceConstants{
         ComponentConstants.SERVICE_TARGET_NAME
     )
 }
+object InterceptorConstants{
+    val INTERCEPTOR_ACTION_DELEGATE_FACTORY_NAME =
+        ClassName(
+            ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
+            ComponentConstants.INTERCEPTOR_ACTION_DELEGATE,
+            ComponentConstants.FACTORY_NAME
+        )
+    val INTERCEPTOR_ACTION_DELEGATE_NAME =
+        ClassName(
+            ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
+            ComponentConstants.INTERCEPTOR_ACTION_DELEGATE
+        )
+    val INTERCEPTOR_TARGET_NAME = ClassName(
+        ComponentConstants.ROUTER_ACTION_PACKAGE_NAME,
+        ComponentConstants.TARGET_NAME,
+        ComponentConstants.INTERCEPTOR_TARGET_NAME
+    )
+}
 object MethodConstants{
     val METHOD_ACTION_DELEGATE_FACTORY_NAME =
         ClassName(

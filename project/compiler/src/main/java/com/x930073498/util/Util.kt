@@ -2,7 +2,6 @@ package com.x930073498.util
 
 import com.squareup.kotlinpoet.*
 import com.x930073498.annotations.*
-import com.x930073498.bean.RouterInfo
 import com.x930073498.compiler.BaseProcessor
 import org.jetbrains.annotations.Nullable
 import java.lang.StringBuilder
@@ -11,7 +10,6 @@ import javax.lang.model.element.*
 import javax.lang.model.type.ArrayType
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
-import javax.lang.model.util.Elements
 import kotlin.coroutines.Continuation
 
 private var _emptyInfo: TypeInfo? = null
@@ -33,16 +31,65 @@ internal fun BaseProcessor.getInfo(element: Element): Generator {
     if (info != emptyTypeInfo) return info.getGenerator()
     info = getServiceInfo(element)
     if (info != emptyTypeInfo) return info.getGenerator()
+    info = getInterceptorInfo(element)
+    if (info != emptyTypeInfo) return info.getGenerator()
     return getMethodInfo(element).getGenerator()
+
 }
 
 internal fun BaseProcessor.generate(element: Element) {
     getInfo(element).generate()
 }
 
+internal fun BaseProcessor.getInterceptorInfo(element: Element): TypeInfo {
+    if (element.kind != ElementKind.CLASS) return emptyTypeInfo
+    val annotation =
+        element.getAnnotation(InterceptorAnnotation::class.java) ?: return emptyTypeInfo
+    val annotationGroup = annotation.group
+    val annotationPath = annotation.path
+    val group: String
+    val path: String
+    if (annotationGroup.isEmpty()) {
+        group = getGroupFromPath(annotationPath) ?: ""
+        path = annotationPath
+    } else {
+        group = annotationGroup
+        path = "/${group}$annotationPath"
+    }
+    val classPrefixName = "_${pathCapitalize(path)}"
+    val className = "${classPrefixName}InterceptorActionDelegate"
+    val packageName = elements.getPackageOf(element).qualifiedName.toString()
+    val typeName = element.asType().asTypeName()
+    return InterceptorInfo(
+        this,
+        path,
+        group,
+        classPrefixName,
+        className,
+        packageName,
+        typeName,
+        element = element,
+        factoryTypeName = InterceptorConstants.INTERCEPTOR_ACTION_DELEGATE_FACTORY_NAME,
+        injectTargetTypeName = null,
+        superClassName = AUTO_ACTION_NAME,
+        interceptors = arrayOf(),
+        supperInterfaces = arrayListOf(
+            InterceptorConstants.INTERCEPTOR_ACTION_DELEGATE_NAME,
+            I_AUTO_NAME
+        )
+    )
+
+}
+
 internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation = element.getAnnotation(FragmentAnnotation::class.java) ?: return emptyTypeInfo
+    if (!types.isSubtype(
+            element.asType(),
+            elements.getTypeElement(ComponentConstants.ANDROID_FRAGMENT).asType()
+        )
+    ) return emptyTypeInfo
+    val interceptors = annotation.interceptors
     val annotationGroup = annotation.group
     val annotationPath = annotation.path
     val group: String
@@ -70,6 +117,7 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
         factoryTypeName = FragmentConstants.FRAGMENT_ACTION_DELEGATE_FACTORY_NAME,
         injectTargetTypeName = FragmentConstants.FRAGMENT_NAME,
         superClassName = AUTO_ACTION_NAME,
+        interceptors = interceptors,
         supperInterfaces = arrayListOf(FragmentConstants.FRAGMENT_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     ).apply {
         autoInjectList.addAll(element.enclosedElements.mapNotNull {
@@ -90,6 +138,7 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation = element.getAnnotation(ServiceAnnotation::class.java) ?: return emptyTypeInfo
     val annotationGroup = annotation.group
+    val interceptors = annotation.interceptors
     val annotationPath = annotation.path
     val group: String
     val path: String
@@ -117,6 +166,7 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
         isSingleTone = annotation.singleton,
         factoryTypeName = ServiceConstants.SERVICE_ACTION_DELEGATE_FACTORY_NAME,
         injectTargetTypeName = ServiceConstants.SERVICE_NAME,
+        interceptors = annotation.interceptors,
         superClassName = AUTO_ACTION_NAME,
         supperInterfaces = arrayListOf(ServiceConstants.SERVICE_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     ).apply {
@@ -163,6 +213,7 @@ internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
         element = element,
         injectTargetTypeName = ActivityConstants.ACTIVITY_NAME,
         superClassName = AUTO_ACTION_NAME,
+        interceptors = annotation.interceptors,
         supperInterfaces = arrayListOf(ActivityConstants.ACTIVITY_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     ).apply {
         autoInjectList.addAll(element.enclosedElements.mapNotNull {
@@ -210,6 +261,7 @@ internal fun BaseProcessor.getMethodInfo(element: Element): MethodInfo {
         factoryTypeName = MethodConstants.METHOD_ACTION_DELEGATE_FACTORY_NAME,
         injectTargetTypeName = null,
         superClassName = AUTO_ACTION_NAME,
+        interceptors = annotation.interceptors,
         supperInterfaces = arrayListOf(MethodConstants.METHOD_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     )
     val parameters = element.parameters

@@ -1,14 +1,18 @@
 package com.x930073498.router.request
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.core.os.bundleOf
+import com.x930073498.router.action.ContextHolder
 import com.x930073498.router.util.ParameterSupport
 
-internal class InternalRouterRequest private constructor() : RouterRequest, Parcelable {
-    constructor(uri: Uri, bundle: Bundle) : this() {
+internal class InternalRouterRequest private constructor(context: Context?) : RouterRequest{
+    private val _contextHolder:ContextHolder = ContextHolder.create(context)
+
+    constructor(uri: Uri, bundle: Bundle, context: Context? = null) : this(context) {
         setBundle(bundle)
         setUri(uri)
     }
@@ -25,10 +29,13 @@ internal class InternalRouterRequest private constructor() : RouterRequest, Parc
         mBundle.putAll(bundle)
     }
 
+
     override val uri: Uri
         get() = mUri
     override val bundle: Bundle
         get() = mBundle
+    override val contextHolder: ContextHolder
+        get() = _contextHolder
 
     override suspend fun buildUpon(): RouterRequest.Builder {
         return InternalRouterRequestBuilder(this)
@@ -42,35 +49,16 @@ internal class InternalRouterRequest private constructor() : RouterRequest, Parc
         bundle.putInt(KEY_SYNC_URI, uri.hashCode())
     }
 
-    constructor(parcel: Parcel) : this() {
-        mUri = parcel.readParcelable(Uri::class.java.classLoader)
-        mBundle = parcel.readBundle(Bundle::class.java.classLoader) ?: bundleOf()
-    }
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeParcelable(mUri, flags)
-        parcel.writeBundle(mBundle)
-    }
 
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<InternalRouterRequest> {
-        val KEY_SYNC_URI = "_componentSyncUri"
+    companion object   {
+        const val KEY_SYNC_URI = "_componentSyncUri"
         const val KEY_URI_QUERY_BUNDLE = "_componentQueryBundle"
         const val KEY_URI = "_componentRouterUri"
-
-        override fun createFromParcel(parcel: Parcel): InternalRouterRequest {
-            return InternalRouterRequest(parcel)
-        }
-
-        override fun newArray(size: Int): Array<InternalRouterRequest?> {
-            return arrayOfNulls(size)
-        }
     }
 
 }
-fun routerRequest(uri: Uri, bundle: Bundle = bundleOf()): RouterRequest {
-    return InternalRouterRequest(uri, bundle)
+
+fun routerRequest(uri: Uri, bundle: Bundle = bundleOf(),context: Context?=null): RouterRequest {
+    return InternalRouterRequest(uri, bundle,context)
 }

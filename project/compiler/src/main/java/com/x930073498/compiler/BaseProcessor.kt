@@ -28,18 +28,10 @@ abstract class BaseProcessor : AbstractProcessor() {
 
     var mTypeElementString: TypeElement by Delegates.notNull()
     var mTypeElementInteger: TypeElement by Delegates.notNull()
-    var mTypeElementList: TypeElement by Delegates.notNull()
-    var mTypeElementArrayList: TypeElement by Delegates.notNull()
     var mTypeElementSparseArray: TypeElement by Delegates.notNull()
-    var mTypeElementHashMap: TypeElement by Delegates.notNull()
-    var mTypeElementHashSet: TypeElement by Delegates.notNull()
 
     var mTypeNameString: TypeName by Delegates.notNull()
-    var mTypeNameList: TypeName by Delegates.notNull()
-    var mTypeNameArrayList: TypeName by Delegates.notNull()
     var mTypeNameSparseArray: TypeName by Delegates.notNull()
-    var mTypeNameHashMap: TypeName by Delegates.notNull()
-    var mTypeNameHashSet: TypeName by Delegates.notNull()
 
 
     var serializableTypeMirror: TypeMirror by Delegates.notNull()
@@ -50,38 +42,17 @@ abstract class BaseProcessor : AbstractProcessor() {
     var charSequenceTypeName: TypeName by Delegates.notNull()
     var charSequenceTypeElement: TypeElement by Delegates.notNull()
     var charSequenceTypeMirror: TypeMirror by Delegates.notNull()
-    var arrayListTypeElement: TypeElement by Delegates.notNull()
-    var arrayListClassName: TypeName by Delegates.notNull()
-    var moduleName: String by Delegates.notNull()
-    var generatePackageName = "com.x930073498.router"
-
     override fun init(processingEnv: ProcessingEnvironment) {
         super.init(processingEnv)
-        moduleName = processingEnv.options["AROUTER_MODULE_NAME"] ?: ""
-//        generatePackageName=processingEnv.options["packageName"]?:generatePackageName
-        if (moduleName.isEmpty()) {
-            throw ProcessException("模块尚未配置authority属性")
-        }
         elements = processingEnv.elementUtils
         types = processingEnv.typeUtils
         messager = processingEnv.messager
         filer = processingEnv.filer
         mTypeElementString = elements.getTypeElement(ComponentConstants.JAVA_STRING)
         mTypeElementInteger = elements.getTypeElement(ComponentConstants.JAVA_INTEGER)
-        mTypeElementList = elements.getTypeElement(ComponentConstants.JAVA_LIST)
-        mTypeElementArrayList = elements.getTypeElement(ComponentConstants.JAVA_ARRAYLIST)
         mTypeElementSparseArray = elements.getTypeElement(ComponentConstants.ANDROID_SPARSEARRAY)
-        mTypeElementHashMap = elements.getTypeElement(ComponentConstants.JAVA_HASHMAP)
-        mTypeElementHashSet = elements.getTypeElement(ComponentConstants.JAVA_HASHSET)
-
         mTypeNameString = mTypeElementString.javaToKotlinType()
-        mTypeNameList = mTypeElementList.javaToKotlinType()
-        mTypeNameArrayList = mTypeElementArrayList.javaToKotlinType()
         mTypeNameSparseArray = mTypeElementSparseArray.javaToKotlinType()
-        mTypeNameHashMap = mTypeElementHashMap.javaToKotlinType()
-        mTypeNameHashSet = mTypeElementHashSet.javaToKotlinType()
-
-
         val serializableTypeElement: TypeElement =
             elements.getTypeElement(ComponentConstants.JAVA_SERIALIZABLE)
         serializableTypeMirror = serializableTypeElement.asType()
@@ -98,8 +69,10 @@ abstract class BaseProcessor : AbstractProcessor() {
         charSequenceTypeName = charSequenceTypeMirror.asTypeName().javaToKotlinType()
         arrayListTypeElement = elements.getTypeElement(ComponentConstants.JAVA_ARRAYLIST)
         arrayListClassName = arrayListTypeElement.javaToKotlinType()
-        messager.printMessage(Diagnostic.Kind.WARNING, "host=$moduleName\n")
     }
+    var arrayListTypeElement: TypeElement by Delegates.notNull()
+
+    var arrayListClassName: TypeName by Delegates.notNull()
 
     protected fun TypeMirror.javaToKotlinType(): TypeName {
         return asTypeName().javaToKotlinType()

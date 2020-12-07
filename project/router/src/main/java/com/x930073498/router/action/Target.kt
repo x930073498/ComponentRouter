@@ -43,6 +43,8 @@ sealed class Target(
 
     class FragmentTarget(targetClazz: Class<*>) : Target(targetClazz)
 
+    class InterceptorTarget(targetClazz: Class<*>):Target(targetClazz)
+
     internal class SystemTarget internal constructor(val path: String?) : Target(Unit::class.java) {
 
         fun go(context: Context) {

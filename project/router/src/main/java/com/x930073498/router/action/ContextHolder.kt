@@ -19,7 +19,7 @@ class ContextHolder private constructor(
     }
 
     companion object {
-        internal fun create(context: Context?): ContextHolder {
+        internal fun create(context: Context?=null): ContextHolder {
             return if (context == null) return ContextHolder()
             else ContextHolder(context = context)
         }
