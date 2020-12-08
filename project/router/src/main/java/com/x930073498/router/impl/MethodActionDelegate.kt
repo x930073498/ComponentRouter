@@ -9,9 +9,10 @@ interface MethodActionDelegate : ActionDelegate {
         return ActionType.METHOD
     }
 
+    override fun inject(bundle: Bundle, target: Any) {
+    }
     suspend fun factory(): Factory
 
-    suspend fun target(): Target.MethodTarget
 
     interface Factory {
         suspend fun create(

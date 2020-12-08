@@ -13,6 +13,7 @@ import com.x930073498.router.action.ActionCenter
 import com.x930073498.router.impl.ActionDelegateRouterInterceptor
 import com.x930073498.router.impl.ActivityActionDelegate
 import com.x930073498.router.impl.FragmentActionDelegate
+import com.x930073498.router.impl.IService
 import com.x930073498.router.interceptor.onInterceptors
 import com.x930073498.router.request.routerRequest
 import com.x930073498.router.response.RouterResponse
@@ -138,29 +139,13 @@ class Router(uri: Uri = Uri.EMPTY) {
 
     companion object Init : InitI {
 
-
-        private fun ActivityActionDelegate.injectInternal(bundle: Bundle, activity: Activity) {
-            inject(bundle, activity)
-            var parentPath = parentPath()
-            var action: ActivityActionDelegate?
-            while (parentPath.isNotEmpty()) {
-                action = ActionCenter.getAction(parentPath) as? ActivityActionDelegate
-                if (action != null) {
-                    parentPath = action.parentPath()
-                    action.inject(bundle, activity)
-                } else {
-                    parentPath = ""
-                }
-            }
-        }
-
         internal fun <T> inject(activity: T) where T : Activity {
             val intent = activity.intent ?: return
             val key = ParameterSupport.getCenterKey(intent) ?: return
             val center = ActionCenter.getAction(key)
             val bundle = intent.extras ?: return
             (center as? ActivityActionDelegate)?.apply {
-                injectInternal(bundle, activity)
+                inject(bundle, activity)
             }
         }
 
@@ -186,6 +171,15 @@ class Router(uri: Uri = Uri.EMPTY) {
         fun from(uri: Uri): Router {
             return Router(uri)
         }
+
+        suspend inline fun <reified T> getService(): T? where T : IService {
+            return ActionCenter.getService(T::class.java)
+        }
+
+        inline fun <reified T> getServiceSync(): T? where T : IService {
+            return ActionCenter.getServiceSync(T::class.java)
+        }
+
 
         fun from(url: String): Router {
             return from(Uri.parse(url))

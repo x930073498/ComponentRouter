@@ -44,6 +44,10 @@ sealed class TypeInfo constructor(
     class Empty(processor: BaseProcessor) : TypeInfo(
         processor, "", "", "", "", "", ANY, ANY, emptyList(), null, null, parentPath = ""
     ) {
+        override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
+
+        }
+
         override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         }
 
@@ -98,6 +102,7 @@ sealed class TypeInfo constructor(
 
     private fun generateInjectCode(typeSpec: TypeSpec.Builder) {
         if (injectTargetTypeName == null) return
+
         typeSpec.addFunction(
             FunSpec.builder("inject")
                 .addModifiers(KModifier.OVERRIDE)
@@ -110,11 +115,18 @@ sealed class TypeInfo constructor(
                 .addParameter(
                     ParameterSpec.builder(
                         "target",
-                        injectTargetTypeName
+                        ANY
                     ).build()
                 )
 //                .addParameter(ParameterSpec.builder("parent",ClassName(packageName,className)).build())
-                .addStatement("target as %T", type)
+
+                .apply {
+                    if (parentPath.isNotEmpty())
+                        addStatement("%L(%S,bundle,target)", "injectParent", parentPath)
+                    if (autoInjectList.isNotEmpty()) {
+                        addStatement("target as? %T?:return", type)
+                    }
+                }
                 .apply {
                     autoInjectList.forEach {
                         addStatement(
@@ -144,13 +156,16 @@ sealed class TypeInfo constructor(
         typeSpec.addFunction(target.build())
     }
 
+    abstract fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder)
     open fun generateTargetCode(typeSpec: TypeSpec.Builder) {
-        typeSpec.addFunction(
-            FunSpec.builder("target")
-                .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
-                .apply { generateTargetReturnCode(this) }
-                .build()
-        )
+
+
+//        typeSpec.addFunction(
+//            FunSpec.builder("target")
+//                .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
+//                .apply { generateTargetReturnCode(this) }
+//                .build()
+//        )
     }
 
     protected abstract fun generateTargetReturnCode(funSpec: FunSpec.Builder)
@@ -202,20 +217,24 @@ sealed class TypeInfo constructor(
     protected open fun generateOtherCode(typeSpec: TypeSpec.Builder) {
 
     }
-    protected open fun generateParentCode(typeSpec: TypeSpec.Builder){
-        if (parentPath.isEmpty())return
-        typeSpec.addFunction(FunSpec.builder("parentPath")
-            .addModifiers(KModifier.OVERRIDE)
-            .addStatement("return %S",parentPath)
-            .build())
+
+    protected open fun generateParentCode(typeSpec: TypeSpec.Builder) {
+        if (parentPath.isEmpty()) return
+        typeSpec.addFunction(
+            FunSpec.builder("parentPath")
+                .addModifiers(KModifier.OVERRIDE)
+                .addStatement("return %S", parentPath)
+                .build()
+        )
     }
 
     protected open fun generate(typeSpec: TypeSpec.Builder) {
         generateSuper(typeSpec)
         generatePathCode(typeSpec)
+        generateTargetPropertyCode(typeSpec)
         generateGroupCode(typeSpec)
         generateInterceptorsCode(typeSpec)
-        generateParentCode(typeSpec)
+//        generateParentCode(typeSpec)
         generateInjectCode(typeSpec)
         generateTargetCode(typeSpec)
         generateOtherCode(typeSpec)
@@ -272,13 +291,29 @@ class InterceptorInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
-    parentPath=parentPath,
+    parentPath = parentPath,
     interceptors,
     autoInjectList,
 ) {
+    override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder(
+                "target",
+                InterceptorConstants.INTERCEPTOR_TARGET_NAME,
+                KModifier.OVERRIDE
+            )
+                .delegate(
+                    "lazy {\n%T(%T::class.java,this)\n}",
+                    InterceptorConstants.INTERCEPTOR_TARGET_NAME,
+                    type
+                )
+                .build()
+        )
+    }
+
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
-            "return %T(%T::class.java)",
+            "return %T(%T::class.java,this)",
             InterceptorConstants.INTERCEPTOR_TARGET_NAME,
             type
         )
@@ -342,13 +377,25 @@ class ServiceInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
-    parentPath=parentPath,
+    parentPath = parentPath,
     interceptors,
     autoInjectList
 ) {
+    override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder("target", ServiceConstants.SERVICE_TARGET_NAME, KModifier.OVERRIDE)
+                .delegate(
+                    "lazy {\n%T(%T::class.java,%L,this)\n}", ServiceConstants.SERVICE_TARGET_NAME,
+                    type,
+                    isSingleTone
+                )
+                .build()
+        )
+    }
+
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
-            "return %T(%T::class.java,%L)",
+            "return %T(%T::class.java,%L,this)",
             ServiceConstants.SERVICE_TARGET_NAME,
             type,
             isSingleTone
@@ -395,13 +442,28 @@ class ActivityInfo(
     injectTargetTypeName,
     factoryTypeName = null,
     element,
-    parentPath=parentPath,
+    parentPath = parentPath,
     interceptors,
     autoInjectList
 ) {
+    override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder(
+                "target",
+                ActivityConstants.ACTIVITY_TARGET_NAME,
+                KModifier.OVERRIDE
+            )
+                .delegate(
+                    "lazy {\n%T(%T::class.java,this)\n}", ActivityConstants.ACTIVITY_TARGET_NAME,
+                    type
+                )
+                .build()
+        )
+    }
+
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
-            "return %T(%T::class.java)",
+            "return %T(%T::class.java,this)",
             ActivityConstants.ACTIVITY_TARGET_NAME,
             type
         )
@@ -441,14 +503,27 @@ class FragmentInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
-    parentPath=parentPath,
+    parentPath = parentPath,
     interceptors,
     autoInjectList
 ) {
+    override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder(
+                "target",
+                FragmentConstants.FRAGMENT_TARGET_NAME,
+                KModifier.OVERRIDE
+            )
+                .delegate(
+                    "lazy {\n%T(%T::class.java,this)\n}", FragmentConstants.FRAGMENT_TARGET_NAME,
+                    type
+                ).build()
+        )
+    }
 
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
-            "return %T(%T::class.java)",
+            "return %T(%T::class.java,this)",
             FragmentConstants.FRAGMENT_TARGET_NAME,
             type
         )
@@ -489,13 +564,24 @@ class MethodInvokerInfo(
     injectTargetTypeName,
     factoryTypeName,
     element,
-    parentPath=parentPath,
+    parentPath = parentPath,
     interceptors,
     autoInjectList
 ) {
+    override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder("target", MethodConstants.METHOD_TARGET_NAME, KModifier.OVERRIDE)
+                .delegate(
+                    "lazy {\n%T(%N::class.java,this)\n}", MethodConstants.METHOD_TARGET_NAME,
+                    type
+                )
+                .build()
+        )
+    }
+
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
-            "return %T(%N::class.java)",
+            "return %T(%N::class.java,this)",
             MethodConstants.METHOD_TARGET_NAME,
             type
         )

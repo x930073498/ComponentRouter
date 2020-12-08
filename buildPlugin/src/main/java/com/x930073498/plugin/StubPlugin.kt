@@ -38,7 +38,6 @@ class StubPlugin : Plugin<Project> {
 
             afterEvaluate {
                 if (plugins.hasPlugin(AppPlugin::class.java)) {
-                    println("enter this line ")
                     if (!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
                         plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
                     }

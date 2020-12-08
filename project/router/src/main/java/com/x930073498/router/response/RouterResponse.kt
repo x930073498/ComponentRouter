@@ -1,14 +1,11 @@
 package com.x930073498.router.response
 
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import com.x930073498.router.interceptor.Response
 import com.x930073498.router.action.ActionCenter
 import com.x930073498.router.action.ContextHolder
-import com.x930073498.router.impl.ActionDelegate
-import com.x930073498.router.impl.EmptyDelegate
 import com.x930073498.router.impl.navigate
+import com.x930073498.router.interceptor.Response
 
 interface RouterResponse : Response {
     val uri: Uri
@@ -37,7 +34,6 @@ fun RouterResponse.success(isSuccess: Boolean = true): RouterResponse {
 }
 
 
-@Suppress("UNCHECKED_CAST")
 suspend fun RouterResponse.navigate(): Any? {
     return ActionCenter.getAction(uri).navigate(bundle, contextHolder)
 }

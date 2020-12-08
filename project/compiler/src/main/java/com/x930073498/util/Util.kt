@@ -87,16 +87,12 @@ private fun <T> BaseProcessor.findParentAnnotation(
     type: TypeMirror,
     boundType: TypeMirror,
     clazz: Class<T>,
-    path: String=""
+    path: String = ""
 ): T? where T : Annotation {
-//return null
     var current: TypeMirror = type
     while (types.isSubtype(current, boundType)) {
         val temp = types.directSupertypes(current).firstOrNull {
             types.asElement(it).kind == ElementKind.CLASS
-        }
-        if (path=="/test/a"){
-            messager.printMessage(Diagnostic.Kind.NOTE,"temp=$temp")
         }
         if (temp != null) {
             val annotation = types.asElement(temp).getAnnotation(clazz)
@@ -136,7 +132,7 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
     val typeName = type.asTypeName()
 
     val parentAnnotation =
-        findParentAnnotation(type, fragmentTypeMirror, FragmentAnnotation::class.java,path)
+        findParentAnnotation(type, fragmentTypeMirror, FragmentAnnotation::class.java, path)
     messager.printMessage(Diagnostic.Kind.NOTE, "path=$path,parentAnnotation=$parentAnnotation")
     return FragmentInfo(
         this,
@@ -187,6 +183,7 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
     val type = element.asType()
     val typeName = type.asTypeName()
+    val parentAnnotation = findParentAnnotation(type, fragmentTypeMirror, ServiceAnnotation::class.java, path)
     return ServiceInfo(
         this,
         path,
@@ -202,7 +199,7 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
         injectTargetTypeName = ServiceConstants.SERVICE_NAME,
         interceptors = annotation.interceptors,
         superClassName = AUTO_ACTION_NAME,
-        parentPath = "",
+        parentPath = parentAnnotation?.path ?: "",
         supperInterfaces = arrayListOf(ServiceConstants.SERVICE_ACTION_DELEGATE_NAME, I_AUTO_NAME)
     ).apply {
         autoInjectList.addAll(element.enclosedElements.mapNotNull {
@@ -347,31 +344,6 @@ fun getGroupFromPath(path: String?): String? {
     return group
 }
 
-
-fun BaseProcessor.generateParameterCodeForInject(
-    variableElement: VariableElement,
-    methodBuilder: FunSpec.Builder,
-    parameterName: String,
-    bundleCallStr: String,
-    fragmentCallStr: String,
-) {
-    val annotation: ValueAutowiredAnnotation =
-        variableElement.getAnnotation(ValueAutowiredAnnotation::class.java)
-    val methodName = getParameterMethodName(variableElement)
-    if (methodName.isNotEmpty())
-        methodBuilder.addStatement(
-            "%L.%N = %T.%L(%N,%S)?:%L.%N",
-            fragmentCallStr,
-            parameterName,
-            parameterSupportTypeMirror,
-            methodName,
-            bundleCallStr,
-            annotation.name.ifEmpty { parameterName },
-            fragmentCallStr,
-            parameterName,
-        )
-
-}
 
 fun BaseProcessor.getParameterMethodName(variableElement: VariableElement): String {
     val variableTypeMirror = variableElement.asType()

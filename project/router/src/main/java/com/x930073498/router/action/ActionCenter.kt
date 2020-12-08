@@ -1,9 +1,16 @@
 package com.x930073498.router.action
 
 import android.net.Uri
+import androidx.core.os.bundleOf
 import com.x930073498.router.impl.ActionDelegate
+import com.x930073498.router.impl.IService
+import com.x930073498.router.impl.ServiceActionDelegate
 import com.x930073498.router.impl.SystemActionDelegate
 import com.x930073498.router.util.authorityAndPath
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicReference
 
 object ActionCenter {
 
@@ -33,21 +40,6 @@ object ActionCenter {
         return key
     }
 
-    fun reloadGroup(group: String) {
-        mMap.putAll(map.filter { it.key.group == group })
-    }
-
-    fun unregister(key: Key) {
-        mMap.remove(key)
-    }
-
-
-    fun unloadGroup(group: String) {
-        mMap.keys.filter { it.group == group }.forEach {
-            mMap.remove(it)
-        }
-    }
-
 
     internal fun getAction(url: String): ActionDelegate {
         val key = Uri.parse(url).authorityAndPath()
@@ -55,6 +47,47 @@ object ActionCenter {
         return mMap[Key(group, key.path)] ?: SystemActionDelegate
     }
 
+
+    fun <T> getServiceSync(clazz: Class<T>): T? where T : IService {
+        return getServiceSyncInternal(clazz)
+    }
+
+    suspend fun <T> getService(clazz: Class<T>): T? where T : IService {
+        return getServiceInternal(clazz)
+    }
+
+    private fun <T> getServiceSyncInternal(clazz: Class<T>): T? where T : IService {
+        val action = mMap.values.firstOrNull {
+            with(it.target) {
+                this is Target.ServiceTarget && clazz.isAssignableFrom(targetClazz)
+            }
+        } as? ServiceActionDelegate ?: return null
+        val resultRef = AtomicReference<T>()
+        val flagRef = AtomicReference(0)
+        GlobalScope.launch(Dispatchers.IO) {
+            runCatching {
+                resultRef.set(
+                    action.factory()
+                        .create(ContextHolder.create(), action.target.targetClazz, bundleOf()) as? T
+                )
+            }
+            flagRef.set(1)
+        }
+        while (flagRef.get() == 0) {
+            // do nothing
+        }
+        return resultRef.get()
+    }
+
+    private suspend fun <T : IService> getServiceInternal(clazz: Class<T>): T? {
+        val action = mMap.values.firstOrNull {
+            with(it.target) {
+                this is Target.ServiceTarget && clazz.isAssignableFrom(targetClazz)
+            }
+        } as? ServiceActionDelegate ?: return null
+        return action.factory()
+            .create(ContextHolder.create(), action.target.targetClazz, bundleOf()) as? T
+    }
 
     internal fun getAction(uri: Uri): ActionDelegate {
         val key = uri.authorityAndPath()

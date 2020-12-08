@@ -11,11 +11,10 @@ interface FragmentActionDelegate: ActionDelegate{
         return ActionType.FRAGMENT
     }
 
-    fun inject(bundle: Bundle, target: Fragment)
+
 
     suspend fun factory(): Factory
 
-    suspend fun target(): Target.FragmentTarget
 
     interface Factory {
         suspend fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):  Fragment

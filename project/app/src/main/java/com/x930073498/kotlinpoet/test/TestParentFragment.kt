@@ -28,9 +28,10 @@ open class TestParentFragment : Fragment(R.layout.fragment_test) {
         super.onViewCreated(view, savedInstanceState)
         requireView().findViewById<TextView>(R.id.tv)?.text = name
         requireView().setOnClickListener {
-            Router.from("http://www.baidu.com").syncNavigation<Any>()
-            println("enter this line 987456")
+//            Router.from("http://www.baidu.com").syncNavigation<Any>()
+            Router.getServiceSync<TestService>()?.test()
             GlobalScope.launch {
+                println("enter this line 987456")
 //                Router.from("/a/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
 //                    println(it)
 //                }

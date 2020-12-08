@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.x930073498.annotations.ActivityAnnotation
 import com.x930073498.annotations.ValueAutowiredAnnotation
+import com.x930073498.kotlinpoet.test.TestService
 import com.x930073498.router.*
 import com.x930073498.router.impl.RouterInterceptor
 import com.x930073498.router.interceptor.Chain
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity() {
         foo.test()
         viewModel.test()
         setContentView(R.layout.activity_main)
+
         val uri = Uri.parse("/test/a?name=24254&title=测试")
 //        val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
         Executors.newSingleThreadExecutor().submit {

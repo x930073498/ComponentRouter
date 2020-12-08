@@ -20,19 +20,7 @@ interface RouterInterceptor :
     }
 }
 
-data class RouterInterceptorHolder(
-    val path: String?,
-    val clazz: Class<RouterInterceptor>?
-) {
-    suspend fun asInterceptor(bundle: Bundle, contextHolder: ContextHolder): RouterInterceptor {
-        var interceptor = clazz?.newInstance()
-        if (interceptor != null) return interceptor
-        if (path == null) return RouterInterceptor.Empty
-        interceptor =
-            ActionCenter.getAction(path).navigate(bundle, contextHolder) as? RouterInterceptor
-        return interceptor ?: RouterInterceptor.Empty
-    }
-}
+
 
 class ActionDelegateRouterInterceptor : RouterInterceptor {
     override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {

@@ -15,6 +15,8 @@ public class ComponentConstants {
 
     public static final String ROUTER_ACTION_PACKAGE_NAME = "com.x930073498.router.action";
     public static final String ROUTER_INTERFACE_PACKAGE_NAME = "com.x930073498.router.impl";
+    public static final String ACTION_DELEGATE_NAME = "ActionDelegate";
+    public static final String COMPANION_NAME="Companion";
     public static final String CONTEXT_HOLDER_NAME = "ContextHolder";
     public static final String FRAGMENT_TARGET_NAME = "FragmentTarget";
     public static final String ACTIVITY_TARGET_NAME = "ActivityTarget";
