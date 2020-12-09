@@ -1,4 +1,4 @@
-package com.x930073498.kotlinpoet
+package com.x930073498.component
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext

@@ -1,22 +1,18 @@
-package com.x930073498.kotlinpoet.test
+package com.x930073498.component.test
 
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.View
 import android.widget.TextView
-import androidx.activity.OnBackPressedDispatcher
 import androidx.fragment.app.Fragment
 import com.x930073498.annotations.FactoryAnnotation
 import com.x930073498.annotations.FragmentAnnotation
 import com.x930073498.annotations.ValueAutowiredAnnotation
-import com.x930073498.kotlinpoet.R
+import com.x930073498.component.R
 import com.x930073498.router.*
 import com.x930073498.router.action.ContextHolder
 import com.x930073498.router.impl.FragmentActionDelegate
-import kotlinx.android.parcel.Parcelize
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.Serializable
 
 
 @FragmentAnnotation(path = "/test/parent")

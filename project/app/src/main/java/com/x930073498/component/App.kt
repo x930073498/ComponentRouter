@@ -1,4 +1,4 @@
-package com.x930073498.kotlinpoet
+package com.x930073498.component
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

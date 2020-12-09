@@ -15,7 +15,7 @@ android {
     }
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {
-        applicationId("com.x930073498.kotlinpoet")
+        applicationId("com.x930073498.component")
         minSdkVersion(Versions.minSdk)
         targetSdkVersion(Versions.targetSdk)
         versionCode(Versions.versionCode)

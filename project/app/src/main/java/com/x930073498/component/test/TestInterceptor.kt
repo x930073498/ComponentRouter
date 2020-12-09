@@ -1,4 +1,4 @@
-package com.x930073498.kotlinpoet.test
+package com.x930073498.component.test
 
 import com.x930073498.annotations.InterceptorAnnotation
 import com.x930073498.router.impl.RouterInterceptor

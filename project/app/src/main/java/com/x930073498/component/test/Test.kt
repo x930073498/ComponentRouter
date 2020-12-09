@@ -1,4 +1,4 @@
-package com.x930073498.kotlinpoet.test
+package com.x930073498.component.test
 
 import android.content.Context
 import com.x930073498.annotations.MethodAnnotation

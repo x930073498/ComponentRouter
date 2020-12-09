@@ -1,4 +1,4 @@
-package com.x930073498.kotlinpoet
+package com.x930073498.component
 
 import android.app.Activity
 import android.app.Application
@@ -54,6 +54,10 @@ class TestAutoStartTask : AutoStartTask(),IAuto {
 
     override fun isRunOnMainThread(): Boolean {
         return false
+    }
+
+    override fun needWait(): Boolean {
+        return true
     }
 
 }

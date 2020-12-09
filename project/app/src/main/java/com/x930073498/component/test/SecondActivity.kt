@@ -1,9 +1,9 @@
-package com.x930073498.kotlinpoet.test
+package com.x930073498.component.test
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.x930073498.annotations.ActivityAnnotation
-import com.x930073498.kotlinpoet.R
+import com.x930073498.component.R
 import com.x930073498.router.Router
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
