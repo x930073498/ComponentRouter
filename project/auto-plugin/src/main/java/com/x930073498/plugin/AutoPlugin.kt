@@ -14,15 +14,36 @@ class AutoPlugin : Plugin<Project> {
         transform.config = config
     }
 
-    override fun apply(project: Project) {
-        project.subprojects {
-            plugins.whenPluginAdded {
-                if (this is AppPlugin) {
-                    val transform = RegisterTransform(this@subprojects)
-                    init(this@subprojects, transform)
-                    android.registerTransform(transform)
+    private fun registerPlugin(project: Project) {
+        with(project) {
+            println("enter this line project=$this")
+            val transform = RegisterTransform(this)
+            init(this, transform)
+            android.registerTransform(transform)
+        }
+    }
+
+    private fun initPlugin(project: Project) {
+        with(project) {
+            if (plugins.hasPlugin(AppPlugin::class.java)) {
+                registerPlugin(this)
+            } else {
+                plugins.whenPluginAdded {
+                    if (this is AppPlugin) {
+                        registerPlugin(this@with)
+                    }
                 }
             }
         }
+    }
+
+    override fun apply(project: Project) {
+        println("enter this line auto plugin")
+        if (project.subprojects.size == 0) {
+           initPlugin(project)
+        } else
+            project.subprojects {
+              initPlugin(this)
+            }
     }
 }

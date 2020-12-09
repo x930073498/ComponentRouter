@@ -9,4 +9,5 @@ include ':router-compiler'
 include':starter-dispatcher'
 include ':app'
 rootProject.name = "Component"
+rootProject.buildFileName = "build.gradle.kts"
 include ':auto-starter-dispatcher'

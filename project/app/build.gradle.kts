@@ -1,13 +1,16 @@
-import com.x930073498.Versions
+import com.x930073498.*
 
 plugins {
+//    id("com.x930073498.auto.plugin")
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
     id("kotlin-parcelize")
+    id("dagger.hilt.android.plugin")
+
 }
 android {
-    buildFeatures{
+    buildFeatures {
         viewBinding = true
     }
     compileSdkVersion(Versions.compileSdk)
@@ -35,14 +38,17 @@ android {
 }
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}")
-    implementation("androidx.core:core-ktx:1.3.2")
-    implementation("androidx.appcompat:appcompat:1.2.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1")
-    implementation("androidx.datastore:datastore-preferences:1.0.0-alpha04")
-    implementation("androidx.startup:startup-runtime:1.0.0")
-    implementation("androidx.paging:paging-runtime-ktx:3.0.0-alpha09")
+    implementation(Libraries.kotlin)
+    implementation(Libraries.androidx_core_ktx)
+    implementation(Libraries.hilt_android)
+    implementation(Libraries.hilt_lifecycle_viewmodel)
+    kapt(Libraries.hilt_android_compiler)
+    kapt(Libraries.hilt_compiler)
+    implementation(Libraries.androidx_appcompat)
+    implementation(Libraries.constraintlayout)
+    implementation(Libraries.kotlinx_coroutines_core)
+    implementation(Libraries.datastore_preferences)
+    implementation(Libraries.startup)
     implementation(project(":router-annotations"))
     implementation(project(":auto"))
     implementation(project(":auto-starter-dispatcher"))

@@ -47,7 +47,7 @@ internal class CodeScanProcessor(
         return true
     }
 
-   private fun hitCache(jarFile: File, destFile: File): Boolean {
+    private fun hitCache(jarFile: File, destFile: File): Boolean {
         val jarFilePath = jarFile.absolutePath
         if (cacheMap != null) {
             val scanJarHarvest = cacheMap[jarFilePath]
@@ -74,7 +74,7 @@ internal class CodeScanProcessor(
         return checkInitClass(entryName, destFile, "")
     }
 
-   private fun checkInitClass(entryName: String?, destFile: File, srcFilePath: String): Boolean {
+    private fun checkInitClass(entryName: String?, destFile: File, srcFilePath: String): Boolean {
         if (entryName == null || !entryName.endsWith(".class"))
             return false
         var found = false
@@ -175,10 +175,9 @@ internal class CodeScanProcessor(
             interfaces: Array<out String>?
         ) {
             super.visit(version, access, name, signature, superName, interfaces)
-            if (asIs(access, Opcodes.ACC_ABSTRACT) || asIs(access, Opcodes.ACC_INTERFACE) || !asIs(
-                    access,
-                    Opcodes.ACC_PUBLIC
-                )
+            if (asIs(access, Opcodes.ACC_ABSTRACT)
+                || asIs(access, Opcodes.ACC_INTERFACE)
+                || !asIs(access, Opcodes.ACC_PUBLIC)
             ) {
                 return
             }

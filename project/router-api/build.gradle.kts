@@ -1,15 +1,9 @@
-import com.x930073498.Versions
-
-plugins {
+import com.x930073498.*
+plugins{
     id("com.android.library")
     kotlin("android")
-    kotlin("kapt")
-    id("kotlin-parcelize")
 }
-android {
-    buildFeatures{
-        viewBinding = true
-    }
+android{
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {
         minSdkVersion(Versions.minSdk)
@@ -18,12 +12,13 @@ android {
         versionName(Versions.versionName)
         consumerProguardFile("consumer-rules.pro")
     }
-
     lintOptions {
         disable("GoogleAppIndexingWarning")
         baseline(file("lint-baseline.xml"))
     }
-
 }
-dependencies {
+dependencies{
+    implementation(Libraries.kotlin)
+    implementation(Libraries.androidx_fragment_ktx)
+    implementation(project(":auto"))
 }

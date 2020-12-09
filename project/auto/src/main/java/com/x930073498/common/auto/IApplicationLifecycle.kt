@@ -10,6 +10,18 @@ interface IApplicationLifecycle {
     fun onTaskComponentLoaded(app: Application) {
 
     }
+
+    fun onApplicationExited(app: Application) {
+
+    }
+
+    fun onApplicationBringToFront(app: Application) {
+
+    }
+
+    fun onApplicationSwitchToBackground(app: Application) {
+
+    }
 }
 
 internal fun IApplicationLifecycle.doRegister() {
@@ -30,6 +42,25 @@ internal object ApplicationLifecycleHandler {
             it.onTaskComponentLoaded(app)
         }
     }
+
+    fun onApplicationExit() {
+        lifecycles.forEach {
+            it.onApplicationExited(app)
+        }
+    }
+
+    fun onApplicationBringToFront() {
+        lifecycles.forEach {
+            it.onApplicationBringToFront(app)
+        }
+    }
+
+    fun onApplicationSwitchToBackground() {
+        lifecycles.forEach {
+            it.onApplicationSwitchToBackground(app)
+        }
+    }
+
 
 }
 

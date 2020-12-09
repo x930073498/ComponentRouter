@@ -1,13 +1,13 @@
 import com.x930073498.Versions
+import com.x930073498.Libraries
 
 plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("kapt")
-    id("kotlin-parcelize")
 }
 android {
-    buildFeatures{
+    buildFeatures {
         viewBinding = true
     }
     compileSdkVersion(Versions.compileSdk)
@@ -23,7 +23,13 @@ android {
         disable("GoogleAppIndexingWarning")
         baseline(file("lint-baseline.xml"))
     }
-
 }
 dependencies {
+    implementation(Libraries.kotlin)
+    implementation(Libraries.androidx_core_ktx)
+    implementation(Libraries.androidx_appcompat)
+    kapt(project(":router-compiler"))
+    implementation(project(":router-annotations"))
+    implementation(project(":auto"))
+    implementation(project(":router-api"))
 }

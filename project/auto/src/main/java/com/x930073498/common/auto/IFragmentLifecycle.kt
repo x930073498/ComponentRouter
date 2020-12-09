@@ -86,7 +86,7 @@ private class FragmentLifecycle(val lifecycle: IFragmentLifecycle) :
 
     fun register() {
         if (hasRegister) return
-        AutoTaskRegister.activityLifecycle.add(this)
+        AutoTaskRegister.AutoActivityLifecycle.add(this)
         hasRegister = true
     }
 

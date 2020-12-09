@@ -1,4 +1,3 @@
-import com.x930073498.plugin.android
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 repositories {
@@ -12,19 +11,40 @@ plugins {
     java
     `kotlin-dsl`
     kotlin("jvm")
-    `maven-publish`
+//    `maven-publish`
+
 }
 
 group = "com.x930073498.auto"
 version = "0.5"
 
+apply("upload.gradle")
 
-
-
-
-afterEvaluate {
-
-}
+//publishing {
+//    repositories {
+//        this.maven("../repo")
+//    }
+//}
+//afterEvaluate {
+//    publishing{
+//        repositories {
+//            maven {
+//                uri("../repo")
+//            }
+//        }
+////        publications {
+////            create<MavenPublication>("release"){
+////                groupId="com.x930073498.auto"
+////                artifactId="auto-plugin"
+////                version="0.5"
+////                components.forEach {
+////                    println("it=${it.name}")
+////                }
+////                from(components["java"])
+////            }
+////        }
+//    }
+//}
 
 dependencies {
     implementation(gradleApi())
