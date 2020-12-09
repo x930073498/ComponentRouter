@@ -38,10 +38,9 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
-    kapt project(':compiler')
-    implementation project(':annotations')
-    implementation project(':api')
-    implementation project(':library')
-    implementation project(':router')
+    kapt project(':router-compiler')
+    implementation project(':router-annotations')
+    implementation project(':auto')
+    implementation project(':router-api')
 
 }
