@@ -9,7 +9,7 @@
             android:exported="false"
             tools:node="merge">
             <meta-data
-                android:name="com.zx.common.auto.AutoInitializer"
+                android:name="com.x930073498.common.auto.AutoInitializer"
                 android:value="@string/androidx_startup" />
         </provider>
     </application>

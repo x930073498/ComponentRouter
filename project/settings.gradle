@@ -1,4 +1,5 @@
-includeBuild "../buildPlugin"
+//includeBuild "../buildPlugin"
+includeBuild "../buildProject"
 include ':module1'
 include ':router'
 include ':plugin'

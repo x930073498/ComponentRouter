@@ -33,7 +33,7 @@ public class ComponentConstants {
     public static final String METHOD_INVOKER_NAME = "MethodInvoker";
     public static final String AUTO_ACTION_NAME = "AutoAction";
     public static final String TARGET_NAME = "Target";
-    public static final String AUTO_INTERFACE_NAME = "com.zx.common.auto.IAuto";
+    public static final String AUTO_INTERFACE_NAME = "com.x930073498.common.auto.IAuto";
 
     public static final String PARAMETER_SUPPORT_CLASS_NAME = "com.x930073498.router.util.ParameterSupport";
 

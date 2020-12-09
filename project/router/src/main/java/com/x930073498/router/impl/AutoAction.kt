@@ -3,7 +3,7 @@ package com.x930073498.router.impl
 import android.app.Application
 import android.os.Bundle
 import com.x930073498.router.action.ActionCenter
-import com.zx.common.auto.IApplicationLifecycle
+import com.x930073498.common.auto.IApplicationLifecycle
 
 abstract class AutoAction:ActionDelegate ,IApplicationLifecycle{
     override fun onApplicationCreated(app: Application) {

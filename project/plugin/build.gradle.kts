@@ -1,3 +1,4 @@
+import com.x930073498.plugin.android
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 repositories {
@@ -11,6 +12,18 @@ plugins {
     java
     `kotlin-dsl`
     kotlin("jvm")
+    `maven-publish`
+}
+
+group = "com.x930073498.auto"
+version = "0.5"
+
+
+
+
+
+afterEvaluate {
+
 }
 
 dependencies {

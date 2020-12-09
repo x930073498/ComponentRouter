@@ -26,8 +26,6 @@ class StubPlugin : Plugin<Project> {
     }
 
     override fun apply(project: Project) {
-        println("测试----")
-
         project.subprojects {
 
             tasks.withType<KotlinCompile> {
@@ -77,9 +75,7 @@ class StubPlugin : Plugin<Project> {
                 if (this is AppPlugin || this is LibraryPlugin) {
                     dependencies {
                         add("implementation", Libraries.kotlin)
-//
                     }
-
                     android.apply {
                         compileSdkVersion(Versions.compileSdk)
                         buildToolsVersion(Versions.buildTools)

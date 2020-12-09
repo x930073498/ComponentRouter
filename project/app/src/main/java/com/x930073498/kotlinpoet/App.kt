@@ -6,6 +6,7 @@ import javax.inject.Inject
 
 @HiltAndroidApp
 class App : Application() {
+
     @Inject
     lateinit var foo:Foo
     override fun onCreate() {
@@ -14,6 +15,6 @@ class App : Application() {
 
     }
     fun a(){
-        println("enter this line App ")
+        println("enter this line App")
     }
 }

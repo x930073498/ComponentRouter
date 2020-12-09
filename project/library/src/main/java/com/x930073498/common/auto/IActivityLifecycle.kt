@@ -1,4 +1,4 @@
-package com.zx.common.auto
+package com.x930073498.common.auto
 
 import android.app.Activity
 import android.app.Application

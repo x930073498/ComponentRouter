@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.x930073498.router.action
 
 import android.net.Uri

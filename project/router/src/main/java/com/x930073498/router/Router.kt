@@ -8,11 +8,9 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
-import androidx.fragment.app.Fragment
 import com.x930073498.router.action.ActionCenter
 import com.x930073498.router.impl.ActionDelegateRouterInterceptor
 import com.x930073498.router.impl.ActivityActionDelegate
-import com.x930073498.router.impl.FragmentActionDelegate
 import com.x930073498.router.impl.IService
 import com.x930073498.router.interceptor.onInterceptors
 import com.x930073498.router.request.routerRequest
@@ -20,9 +18,9 @@ import com.x930073498.router.response.RouterResponse
 import com.x930073498.router.response.navigate
 import com.x930073498.router.response.routerResponse
 import com.x930073498.router.util.ParameterSupport
-import com.zx.common.auto.IActivityLifecycle
-import com.zx.common.auto.IApplicationLifecycle
-import com.zx.common.auto.IAuto
+import com.x930073498.common.auto.IActivityLifecycle
+import com.x930073498.common.auto.IApplicationLifecycle
+import com.x930073498.common.auto.IAuto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

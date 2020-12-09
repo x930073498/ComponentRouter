@@ -1,4 +1,4 @@
-package com.zx.common.auto
+package com.x930073498.common.auto
 
 import android.app.Activity
 import android.app.Application
@@ -42,13 +42,16 @@ internal object AutoTaskRegister {
         if (task is IFragmentLifecycle) {
             task.register()
         }
+        if (task is IInstanceActivityLifecycle<*>){
+            task.register()
+        }
 
     }
 
     private class TestAuto : IAuto
 }
 
-internal class FragmentAutoActivityLifecycle() : IActivityLifecycle {
+internal class FragmentAutoActivityLifecycle : IActivityLifecycle {
     private val list = arrayListOf<FragmentManager.FragmentLifecycleCallbacks>()
     fun add(lifecycle: FragmentManager.FragmentLifecycleCallbacks) {
         if (!list.contains(lifecycle)) {
