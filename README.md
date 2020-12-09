@@ -1,2 +1,2 @@
-# ComponentRouter
-一个路由框架，支持方法调用，服务获取，activity跳转，fragment获取
+# auto
+一个模块化工具，包括路由以及模块自动初始化工具
