@@ -73,8 +73,8 @@ interface IInstanceActivityLifecycle<T> where T : Activity {
     }
 }
 
-internal fun IInstanceActivityLifecycle<*>.register() {
-    asActivityLifecycle().register()
+internal fun IInstanceActivityLifecycle<*>.doRegister() {
+    asActivityLifecycle().doRegister()
 }
 
 private fun <T : Activity> IInstanceActivityLifecycle<T>.asActivityLifecycle(): IActivityLifecycle {

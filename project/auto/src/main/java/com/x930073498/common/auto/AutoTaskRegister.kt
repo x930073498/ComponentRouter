@@ -12,12 +12,14 @@ internal object AutoTaskRegister {
     private var hasInit = false
     internal val activityLifecycle = FragmentAutoActivityLifecycle()
 
+
     @JvmStatic
     internal fun init(context: Context) {
         if (hasInit) return
         this.app = getApplication(context)
-        activityLifecycle.register()
+        activityLifecycle.doRegister()
         load()
+        ApplicationLifecycleHandler.onTaskComponentLoaded()
     }
 
     private fun getApplication(context: Context): Application {
@@ -34,15 +36,18 @@ internal object AutoTaskRegister {
     @JvmStatic
     private fun register(task: IAuto) {
         if (task is IApplicationLifecycle) {
-            task.onApplicationCreated(app)
+            task.doRegister()
         }
         if (task is IActivityLifecycle) {
-            task.register()
+            task.doRegister()
         }
         if (task is IFragmentLifecycle) {
-            task.register()
+            task.doRegister()
         }
-        if (task is IInstanceActivityLifecycle<*>){
+        if (task is IInstanceActivityLifecycle<*>) {
+            task.doRegister()
+        }
+        if (task is IRegister) {
             task.register()
         }
 

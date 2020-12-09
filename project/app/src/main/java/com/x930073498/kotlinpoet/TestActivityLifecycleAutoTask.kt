@@ -5,6 +5,7 @@ import android.app.Application
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.x930073498.auto.start.dispatcher.AutoStartTask
 import com.x930073498.common.auto.*
 
 //模块化工具,只需要在任意模块中实现IAuto接口,无需做其他配置,实现的代码都可以在特定的是否自动运行,
@@ -42,4 +43,17 @@ class TestInstanceActivityLifecycleAutoTask : IAuto, IInstanceActivityLifecycle<
     override fun getTargetClass(): Class<*> {
         return MainActivity::class.java
     }
+}
+
+class TestAutoStartTask : AutoStartTask(),IAuto {
+    override fun run() {
+        println("enter this line TestAutoStartTask start")
+        Thread.sleep(1200)
+        println("enter this line TestAutoStartTask end")
+    }
+
+    override fun isRunOnMainThread(): Boolean {
+        return false
+    }
+
 }

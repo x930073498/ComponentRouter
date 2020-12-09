@@ -4,6 +4,9 @@ import android.app.Application
 
 interface IAuto
 
+interface IRegister {
+    fun register()
+}
 
 val IAuto.app: Application
     get() {

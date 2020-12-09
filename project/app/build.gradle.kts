@@ -45,6 +45,8 @@ dependencies {
     implementation("androidx.paging:paging-runtime-ktx:3.0.0-alpha09")
     implementation(project(":router-annotations"))
     implementation(project(":auto"))
+    implementation(project(":auto-starter-dispatcher"))
+    implementation(project(":starter-dispatcher"))
     implementation(project(":router-api"))
     implementation(project(":module1"))
     kapt(project(":router-compiler"))

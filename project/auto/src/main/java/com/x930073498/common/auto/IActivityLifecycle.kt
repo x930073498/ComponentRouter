@@ -75,7 +75,7 @@ val IActivityLifecycle.app: Application
         return ActivityLifecycle.get(this).app
     }
 
-internal fun  IActivityLifecycle.register(){
+internal fun  IActivityLifecycle.doRegister(){
     ActivityLifecycle.get(this).register()
 }
 

@@ -6,5 +6,7 @@ include ':auto'
 include ':router-api'
 include ':router-annotations'
 include ':router-compiler'
+include':starter-dispatcher'
 include ':app'
 rootProject.name = "Component"
+include ':auto-starter-dispatcher'

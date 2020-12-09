@@ -69,7 +69,7 @@ val IFragmentLifecycle.app: Application
         return FragmentLifecycle.get(this).app
     }
 
-fun IFragmentLifecycle.register() {
+fun IFragmentLifecycle.doRegister() {
     FragmentLifecycle.get(this).register()
 
 }
