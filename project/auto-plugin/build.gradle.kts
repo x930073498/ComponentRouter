@@ -17,8 +17,8 @@ plugins {
 
 group = "com.x930073498.auto"
 version = "0.5"
-
-apply("upload.gradle")
+println("auto-plugin group=$group")
+//apply("upload.gradle")
 
 //publishing {
 //    repositories {
