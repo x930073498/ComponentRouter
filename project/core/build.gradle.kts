@@ -20,7 +20,7 @@ android {
     }
 }
 dependencies {
-    implementation(Libraries.kotlin)
+    compileOnly(Libraries.kotlin)
     implementation(Libraries.startup)
 //    debugImplementation(project(":auto"))
 //    releaseImplementation(PublishLibraries.auto)

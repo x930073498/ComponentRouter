@@ -52,6 +52,7 @@ dependencies {
     implementation(Libraries.startup)
     implementation(project(":router-annotations"))
     implementation(project(":auto"))
+    implementation(project(":core"))
     implementation(project(":auto-starter-dispatcher"))
     implementation(project(":starter-dispatcher"))
     implementation(project(":router-api"))

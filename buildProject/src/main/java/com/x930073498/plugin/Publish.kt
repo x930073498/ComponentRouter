@@ -4,7 +4,8 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.extra
 
 object Publish {
-
+    const val GROUP = "com.x930073498.component"
+    const val VERSION = "0.0.6"
     enum class PublishInfo(
         val group: String,
         val artifact: String,
@@ -55,8 +56,7 @@ object Publish {
         }
     }
 
-    const val GROUP = "com.x930073498.component"
-    const val VERSION = "0.0.5"
+
 
     @JvmStatic
     fun getPublishInfo(project: Project): PublishInfo? {

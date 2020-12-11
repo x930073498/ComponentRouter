@@ -54,10 +54,9 @@ class BuildPlugin : Plugin<Project> {
                     tasks.withType<Javadoc> {
                         options.encoding = "UTF-8"
                     }
-//                    val path = "${rootProject.rootDir}${File.separator}upload.gradle"
-//                    this.apply(path)
+
                     plugins.apply("com.github.panpf.bintray-publish")
-                    plugins.apply(MavenPublishPlugin::class.java)
+
                     configure<PublishExtension> {
                         userOrg = BinaryInfo.userOrg
                         groupId = it.group
@@ -74,33 +73,20 @@ class BuildPlugin : Plugin<Project> {
                     }
 
                     afterEvaluate {
-                        configure<PublishingExtension> {
-                            this.repositories {
-                                maven(uri("../repository"))
-                            }
-                            this.publications {
-                                create<MavenPublication>("full") {
-                                    groupId = it.group
-                                    artifactId = it.artifact
-                                    version = it.version
-                                    println(
-                                        "components=${
-                                            components.fold(StringBuffer()) { buffer, it ->
-                                                buffer.append(it.name).append("")
-                                            }
-                                        }")
-                                    if (components.isNotEmpty()) {
-                                        val component =
-                                            components.firstOrNull { it.name == "kotlin" || it.name == "release" }
-                                                ?: components.first()
-                                        println("componentName=${component.name}")
-                                        from(component)
-                                    }
-
+//                        if (plugins.hasPlugin(JavaPlugin::class)){
+                            plugins.apply("maven-publish")
+                            configure<PublishingExtension> {
+                                this.repositories {
+                                    maven(uri("../repository"))
                                 }
                             }
+//                        }else{
+//                            val path = "${rootProject.rootDir}${File.separator}upload.gradle"
+//                            this.apply(path)
+//                        }
 
-                        }
+
+
                     }
                 }
             }

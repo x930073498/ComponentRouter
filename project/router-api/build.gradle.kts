@@ -19,7 +19,7 @@ android {
     }
 }
 dependencies {
-    implementation(Libraries.kotlin)
+    compileOnly(Libraries.kotlin)
     implementation(Libraries.androidx_fragment_ktx)
 //    debugImplementation(project(":core"))
 //    debugImplementation(project(":auto"))

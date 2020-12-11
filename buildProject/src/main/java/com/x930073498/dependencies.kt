@@ -3,7 +3,6 @@ package com.x930073498
 import com.x930073498.plugin.Publish
 
 object Versions {
-    const val buildTools = "29.0.3"
     const val compileSdk = 29
     const val gradlePlugin = "4.0.0"
     const val kotlin = "1.4.20"
