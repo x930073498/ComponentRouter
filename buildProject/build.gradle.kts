@@ -6,7 +6,6 @@ repositories {
     mavenCentral()
     jcenter()
 }
-
 plugins {
     java
     `kotlin-dsl`
@@ -27,6 +26,8 @@ dependencies {
     implementation("org.jacoco:org.jacoco.core:0.8.5")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.20")
     implementation(kotlin("stdlib-jdk8"))
+    implementation("com.novoda:bintray-release:0.9.2")
+    implementation("com.github.panpf.bintray-publish:bintray-publish:1.0.0")
 }
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {

@@ -1,13 +1,14 @@
 //includeBuild "../buildPlugin"
+rootProject.name = "Component"
+rootProject.buildFileName = "build.gradle.kts"
 includeBuild "../buildProject"
 include ':module1'
 include ':auto-plugin'
+include ':core'
 include ':auto'
 include ':router-api'
 include ':router-annotations'
 include ':router-compiler'
-include':starter-dispatcher'
-include ':app'
-rootProject.name = "Component"
-rootProject.buildFileName = "build.gradle.kts"
+include ':starter-dispatcher'
 include ':auto-starter-dispatcher'
+include ':app'

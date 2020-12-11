@@ -15,13 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 
 public class AppStartTaskSortUtil {
-    /**
-     * 拓扑排序
-     * taskIntegerHashMap每个Task的入度（key= Class < ? extends AppStartTask>）
-     * taskHashMap每个Task            （key= Class < ? extends AppStartTask>）
-     * taskChildHashMap每个Task的孩子  （key= Class < ? extends AppStartTask>）
-     * deque 入度为0的Task
-     * */
     public static List<AppStartTask> getSortResult(List<AppStartTask> startTaskList, HashMap<Class<? extends AppStartTask>, AppStartTask> taskHashMap, HashMap<Class<? extends AppStartTask>, List<Class<? extends AppStartTask>>> taskChildHashMap){
         List<AppStartTask> sortTaskList = new ArrayList<>();
         HashMap<Class<? extends AppStartTask>, TaskSortModel> taskIntegerHashMap=new HashMap<>();

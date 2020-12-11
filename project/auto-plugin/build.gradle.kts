@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 repositories {
     google()
     maven(url = "https://plugins.gradle.org/m2/")
@@ -11,40 +10,9 @@ plugins {
     java
     `kotlin-dsl`
     kotlin("jvm")
-//    `maven-publish`
-
 }
 
-group = "com.x930073498.auto"
-version = "0.5"
-println("auto-plugin group=$group")
-//apply("upload.gradle")
 
-//publishing {
-//    repositories {
-//        this.maven("../repo")
-//    }
-//}
-//afterEvaluate {
-//    publishing{
-//        repositories {
-//            maven {
-//                uri("../repo")
-//            }
-//        }
-////        publications {
-////            create<MavenPublication>("release"){
-////                groupId="com.x930073498.auto"
-////                artifactId="auto-plugin"
-////                version="0.5"
-////                components.forEach {
-////                    println("it=${it.name}")
-////                }
-////                from(components["java"])
-////            }
-////        }
-//    }
-//}
 
 dependencies {
     implementation(gradleApi())

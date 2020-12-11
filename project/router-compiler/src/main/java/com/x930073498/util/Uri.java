@@ -56,16 +56,7 @@ public abstract class Uri implements  Comparable<Uri> {
 
     public abstract String getSchemeSpecificPart();
 
-    /**
-     * Gets the scheme-specific part of this URI, i.e.&nbsp;everything between
-     * the scheme separator ':' and the fragment separator '#'. If this is a
-     * relative URI, this method returns the entire URI. Leaves escaped octets
-     * intact.
-     *
-     * <p>Example: "//www.google.com/search?q=android"
-     *
-     * @return the encoded scheme-specific-part
-     */
+
     public abstract String getEncodedSchemeSpecificPart();
 
     /**
@@ -232,20 +223,8 @@ public abstract class Uri implements  Comparable<Uri> {
         return toString().compareTo(other.toString());
     }
 
-    /**
-     * Returns the encoded string representation of this URI.
-     * Example: "http://google.com/"
-     */
     public abstract String toString();
 
-    /**
-     * Return a string representation of this URI that has common forms of PII redacted,
-     * making it safer to use for logging purposes.  For example, {@code tel:800-466-4411} is
-     * returned as {@code tel:xxx-xxx-xxxx} and {@code http://example.com/path/to/item/} is
-     * returned as {@code http://example.com/...}.
-     * @return the common forms PII redacted string of this URI
-     * @hide
-     */
     public  String toSafeString() {
         String scheme = getScheme();
         String ssp = getSchemeSpecificPart();
@@ -288,9 +267,7 @@ public abstract class Uri implements  Comparable<Uri> {
         return builder.toString();
     }
 
-    /**
-     * Constructs a new builder, copying the attributes from this Uri.
-     */
+
     public abstract Builder buildUpon();
 
     /** Index of a component which was not found. */
@@ -320,16 +297,7 @@ public abstract class Uri implements  Comparable<Uri> {
         return new StringUri(uriString);
     }
 
-    /**
-     * Creates a Uri from a file. The URI has the form
-     * "file://<absolute path>". Encodes path characters with the exception of
-     * '/'.
-     *
-     * <p>Example: "file:///tmp/android.txt"
-     *
-     * @throws NullPointerException if file is null
-     * @return a Uri for the given file
-     */
+
     public static Uri fromFile(File file) {
         if (file == null) {
             throw new NullPointerException("file");
@@ -1008,12 +976,8 @@ public abstract class Uri implements  Comparable<Uri> {
         }
     }
 
-    /**
-     * Hierarchical Uri.
-     */
     private static class HierarchicalUri extends AbstractHierarchicalUri {
 
-        /** Used in parcelling. */
         static final int TYPE_ID = 3;
 
         private final String scheme; // can be null
@@ -1160,22 +1124,6 @@ public abstract class Uri implements  Comparable<Uri> {
         }
     }
 
-    /**
-     * Helper class for building or manipulating URI references. Not safe for
-     * concurrent use.
-     *
-     * <p>An absolute hierarchical URI reference follows the pattern:
-     * {@code <scheme>://<authority><absolute path>?<query>#<fragment>}
-     *
-     * <p>Relative URI references (which are always hierarchical) follow one
-     * of two patterns: {@code <relative or absolute path>?<query>#<fragment>}
-     * or {@code //<authority><absolute path>?<query>#<fragment>}
-     *
-     * <p>An opaque URI follows this pattern:
-     * {@code <scheme>:<opaque part>#<fragment>}
-     *
-     * <p>Use {@link Uri#buildUpon()} to obtain a builder representing an existing URI.
-     */
     public static final class Builder {
 
         private String scheme;
@@ -1190,11 +1138,6 @@ public abstract class Uri implements  Comparable<Uri> {
          */
         public Builder() {}
 
-        /**
-         * Sets the scheme.
-         *
-         * @param scheme name or {@code null} if this is a relative Uri
-         */
         public Builder scheme(String scheme) {
             this.scheme = scheme;
             return this;
@@ -1205,20 +1148,10 @@ public abstract class Uri implements  Comparable<Uri> {
             return this;
         }
 
-        /**
-         * Encodes and sets the given opaque scheme-specific-part.
-         *
-         * @param opaquePart decoded opaque part
-         */
         public Builder opaquePart(String opaquePart) {
             return opaquePart(Part.fromDecoded(opaquePart));
         }
 
-        /**
-         * Sets the previously encoded opaque scheme-specific-part.
-         *
-         * @param opaquePart encoded opaque part
-         */
         public Builder encodedOpaquePart(String opaquePart) {
             return opaquePart(Part.fromEncoded(opaquePart));
         }
@@ -1231,16 +1164,10 @@ public abstract class Uri implements  Comparable<Uri> {
             return this;
         }
 
-        /**
-         * Encodes and sets the authority.
-         */
         public Builder authority(String authority) {
             return authority(Part.fromDecoded(authority));
         }
 
-        /**
-         * Sets the previously encoded authority.
-         */
         public Builder encodedAuthority(String authority) {
             return authority(Part.fromEncoded(authority));
         }
@@ -1253,39 +1180,18 @@ public abstract class Uri implements  Comparable<Uri> {
             return this;
         }
 
-        /**
-         * Sets the path. Leaves '/' characters intact but encodes others as
-         * necessary.
-         *
-         * <p>If the path is not null and doesn't start with a '/', and if
-         * you specify a scheme and/or authority, the builder will prepend the
-         * given path with a '/'.
-         */
         public Builder path(String path) {
             return path(PathPart.fromDecoded(path));
         }
 
-        /**
-         * Sets the previously encoded path.
-         *
-         * <p>If the path is not null and doesn't start with a '/', and if
-         * you specify a scheme and/or authority, the builder will prepend the
-         * given path with a '/'.
-         */
         public Builder encodedPath(String path) {
             return path(PathPart.fromEncoded(path));
         }
 
-        /**
-         * Encodes the given segment and appends it to the path.
-         */
         public Builder appendPath(String newSegment) {
             return path(PathPart.appendDecodedSegment(path, newSegment));
         }
 
-        /**
-         * Appends the given segment to the path.
-         */
         public Builder appendEncodedPath(String newSegment) {
             return path(PathPart.appendEncodedSegment(path, newSegment));
         }
@@ -1298,16 +1204,10 @@ public abstract class Uri implements  Comparable<Uri> {
             return this;
         }
 
-        /**
-         * Encodes and sets the query.
-         */
         public Builder query(String query) {
             return query(Part.fromDecoded(query));
         }
 
-        /**
-         * Sets the previously encoded query.
-         */
         public Builder encodedQuery(String query) {
             return query(Part.fromEncoded(query));
         }
@@ -1316,28 +1216,14 @@ public abstract class Uri implements  Comparable<Uri> {
             this.fragment = fragment;
             return this;
         }
-
-        /**
-         * Encodes and sets the fragment.
-         */
         public Builder fragment(String fragment) {
             return fragment(Part.fromDecoded(fragment));
         }
 
-        /**
-         * Sets the previously encoded fragment.
-         */
         public Builder encodedFragment(String fragment) {
             return fragment(Part.fromEncoded(fragment));
         }
 
-        /**
-         * Encodes the key and value and then appends the parameter to the
-         * query string.
-         *
-         * @param key which will be encoded
-         * @param value which will be encoded
-         */
         public Builder appendQueryParameter(String key, String value) {
             // This URI will be hierarchical.
             this.opaquePart = null;
@@ -1360,19 +1246,9 @@ public abstract class Uri implements  Comparable<Uri> {
             return this;
         }
 
-        /**
-         * Clears the the previously set query.
-         */
         public Builder clearQuery() {
           return query((Part) null);
         }
-
-        /**
-         * Constructs a Uri with the current attributes.
-         *
-         * @throws UnsupportedOperationException if the URI is opaque and the
-         *  scheme is null
-         */
         public Uri build() {
             if (opaquePart != null) {
                 if (this.scheme == null) {
@@ -1411,14 +1287,7 @@ public abstract class Uri implements  Comparable<Uri> {
         }
     }
 
-    /**
-     * Returns a set of the unique names of all query parameters. Iterating
-     * over the set will return the names in order of their first occurrence.
-     *
-     * @throws UnsupportedOperationException if this isn't a hierarchical URI
-     *
-     * @return a set of decoded names
-     */
+
     public Set<String> getQueryParameterNames() {
         if (isOpaque()) {
             throw new UnsupportedOperationException(NOT_HIERARCHICAL);
@@ -1450,15 +1319,7 @@ public abstract class Uri implements  Comparable<Uri> {
         return Collections.unmodifiableSet(names);
     }
 
-    /**
-     * Searches the query string for parameter values with the given key.
-     *
-     * @param key which will be encoded
-     *
-     * @throws UnsupportedOperationException if this isn't a hierarchical URI
-     * @throws NullPointerException if key is null
-     * @return a list of decoded values
-     */
+
     public List<String> getQueryParameters(String key) {
         if (isOpaque()) {
             throw new UnsupportedOperationException(NOT_HIERARCHICAL);
@@ -1511,17 +1372,7 @@ public abstract class Uri implements  Comparable<Uri> {
         return Collections.unmodifiableList(values);
     }
 
-    /**
-     * Searches the query string for the first value with the given key.
-     *
-     * <p><strong>Warning:</strong> Prior to Jelly Bean, this decoded
-     * the '+' character as '+' rather than ' '.
-     *
-     * @param key which will be encoded
-     * @throws UnsupportedOperationException if this isn't a hierarchical URI
-     * @throws NullPointerException if key is null
-     * @return the decoded value or null if no parameter is found
-     */
+
 
     public String getQueryParameter(String key) {
         if (isOpaque()) {
@@ -1568,15 +1419,7 @@ public abstract class Uri implements  Comparable<Uri> {
         return null;
     }
 
-    /**
-     * Searches the query string for the first value with the given key and interprets it
-     * as a boolean value. "false" and "0" are interpreted as <code>false</code>, everything
-     * else is interpreted as <code>true</code>.
-     *
-     * @param key which will be decoded
-     * @param defaultValue the default value to return if there is no query parameter for key
-     * @return the boolean interpretation of the query parameter key
-     */
+
     public boolean getBooleanQueryParameter(String key, boolean defaultValue) {
         String flag = getQueryParameter(key);
         if (flag == null) {
@@ -1601,33 +1444,12 @@ public abstract class Uri implements  Comparable<Uri> {
 
     private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
 
-    /**
-     * Encodes characters in the given string as '%'-escaped octets
-     * using the UTF-8 scheme. Leaves letters ("A-Z", "a-z"), numbers
-     * ("0-9"), and unreserved characters ("_-!.~'()*") intact. Encodes
-     * all other characters.
-     *
-     * @param s string to encode
-     * @return an encoded version of s suitable for use as a URI component,
-     *  or null if s is null
-     */
+
     public static String encode(String s) {
         return encode(s, null);
     }
 
-    /**
-     * Encodes characters in the given string as '%'-escaped octets
-     * using the UTF-8 scheme. Leaves letters ("A-Z", "a-z"), numbers
-     * ("0-9"), and unreserved characters ("_-!.~'()*") intact. Encodes
-     * all other characters with the exception of those specified in the
-     * allow argument.
-     *
-     * @param s string to encode
-     * @param allow set of additional characters to allow in the encoded form,
-     *  null if no characters should be skipped
-     * @return an encoded version of s suitable for use as a URI component,
-     *  or null if s is null
-     */
+
     public static String encode(String s, String allow) {
         if (s == null) {
             return null;
@@ -1707,14 +1529,6 @@ public abstract class Uri implements  Comparable<Uri> {
         return encoded == null ? s : encoded.toString();
     }
 
-    /**
-     * Returns true if the given character is allowed.
-     *
-     * @param c character to check
-     * @param allow characters to allow
-     * @return true if the character is allowed or false if it should be
-     *  encoded
-     */
     private static boolean isAllowed(char c, String allow) {
         return (c >= 'A' && c <= 'Z')
                 || (c >= 'a' && c <= 'z')
@@ -1723,15 +1537,7 @@ public abstract class Uri implements  Comparable<Uri> {
                 || (allow != null && allow.indexOf(c) != NOT_FOUND);
     }
 
-    /**
-     * Decodes '%'-escaped octets in the given string using the UTF-8 scheme.
-     * Replaces invalid octets with the unicode replacement character
-     * ("\\uFFFD").
-     *
-     * @param s encoded string to decode
-     * @return the given string with escaped octets decoded, or null if
-     *  s is null
-     */
+
     public static String decode(String s) {
         if (s == null) {
             return null;
@@ -1893,12 +1699,6 @@ public abstract class Uri implements  Comparable<Uri> {
          */
         private PathSegments pathSegments;
 
-        /**
-         * Gets the individual path segments. Parses them if necessary.
-         *
-         * @return parsed path segments or null if this isn't a hierarchical
-         *  URI
-         */
         PathSegments getPathSegments() {
             if (pathSegments != null) {
                 return pathSegments;

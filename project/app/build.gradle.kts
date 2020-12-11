@@ -9,6 +9,7 @@ plugins {
     id("dagger.hilt.android.plugin")
 
 }
+println("group=$group")
 android {
     buildFeatures {
         viewBinding = true

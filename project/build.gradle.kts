@@ -1,7 +1,21 @@
-
+import com.x930073498.plugin.BinaryInfo
+import java.util.Properties
 
 buildscript {
-    val repository=rootDir.absolutePath+File.separator+"repository"
+    val properties = mapOf<String, String>().toProperties()
+    val file = file("local.properties")
+    println("enter this line local.properties isExit=${file.exists()}")
+    if (file.exists()) {
+        properties.load(file.inputStream())
+        extra.apply {
+            this["repoName"] = properties["repoName"] ?: ""
+            this["bintrayKey"] = properties["bintrayKey"] ?: ""
+            this["bintrayUser"] = properties["bintrayUser"] ?: ""
+            this["userOrg"] = properties["userOrg"] ?: ""
+        }
+
+    }
+    val repository = rootDir.absolutePath + File.separator + "repository"
     println("repository=$repository")
     repositories {
         mavenCentral()
@@ -16,20 +30,25 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.11.1")
         classpath("com.google.dagger:hilt-android-gradle-plugin:+")
-        classpath("com.x930073498.auto:auto-plugin:0.5")
     }
 
 }
+
+
+
 plugins {
     id("com.x930073498.build")
 }
-apply("plugin" to "com.x930073498.auto.plugin")
+
 allprojects {
     repositories {
         mavenCentral()
+        val repository = rootDir.absolutePath + File.separator + "repository"
+        maven(url = "file://$repository")
         maven("https://jitpack.io")
         google()
         jcenter()
     }
 
 }
+

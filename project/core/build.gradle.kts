@@ -1,16 +1,10 @@
-import com.x930073498.Versions
-import com.x930073498.Libraries
-import com.x930073498.PublishLibraries
-
+import com.x930073498.*
 plugins {
     id("com.android.library")
     kotlin("android")
-    kotlin("kapt")
 }
+
 android {
-    buildFeatures {
-        viewBinding = true
-    }
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {
         minSdkVersion(Versions.minSdk)
@@ -27,18 +21,10 @@ android {
 }
 dependencies {
     implementation(Libraries.kotlin)
-    implementation(Libraries.androidx_core_ktx)
-    implementation(Libraries.androidx_appcompat)
-    kapt(project(":router-compiler"))
-    implementation(project(":router-annotations"))
+    implementation(Libraries.startup)
 //    debugImplementation(project(":auto"))
-//    debugImplementation(project(":core"))
-//    debugImplementation(project(":router-api"))
 //    releaseImplementation(PublishLibraries.auto)
-//    releaseImplementation(PublishLibraries.core)
-//    releaseImplementation(PublishLibraries.router_api)
-
+    implementation(Libraries.androidx_appcompat)
     implementation(project(":auto"))
-    implementation(project(":core"))
-    implementation(project(":router-api"))
+
 }
