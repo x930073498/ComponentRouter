@@ -5,7 +5,7 @@ import org.gradle.kotlin.dsl.extra
 
 object Publish {
     const val GROUP = "com.x930073498.component"
-    const val VERSION = "0.0.6"
+    const val VERSION = "0.0.7"
     enum class PublishInfo(
         val group: String,
         val artifact: String,
