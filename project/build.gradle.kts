@@ -1,3 +1,4 @@
+import com.x930073498.PublishLibraries.auto
 import com.x930073498.plugin.BinaryInfo
 import java.util.Properties
 
@@ -30,12 +31,18 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.11.1")
         classpath("com.google.dagger:hilt-android-gradle-plugin:+")
+        classpath("com.x930073498.component:auto-plugin:0.0.8")
     }
 
 }
 
 
+plugins.apply("com.x930073498.component.auto.plugin")
 
+configure<com.x930073498.component.auto.plugin.Auto> {
+    this.enableDependency=false
+
+}
 plugins {
     id("com.x930073498.build")
 }

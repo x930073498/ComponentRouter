@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto.register
+package com.x930073498.component.auto.plugin.register
 
 /**
  * 方法插入的类名

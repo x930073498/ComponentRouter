@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto
+package com.x930073498.component.auto.plugin
 
 
 import com.android.build.gradle.AppPlugin
@@ -10,6 +10,7 @@ import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.kotlin.dsl.*
 
 open class Auto {
+    var enableDependency=true
     var enableRouter = true
     var enableDispatcher = true
     var enable = true
@@ -85,7 +86,7 @@ open class Auto {
 
     fun isValid() =  enable
     internal fun apply(project: Project) {
-        if (!isValid()) {
+        if (!isValid()||!enableDependency) {
             return
         }
         println("enter this line auto apply")

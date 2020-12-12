@@ -31,7 +31,7 @@ class ActionDelegateRouterInterceptor : RouterInterceptor {
         return if (interceptors.isEmpty()) {
             chain.process(request)
         } else {
-            interceptors.forEach {
+            interceptors.reversed().forEach {
                 val interceptor = ActionCenter.getAction(it)
                     .navigate(request.bundle, request.contextHolder) as? RouterInterceptor
                 if (interceptor != null) {

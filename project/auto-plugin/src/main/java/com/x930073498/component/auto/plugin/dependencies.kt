@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto
+package com.x930073498.component.auto.plugin
 
 object Versions {
     const val buildTools = "29.0.3"

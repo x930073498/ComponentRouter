@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         val uri = Uri.parse("/test/a?name=24254&title=测试")
 //        val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
         Executors.newSingleThreadExecutor().submit {
+            Router.from("/module1/method/test").forwardSync(this)
             val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
             if (fragment != null) {
                 println("enter this line 18487")

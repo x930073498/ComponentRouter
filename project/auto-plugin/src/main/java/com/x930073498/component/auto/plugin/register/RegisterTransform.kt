@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto.register
+package com.x930073498.component.auto.plugin.register
 
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager

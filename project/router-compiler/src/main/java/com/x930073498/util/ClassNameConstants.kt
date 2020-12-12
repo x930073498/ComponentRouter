@@ -14,6 +14,7 @@ val CLASS_STAR_NAME = Class::class.asClassName().parameterizedBy(STAR)
 val CONTEXT_HOLDER_NAME = ClassName(ComponentConstants.ROUTER_ACTION_PACKAGE_NAME, ComponentConstants.CONTEXT_HOLDER_NAME)
 val CONTEXT_NAME = ClassName.bestGuess(ComponentConstants.ANDROID_CONTEXT)
 
+val I_THREAD_NAME=ClassName(ComponentConstants.ROUTER_THREAD_PACKAGE_NAME,ComponentConstants.ROUTER_THREAD_NAME)
 object FragmentConstants {
     val FRAGMENT_ACTION_DELEGATE_NAME =
         ClassName(

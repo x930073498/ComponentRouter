@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto
+package com.x930073498.component.auto.plugin
 
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.Project

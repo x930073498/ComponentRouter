@@ -1,9 +1,9 @@
-package com.x930073498.plugin.auto
+package com.x930073498.component.auto.plugin
 
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
-import com.x930073498.plugin.auto.register.AutoRegisterConfig
-import com.x930073498.plugin.auto.register.RegisterTransform
+import com.x930073498.component.auto.plugin.register.AutoRegisterConfig
+import com.x930073498.component.auto.plugin.register.RegisterTransform
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin

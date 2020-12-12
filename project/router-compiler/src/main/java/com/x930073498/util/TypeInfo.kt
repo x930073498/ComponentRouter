@@ -1,10 +1,15 @@
 package com.x930073498.util
 
+import androidx.annotation.AnyThread
+import androidx.annotation.MainThread
+import androidx.annotation.UiThread
+import androidx.annotation.WorkerThread
 import com.squareup.kotlinpoet.*
 import com.x930073498.annotations.ValueAutowiredAnnotation
 import com.x930073498.compiler.BaseProcessor
 import java.lang.StringBuilder
 import javax.lang.model.element.Element
+import javax.lang.model.element.ExecutableElement
 import javax.lang.model.element.VariableElement
 import javax.tools.Diagnostic
 
@@ -21,13 +26,13 @@ sealed class TypeInfo constructor(
     private val className: String,//生成类名字
     val packageName: String,//元素的包名
     var type: Any,//元素的Type
-    private val superClassName: TypeName,//父类
-    private val supperInterfaces: List<TypeName>,//父接口
-    private val injectTargetTypeName: TypeName?,//注入方法中注入属性的目标类
+     val superClassName: TypeName,//父类
+     val supperInterfaces: List<TypeName>,//父接口
+     val injectTargetTypeName: TypeName?,//注入方法中注入属性的目标类
     val factoryTypeName: TypeName?,//factory类
-    private val element: Element? = null,//元素
-    private val parentPath: String,
-    private val interceptors: Array<String> = arrayOf(),
+     val element: Element? = null,//元素
+     val parentPath: String,
+     val interceptors: Array<String> = arrayOf(),
     val autoInjectList: MutableList<ValueAutowired> = arrayListOf()//属性注入元素信息列表
 ) : Generator {
     private var _delegateGenerator: Generator? = null
@@ -218,6 +223,14 @@ sealed class TypeInfo constructor(
 
     }
 
+    protected open fun generateThreadCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder("thread", I_THREAD_NAME, KModifier.OVERRIDE)
+                .initializer("%T.%L", I_THREAD_NAME, "ANY")
+                .build()
+        )
+    }
+
     protected open fun generateParentCode(typeSpec: TypeSpec.Builder) {
         if (parentPath.isEmpty()) return
         typeSpec.addFunction(
@@ -233,6 +246,7 @@ sealed class TypeInfo constructor(
         generatePathCode(typeSpec)
         generateTargetPropertyCode(typeSpec)
         generateGroupCode(typeSpec)
+        generateThreadCode(typeSpec)
         generateInterceptorsCode(typeSpec)
 //        generateParentCode(typeSpec)
         generateInjectCode(typeSpec)
@@ -537,7 +551,7 @@ class FragmentInfo(
 
 class MethodInvokerInfo(
     processor: BaseProcessor,
-    path: String,
+     path: String,
     group: String,
     classPrefixName: String,
     className: String,
@@ -547,7 +561,7 @@ class MethodInvokerInfo(
     supperInterfaces: List<TypeName>,
     injectTargetTypeName: TypeName?,
     factoryTypeName: TypeName?,
-    element: Element? = null,
+  element: Element? = null,
     interceptors: Array<String>,
     autoInjectList: MutableList<ValueAutowired> = arrayListOf(),
     parentPath: String,
@@ -584,6 +598,25 @@ class MethodInvokerInfo(
             "return %T(%N::class.java,this)",
             MethodConstants.METHOD_TARGET_NAME,
             type
+        )
+    }
+
+    override fun generateThreadCode(typeSpec: TypeSpec.Builder) {
+        fun getThread(): String {
+            if (element == null) return "ANY"
+            element as ExecutableElement
+            if (element.getAnnotation(MainThread::class.java) != null || element.getAnnotation(
+                    UiThread::class.java
+                ) != null
+            ) return "UI"
+            return if (element.getAnnotation(WorkerThread::class.java) != null) "WORKER"
+            else "ANY"
+
+        }
+        typeSpec.addProperty(
+            PropertySpec.builder("thread", I_THREAD_NAME, KModifier.OVERRIDE)
+                .initializer("%T.%L", I_THREAD_NAME, getThread())
+                .build()
         )
     }
 

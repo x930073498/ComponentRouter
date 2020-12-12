@@ -9,9 +9,6 @@ import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
 import com.x930073498.router.action.ActionCenter
-import com.x930073498.router.impl.ActionDelegateRouterInterceptor
-import com.x930073498.router.impl.ActivityActionDelegate
-import com.x930073498.router.impl.IService
 import com.x930073498.router.interceptor.onInterceptors
 import com.x930073498.router.request.routerRequest
 import com.x930073498.router.response.RouterResponse
@@ -21,6 +18,9 @@ import com.x930073498.router.util.ParameterSupport
 import com.x930073498.common.auto.IActivityLifecycle
 import com.x930073498.common.auto.IApplicationLifecycle
 import com.x930073498.common.auto.IAuto
+import com.x930073498.router.impl.*
+import com.x930073498.router.interceptor.Chain
+import com.x930073498.router.request.RouterRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -33,9 +33,12 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
         Router.init(app)
     }
 
+    override fun onTaskComponentLoaded(app: Application) {
+        super.onTaskComponentLoaded(app)
+    }
+
     override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
         Router.inject(activity)
-        println("enter this line onActivityPreCreated")
     }
 
 
@@ -44,6 +47,12 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
 class Router(uri: Uri = Uri.EMPTY) {
     private var uriBuilder = uri.buildUpon()
     private val mBundle = bundleOf()
+
+    private var greenChannel = false
+
+    fun greenChannel() {
+        this.greenChannel = true
+    }
 
     fun scheme(scheme: String): Router {
         uriBuilder.scheme(scheme)
@@ -102,14 +111,18 @@ class Router(uri: Uri = Uri.EMPTY) {
     /**
      * 创建
      */
-    inline fun <reified T> syncNavigation(context: Context? = null): T? {
-        val resultRef = AtomicReference<T>()
+    fun <T> syncNavigation(context: Context? = null): T? {
+        return forwardSync(context) as? T
+    }
+
+    fun forwardSync(context: Context? = null): Any? {
+        val resultRef = AtomicReference<Any>()
         val flagRef = AtomicReference(0)
         GlobalScope.launch(Dispatchers.IO) {
             runCatching {
                 val result = forward(context)
-                resultRef.set(result as? T)
-            }
+                resultRef.set(result)
+            }.onFailure { it.printStackTrace() }
             flagRef.set(1)
         }
         while (flagRef.get() == 0) {
@@ -131,11 +144,44 @@ class Router(uri: Uri = Uri.EMPTY) {
             }.beforeIntercept {
                 request().syncUriToBundle()
             }.add(ActionDelegateRouterInterceptor())
+            .apply {
+                if (!greenChannel) add(GlobalInterceptor)
+            }
+
             .start()
     }
 
 
     companion object Init : InitI {
+
+
+        private val globalInterceptors = arrayListOf<Any>()
+
+
+        fun addGlobalInterceptor(vararg interceptor: RouterInterceptor) {
+            globalInterceptors.addAll(interceptor.asList())
+        }
+
+        fun addGlobalInterceptor(vararg path: String) {
+            globalInterceptors.addAll(path.asList())
+        }
+
+
+        internal object GlobalInterceptor : RouterInterceptor {
+            override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+                val request = chain.request()
+                globalInterceptors.reversed().mapNotNull {
+                    when (it) {
+                        is String -> ActionCenter.getAction(it)
+                            .navigate(request.bundle, request.contextHolder) as? RouterInterceptor
+                        is RouterInterceptor -> it
+                        else -> null
+                    }
+                }.forEach { chain.addNext(it) }
+                return chain.process(request)
+            }
+
+        }
 
         internal fun <T> inject(activity: T) where T : Activity {
             val intent = activity.intent ?: return
@@ -149,7 +195,7 @@ class Router(uri: Uri = Uri.EMPTY) {
 
 
         internal var app by Delegates.notNull<Application>()
-        private var hasInit = false
+        internal var hasInit = false
 
         @Synchronized
         override fun init(app: Application): InitI {

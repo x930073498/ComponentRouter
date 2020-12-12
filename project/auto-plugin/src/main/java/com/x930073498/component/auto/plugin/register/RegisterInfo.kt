@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto.register
+package com.x930073498.component.auto.plugin.register
 
 import java.io.File
 import java.util.regex.Pattern

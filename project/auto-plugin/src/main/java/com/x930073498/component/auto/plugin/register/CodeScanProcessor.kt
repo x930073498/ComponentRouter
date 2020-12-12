@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto.register
+package com.x930073498.component.auto.plugin.register
 
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor

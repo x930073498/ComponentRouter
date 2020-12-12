@@ -1,4 +1,4 @@
-package com.x930073498.plugin.auto.register
+package com.x930073498.component.auto.plugin.register
 
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.google.gson.Gson

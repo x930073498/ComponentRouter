@@ -5,6 +5,7 @@ package com.x930073498.router.impl
 import android.os.Bundle
 import com.x930073498.router.action.ContextHolder
 import com.x930073498.router.action.Target
+import com.x930073498.router.thread.IThread
 import com.x930073498.router.util.ParameterSupport
 
 
@@ -20,17 +21,19 @@ sealed class ActionType {
 interface ActionDelegate {
     fun type(): ActionType
     val path: String
+    val thread: IThread
+        get() {
+            return IThread.ANY
+        }
 
+    val target: Target
 
-    val target:Target
 
     fun inject(bundle: Bundle, target: Any)
     val group: String
         get() = ""
 
     fun interceptors(): List<String> = arrayListOf()
-
-
 
 
 }

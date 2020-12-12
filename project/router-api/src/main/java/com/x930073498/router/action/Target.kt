@@ -7,7 +7,10 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
+import androidx.annotation.CallSuper
+import com.x930073498.router.Router
 import com.x930073498.router.impl.*
+import com.x930073498.router.thread.IThread
 import com.x930073498.router.util.ParameterSupport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,7 +19,13 @@ import kotlinx.coroutines.withContext
 sealed class Target(
     val targetClazz: Class<*>
 ) {
-    abstract suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any?
+    @CallSuper
+    open suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any? {
+        if (!Router.hasInit) {
+            throw RuntimeException("Router 尚未初始化成功")
+        }
+        return null
+    }
 
     companion object {
         private val providerMap = mutableMapOf<Class<*>, Any?>()
@@ -48,6 +57,7 @@ sealed class Target(
     ) :
         Target(targetClazz) {
         override suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any? {
+            super.go(bundle, contextHolder)
             return action.run {
                 val factory = factory()
                 val result = if (isSingleTon) {
@@ -70,9 +80,34 @@ sealed class Target(
         }
     }
 
+    protected suspend fun runOnThread(thread: IThread, action: suspend () -> Any?): Any? {
+        return when (thread) {
+            IThread.UI -> {
+                if (Looper.getMainLooper() == Looper.myLooper()) {
+                    action()
+                } else {
+                    withContext(Dispatchers.Main) {
+                        action()
+                    }
+                }
+            }
+            IThread.WORKER -> {
+                if (Looper.getMainLooper() == Looper.myLooper()) {
+                    withContext(Dispatchers.IO) {
+                        action
+                    }
+                } else {
+                    action()
+                }
+            }
+            IThread.ANY -> action()
+        }
+    }
+
     class MethodTarget(targetClazz: Class<*>, val action: MethodActionDelegate) :
         Target(targetClazz) {
         override suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any? {
+            super.go(bundle, contextHolder)
             return action.run {
                 var invoker = getMethod(targetClazz)
                 if (invoker == null) {
@@ -80,9 +115,11 @@ sealed class Target(
                     invoker = factory.create(contextHolder, targetClazz, bundle)
                     putMethod(targetClazz, invoker)
                 }
-                if (invoker is MethodInvoker)
-                    invoker.invoke(contextHolder, bundle)
-                else null
+                if (invoker is MethodInvoker) {
+                    runOnThread(thread) {
+                        invoker.invoke(contextHolder, bundle)
+                    }
+                } else null
             }
         }
 
@@ -92,9 +129,10 @@ sealed class Target(
     class ActivityTarget(targetClazz: Class<*>, val action: ActivityActionDelegate) :
         Target(targetClazz) {
         override suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any? {
+            super.go(bundle, contextHolder)
             return action.run {
                 val context = contextHolder.getContext()
-                val intent = Intent(context,targetClazz)
+                val intent = Intent(context, targetClazz)
                 if (context is Application) {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
@@ -109,13 +147,14 @@ sealed class Target(
     class FragmentTarget(targetClazz: Class<*>, val action: FragmentActionDelegate) :
         Target(targetClazz) {
         override suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any {
+            super.go(bundle, contextHolder)
             return action.run {
                 if (Looper.getMainLooper() == Looper.getMainLooper()) {
                     factory().create(contextHolder, targetClazz, bundle).apply {
                         inject(bundle, this)
                     }
                 } else {
-                    withContext(Dispatchers.Main.immediate) {
+                    withContext(Dispatchers.Main) {
                         factory().create(contextHolder, targetClazz, bundle)
                             .apply {
                                 inject(bundle, this)
@@ -129,6 +168,7 @@ sealed class Target(
     class InterceptorTarget(targetClazz: Class<*>, val action: InterceptorActionDelegate) :
         Target(targetClazz) {
         override suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any {
+            super.go(bundle, contextHolder)
             return action.run {
                 factory().create(contextHolder, targetClazz)
             }
@@ -137,6 +177,7 @@ sealed class Target(
 
     internal object SystemTarget : Target(Unit::class.java) {
         private fun go(context: Context, bundle: Bundle, uri: String?) {
+
             var intent = Intent.parseUri(uri, Intent.URI_INTENT_SCHEME)
             val info = context.packageManager.resolveActivity(
                 intent,
@@ -158,6 +199,7 @@ sealed class Target(
         }
 
         override suspend fun go(bundle: Bundle, contextHolder: ContextHolder): Any {
+            super.go(bundle, contextHolder)
             return go(
                 contextHolder.getContext(),
                 bundle,

@@ -4,6 +4,7 @@ package com.x930073498.router.action
 
 import android.net.Uri
 import androidx.core.os.bundleOf
+import com.x930073498.router.Router
 import com.x930073498.router.impl.ActionDelegate
 import com.x930073498.router.impl.IService
 import com.x930073498.router.impl.ServiceActionDelegate
@@ -59,6 +60,9 @@ object ActionCenter {
     }
 
     private fun <T> getServiceSyncInternal(clazz: Class<T>): T? where T : IService {
+        if (!Router.hasInit) {
+            throw RuntimeException("Router 尚未初始化成功")
+        }
         val action = mMap.values.firstOrNull {
             with(it.target) {
                 this is Target.ServiceTarget && clazz.isAssignableFrom(targetClazz)
@@ -82,6 +86,9 @@ object ActionCenter {
     }
 
     private suspend fun <T : IService> getServiceInternal(clazz: Class<T>): T? {
+        if (!Router.hasInit) {
+            throw RuntimeException("Router 尚未初始化成功")
+        }
         val action = mMap.values.firstOrNull {
             with(it.target) {
                 this is Target.ServiceTarget && clazz.isAssignableFrom(targetClazz)

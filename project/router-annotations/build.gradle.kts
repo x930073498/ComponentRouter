@@ -5,4 +5,5 @@ plugins{
 
 dependencies{
     compileOnly(Libraries.kotlin)
+    compileOnly(Libraries.androidx_annotation)
 }

@@ -5,9 +5,11 @@ import com.x930073498.router.action.ContextHolder
 import com.x930073498.router.action.Target
 
 interface MethodActionDelegate : ActionDelegate {
+
     override fun type(): ActionType {
         return ActionType.METHOD
     }
+
 
     override fun inject(bundle: Bundle, target: Any) {
     }
