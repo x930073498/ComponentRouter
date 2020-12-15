@@ -5,13 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.x930073498.annotations.FragmentAnnotation
-import com.x930073498.annotations.ValueAutowiredAnnotation
-import com.x930073498.common.auto.IAuto
+import com.x930073498.component.annotations.FragmentAnnotation
+import com.x930073498.component.annotations.ValueAutowiredAnnotation
+import com.x930073498.component.auto.IAuto
+import com.x930073498.component.router.Router
 import com.x930073498.module1.databinding.FragmentTestBinding
-import com.x930073498.router.Router
 
-class TestAuto:IAuto {
+class TestAuto: IAuto {
     init {
         println("enter this line 333")
     }
@@ -36,7 +36,7 @@ class TestFragment:Fragment(){
         super.onViewCreated(view, savedInstanceState)
         binding.tv.text=name
         binding.tv.setOnClickListener {
-            Router.from("/method/toast?msg=测试").syncNavigation<Any>(requireContext())
+            Router.from("/method/toast?msg=测试").forwardSync(requireContext())
         }
     }
 }

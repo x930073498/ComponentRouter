@@ -4,13 +4,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.x930073498.annotations.FactoryAnnotation
-import com.x930073498.annotations.FragmentAnnotation
-import com.x930073498.annotations.ValueAutowiredAnnotation
+import com.x930073498.component.annotations.FactoryAnnotation
+import com.x930073498.component.annotations.FragmentAnnotation
+import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.R
-import com.x930073498.router.*
-import com.x930073498.router.action.ContextHolder
-import com.x930073498.router.impl.FragmentActionDelegate
+import com.x930073498.component.core.LogUtil
+import com.x930073498.component.router.*
+import com.x930073498.component.router.action.ContextHolder
+import com.x930073498.component.router.impl.FragmentActionDelegate
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -27,7 +28,7 @@ open class TestParentFragment : Fragment(R.layout.fragment_test) {
 //            Router.from("http://www.baidu.com").syncNavigation<Any>()
             Router.getServiceSync<TestService>()?.test()
             GlobalScope.launch {
-                println("enter this line 987456")
+                LogUtil.log("enter this line 987456")
 //                Router.from("/a/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
 //                    println(it)
 //                }

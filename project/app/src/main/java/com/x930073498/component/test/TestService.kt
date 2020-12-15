@@ -1,8 +1,9 @@
 package com.x930073498.component.test
 
-import com.x930073498.annotations.ServiceAnnotation
-import com.x930073498.annotations.ValueAutowiredAnnotation
-import com.x930073498.router.impl.IService
+import com.x930073498.component.annotations.ServiceAnnotation
+import com.x930073498.component.annotations.ValueAutowiredAnnotation
+import com.x930073498.component.core.LogUtil
+import com.x930073498.component.router.impl.IService
 
 interface TestService : IService {
     fun test()
@@ -14,9 +15,9 @@ class TestServiceImpl : TestService {
     var a:String?=""
 
     override suspend fun invoke() {
-        println(a)
+        LogUtil.log(a)
     }
     override fun test() {
-        println("enter this line TestService")
+        LogUtil.log("enter this line TestService")
     }
 }

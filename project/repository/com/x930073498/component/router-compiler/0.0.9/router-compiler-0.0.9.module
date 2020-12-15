@@ -1,0 +1,109 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.x930073498.component",
+    "module": "router-compiler",
+    "version": "0.0.9",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.7",
+      "buildId": "cjpe3eq5frdx7lai3z6ezy2ewe"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.localToProject": "public",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "files": [
+        {
+          "name": "router-compiler-0.0.9.jar",
+          "url": "router-compiler-0.0.9.jar",
+          "size": 94844,
+          "sha512": "e064f20f2d4e40fe74b357b8a050471bfce8b67180c0dc596ebe36c735488e512d8b4f36def31da5492a80fb3026c91cb999ca7b5e3837fb4c02b864607f0562",
+          "sha256": "4d678df7b5924e3ce232616e49ba15d1757ce93cd534bbac62d7763a37649eba",
+          "sha1": "8a9b660bffe7e3224af863bd802c8380c1b8f3f3",
+          "md5": "5af5ddfae15e9f0e2426f24a52fc2513"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.localToProject": "public",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.4.20"
+          }
+        },
+        {
+          "group": "com.squareup",
+          "module": "kotlinpoet",
+          "version": {
+            "requires": "1.7.2"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-reflect",
+          "version": {
+            "requires": "1.4.21"
+          }
+        },
+        {
+          "group": "androidx.annotation",
+          "module": "annotation",
+          "version": {
+            "requires": "1.1.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-compiler-embeddable",
+          "version": {
+            "requires": "1.4.21"
+          }
+        },
+        {
+          "group": "com.x930073498.component",
+          "module": "router-annotations",
+          "version": {
+            "requires": "0.0.9"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "router-compiler-0.0.9.jar",
+          "url": "router-compiler-0.0.9.jar",
+          "size": 94844,
+          "sha512": "e064f20f2d4e40fe74b357b8a050471bfce8b67180c0dc596ebe36c735488e512d8b4f36def31da5492a80fb3026c91cb999ca7b5e3837fb4c02b864607f0562",
+          "sha256": "4d678df7b5924e3ce232616e49ba15d1757ce93cd534bbac62d7763a37649eba",
+          "sha1": "8a9b660bffe7e3224af863bd802c8380c1b8f3f3",
+          "md5": "5af5ddfae15e9f0e2426f24a52fc2513"
+        }
+      ]
+    }
+  ]
+}

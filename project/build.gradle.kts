@@ -1,7 +1,7 @@
 import com.x930073498.PublishLibraries.auto
 import com.x930073498.plugin.BinaryInfo
 import java.util.Properties
-
+import com.x930073498.component.auto.plugin.Auto
 buildscript {
     val properties = mapOf<String, String>().toProperties()
     val file = file("local.properties")
@@ -22,6 +22,7 @@ buildscript {
         mavenCentral()
         google()
         jcenter()
+//        maven("https://dl.bintray.com/x930073498/component")
         maven(url = "file://$repository")
 
     }
@@ -31,7 +32,7 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.11.1")
         classpath("com.google.dagger:hilt-android-gradle-plugin:+")
-        classpath("com.x930073498.component:auto-plugin:0.0.8")
+        classpath("com.x930073498.component:auto-plugin:0.0.9")
     }
 
 }
@@ -39,8 +40,10 @@ buildscript {
 
 plugins.apply("com.x930073498.component.auto.plugin")
 
-configure<com.x930073498.component.auto.plugin.Auto> {
+configure<Auto> {
+    val repository = rootDir.absolutePath + File.separator + "repository"
     this.enableDependency=false
+    this.mavenUrl=repository
 
 }
 plugins {

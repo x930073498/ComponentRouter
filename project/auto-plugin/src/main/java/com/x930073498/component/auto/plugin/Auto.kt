@@ -89,8 +89,6 @@ open class Auto {
         if (!isValid()||!enableDependency) {
             return
         }
-        println("enter this line auto apply")
-        println("enter this line repositoryUrl=$mavenUrl")
         project.predicate {
             doOn(AppPlugin::class, LibraryPlugin::class, JavaLibraryPlugin::class) {
                 repositories {

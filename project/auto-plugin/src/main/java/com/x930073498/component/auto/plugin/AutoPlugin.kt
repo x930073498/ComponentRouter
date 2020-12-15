@@ -37,7 +37,6 @@ class AutoPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         fun findAuto() = project.extensions.findByType<Auto>()
-        println("enter this line auto plugin")
         project.extensions.add("auto", Auto())
         fun isRootProject(other: Project): Boolean {
             return project.path == other.path

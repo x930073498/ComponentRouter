@@ -10,6 +10,7 @@ plugins {
 
 }
 println("group=$group")
+
 android {
     buildFeatures {
         viewBinding = true
@@ -50,6 +51,7 @@ dependencies {
     implementation(Libraries.kotlinx_coroutines_core)
     implementation(Libraries.datastore_preferences)
     implementation(Libraries.startup)
+    implementation(Libraries.agent_web)
     implementation(project(":router-annotations"))
     implementation(project(":auto"))
     implementation(project(":core"))

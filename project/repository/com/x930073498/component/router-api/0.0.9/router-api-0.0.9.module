@@ -1,0 +1,61 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.x930073498.component",
+    "module": "router-api",
+    "version": "0.0.9",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.7",
+      "buildId": "cjpe3eq5frdx7lai3z6ezy2ewe"
+    }
+  },
+  "variants": [
+    {
+      "name": "runtime",
+      "attributes": {
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "androidx.fragment",
+          "module": "fragment-ktx",
+          "version": {
+            "requires": "1.3.0-beta01"
+          }
+        },
+        {
+          "group": "com.x930073498.component",
+          "module": "core",
+          "version": {
+            "requires": "0.0.9"
+          }
+        },
+        {
+          "group": "com.x930073498.component",
+          "module": "router-annotations",
+          "version": {
+            "requires": "0.0.9"
+          }
+        },
+        {
+          "group": "com.x930073498.component",
+          "module": "auto",
+          "version": {
+            "requires": "0.0.9"
+          }
+        }
+      ]
+    },
+    {
+      "name": "api",
+      "attributes": {
+        "org.gradle.usage": "java-api"
+      }
+    }
+  ]
+}

@@ -5,8 +5,10 @@ import android.os.Looper
 import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.annotation.UiThread
-import com.x930073498.annotations.MethodAnnotation
-import com.x930073498.annotations.MethodBundleNameAnnotation
+import com.x930073498.component.annotations.MethodAnnotation
+import com.x930073498.component.annotations.MethodBundleNameAnnotation
+import com.x930073498.component.auto.IAuto
+import com.x930073498.component.core.LogUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -21,7 +23,7 @@ suspend fun testMethod(
     @MethodBundleNameAnnotation("c") c: CharSequence,
 ) {
     delay(1200)
-    println("enter this line 897 ${a + b + c}$context")
+    LogUtil.log("enter this line 897 ${a + b + c}$context")
 
 }
 
@@ -29,7 +31,7 @@ suspend fun testMethod(
 @MethodAnnotation(path = "/test/method/test1")
 suspend fun testMethod2(context: Context) {
     delay(1000)
-    println("enter this line 877 $context")
+    LogUtil.log("enter this line 877 $context")
 
 }
 
@@ -42,3 +44,6 @@ fun toast(context: Context, msg: String?) {
 
 
 
+interface A:IAuto
+
+class B:A

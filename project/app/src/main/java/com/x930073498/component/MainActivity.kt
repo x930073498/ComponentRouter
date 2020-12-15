@@ -1,18 +1,25 @@
 package com.x930073498.component
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
-import com.x930073498.annotations.ActivityAnnotation
-import com.x930073498.annotations.ValueAutowiredAnnotation
-import com.x930073498.router.*
-import com.x930073498.router.impl.RouterInterceptor
-import com.x930073498.router.interceptor.Chain
-import com.x930073498.router.request.RouterRequest
-import com.x930073498.router.response.RouterResponse
+import com.just.agentweb.AgentWeb
+import com.just.agentweb.AgentWebConfig
+import com.x930073498.component.annotations.ActivityAnnotation
+import com.x930073498.component.annotations.ValueAutowiredAnnotation
+import com.x930073498.component.core.LogUtil
+import com.x930073498.component.router.*
+import com.x930073498.component.router.impl.RouterInterceptor
+import com.x930073498.component.router.interceptor.Chain
+import com.x930073498.component.router.request.RouterRequest
+import com.x930073498.component.router.response.RouterResponse
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -33,20 +40,22 @@ class MainActivity : AppCompatActivity() {
 
     @ValueAutowiredAnnotation("name")
     var name: String = ""
-    val tag = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         foo.test()
         viewModel.test()
         setContentView(R.layout.activity_main)
 
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),100)
+        AgentWebConfig.debug()
         val uri = Uri.parse("/test/a?name=24254&title=测试")
 //        val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
+//        Router.from("/module1/method/test").forwardSync(this)
         Executors.newSingleThreadExecutor().submit {
             Router.from("/module1/method/test").forwardSync(this)
             val fragment = Router.from(uri).syncNavigation<Fragment>(this@MainActivity)
             if (fragment != null) {
-                println("enter this line 18487")
+                LogUtil.log("enter this line 18487")
                 supportFragmentManager.beginTransaction().add(R.id.container, fragment)
                     .commitAllowingStateLoss()
             }
@@ -63,24 +72,28 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode==100){
+
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
 
 }
 
 class A {
     init {
-        println("enter this line 11111")
+        LogUtil.log("enter this line 11111")
     }
 
     companion object {
         init {
-            println("enter this line 2222")
+            LogUtil.log("enter this line 2222")
         }
     }
 }
 
-class GlobalRouterInterceptor : RouterInterceptor {
-    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
-       return chain.process(chain.request())
-    }
-
-}

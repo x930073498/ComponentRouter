@@ -21,10 +21,9 @@ android {
 dependencies {
     compileOnly(Libraries.kotlin)
     implementation(Libraries.androidx_fragment_ktx)
-//    debugImplementation(project(":core"))
-//    debugImplementation(project(":auto"))
-//    releaseImplementation(PublishLibraries.core)
-//    releaseImplementation(PublishLibraries.auto)
+//    implementation(Libraries.androidx_fragment)
+//    implementation(Libraries.kotlinx_coroutines_android)
     implementation(project(":core"))
+    implementation(project(":router-annotations"))
     implementation(project(":auto"))
 }

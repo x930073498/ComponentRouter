@@ -182,15 +182,17 @@ internal class CodeScanProcessor(
                 return
             }
             val ext = info
+
+
             if (shouldProcessThisClassForRegister(ext, name)) {
-                interfaces?.forEach {
-                    if (it == INTERFACE_NAME_SCAN) {
-                        if (!ext.classList.contains(name))
-                            ext.classList.add(name)//需要把对象注入到管理类  就是fileContainsInitClass
-                        addToCacheMap(it, name, filePath)
-                        found = true
-                    }
+                val scanInterfaceName = interfaces?.firstOrNull { it == INTERFACE_NAME_SCAN }
+                if (scanInterfaceName != null) {
+                    if (!ext.classList.contains(name))
+                        ext.classList.add(name)//需要把对象注入到管理类  就是fileContainsInitClass
+                    addToCacheMap(scanInterfaceName, name, filePath)
+                    found = true
                 }
+
             }
         }
 
