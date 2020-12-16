@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.x930073498.component.auto.start.dispatcher.AutoStartTask
 import com.x930073498.component.auto.IAuto
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.core.*
 
 //模块化工具,只需要在任意模块中实现IAuto接口,无需做其他配置,实现的代码都可以在特定的是否自动运行,

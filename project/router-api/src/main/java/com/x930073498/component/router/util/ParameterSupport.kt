@@ -7,7 +7,9 @@ import android.net.Uri
 import android.os.*
 import android.util.SparseArray
 import androidx.arch.core.util.Function
+import com.x930073498.component.auto.getSerializer
 import java.io.Serializable
+import java.lang.reflect.Type
 import java.util.*
 
 /**
@@ -1222,6 +1224,26 @@ object ParameterSupport {
         key: String,
     ): T? {
         return getParcelable(bundle, key, null)
+    }
+
+    fun <T : Any> get(bundle: Bundle?, key: String, type: Type, defaultValue: T?): T? {
+        if (bundle == null) return defaultValue
+        val serializer = getSerializer()
+        if (bundle.containsKey(key)) {
+            val result = bundle.get(key) ?: return defaultValue
+            return runCatching { result as T }.getOrNull()?:run {
+                serializer.deserialize(serializer.serialize(result),type)
+            }
+        }else {
+          val result= getQueryString(bundle,key)?:return defaultValue
+            return runCatching {
+                serializer.deserialize<T>(result,type)
+            }.getOrNull()?:defaultValue
+        }
+    }
+
+    inline fun<reified T>get(bundle: Bundle?,key: String,defaultValue: T?=null):T?{
+        return get(bundle,key,T::class.java,defaultValue)
     }
 
     fun <T : Parcelable?> getParcelable(

@@ -1,11 +1,10 @@
 package com.x930073498.component
 
 import android.app.Application
-import com.x930073498.component.auto.IAuto
-import com.x930073498.component.core.AutoConfiguration
-import com.x930073498.component.core.IConfiguration
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.*
+import com.x930073498.component.test.Data
 import dagger.hilt.android.HiltAndroidApp
+import java.lang.reflect.Type
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -16,6 +15,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         foo.test()
+        LogUtil.log(Data("测试data"))
 
     }
 
@@ -25,10 +25,11 @@ class App : Application() {
 }
 
 class AutoConfig : IConfiguration(), IAuto {
-    override fun AutoConfiguration.config() {
+    override fun ConfigurationHandler.config() {
         if (BuildConfig.DEBUG) {
             checkRouteUnique()
             debug()
         }
     }
+
 }

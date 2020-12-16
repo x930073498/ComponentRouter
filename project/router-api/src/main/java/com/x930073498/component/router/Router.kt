@@ -19,8 +19,8 @@ import com.x930073498.component.router.util.ParameterSupport
 import com.x930073498.component.core.IActivityLifecycle
 import com.x930073498.component.core.IApplicationLifecycle
 import com.x930073498.component.auto.IAuto
-import com.x930073498.component.core.AutoConfiguration
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.auto.getConfiguration
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.NavigateInterceptor
 import com.x930073498.component.router.action.NavigateParams
@@ -35,7 +35,7 @@ import kotlin.properties.Delegates
 class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
     override fun onApplicationCreated(app: Application) {
         Router.init(app).apply {
-            checkRouteUnique(AutoConfiguration.shouldRouterUnique())
+            checkRouteUnique(getConfiguration().shouldRouterUnique())
         }
     }
 

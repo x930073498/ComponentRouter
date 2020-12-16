@@ -2,7 +2,7 @@ package com.x930073498.component.test
 
 import com.x930073498.component.annotations.InterceptorAnnotation
 import com.x930073498.component.annotations.InterceptorScope
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.impl.RouterInterceptor
 import com.x930073498.component.router.interceptor.Chain
 import com.x930073498.component.router.request.RouterRequest

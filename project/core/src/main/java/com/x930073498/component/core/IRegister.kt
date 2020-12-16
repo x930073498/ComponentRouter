@@ -1,9 +1,10 @@
 package com.x930073498.component.core
 
+import com.x930073498.component.auto.IModuleRegister
 import com.x930073498.component.auto.IRegister
 
 
-interface IModuleRegister:IRegister
+
 internal object ModuleHandler{
     private val list= arrayListOf<IModuleRegister>()
 

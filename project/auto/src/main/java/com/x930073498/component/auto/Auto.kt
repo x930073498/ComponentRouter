@@ -1,0 +1,5 @@
+package com.x930073498.component.auto
+
+fun getSerializer(): ISerializer {
+    return configuration.getSerializer() ?: throw RuntimeException("请先指定ISerializer")
+}

@@ -3,6 +3,7 @@ import com.x930073498.plugin.BinaryInfo
 import java.util.Properties
 import com.x930073498.component.auto.plugin.Auto
 buildscript {
+    val kotlin_version by extra("1.4.21")
     val properties = mapOf<String, String>().toProperties()
     val file = file("local.properties")
     println("enter this line local.properties isExit=${file.exists()}")

@@ -8,7 +8,7 @@ import androidx.annotation.UiThread
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.annotations.MethodBundleNameAnnotation
 import com.x930073498.component.auto.IAuto
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.LogUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext

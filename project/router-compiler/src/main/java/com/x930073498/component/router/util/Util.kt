@@ -378,6 +378,8 @@ private fun BaseProcessor.getParameterMethodName(
     isSubParcelableType: Boolean,
     isSubSerializableType: Boolean
 ): String {
+    return  "get"
+
     val noNullParameterClassName = parameterClassName.copy(false)
     return if (noNullParameterClassName == mTypeNameString) { // 如果是一个 String
         "getString"

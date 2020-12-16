@@ -6,6 +6,7 @@ import org.gradle.kotlin.dsl.extra
 object Publish {
     const val GROUP = "com.x930073498.component"
     const val VERSION = "0.0.9"
+
     enum class PublishInfo(
         val group: String,
         val artifact: String,
@@ -44,10 +45,38 @@ object Publish {
         STARTER_DISPATCHER(
             GROUP,
             Name.STARTER_DISPATCHER,
-           VERSION,
+            VERSION,
             Desc.STARTER_DISPATCHER_DESC
-        );
-        fun toDependency():String{
+        ),
+
+        K_SERIALIZER(
+            GROUP,
+            Name.K_SERIALIZER,
+            VERSION,
+            Desc.K_SERIALIZER_DESC
+        ),
+        M_SERIALIZER(
+            GROUP,
+            Name.M_SERIALIZER,
+            VERSION,
+            Desc.M_SERIALIZER_DESC
+        ),
+        G_SERIALIZER(
+            GROUP,
+            Name.G_SERIALIZER,
+            VERSION,
+            Desc.G_SERIALIZER_DESC
+        ),
+        F_SERIALIZER(
+            GROUP,
+            Name.F_SERIALIZER,
+            VERSION,
+            Desc.F_SERIALIZER_DESC
+        ),
+
+        ;
+
+        fun toDependency(): String {
             return "$group:$artifact:$version"
         }
 
@@ -55,7 +84,6 @@ object Publish {
             return "$name{$group,$artifact,$version,$desc}"
         }
     }
-
 
 
     @JvmStatic
@@ -81,6 +109,10 @@ object Publish {
         const val ROUTER_API = "router-api"
         const val ROUTER_COMPILER = "router-compiler"
         const val STARTER_DISPATCHER = "starter-dispatcher"
+        const val K_SERIALIZER = "k-serializer"
+        const val M_SERIALIZER = "m-serializer"
+        const val G_SERIALIZER = "g-serializer"
+        const val F_SERIALIZER = "f-serializer"
     }
 
 
@@ -93,6 +125,10 @@ object Publish {
         const val ROUTER_API_DESC = "路由api库"
         const val ROUTER_COMPILER_DESC = "路由注解processor"
         const val STARTER_DISPATCHER_DESC = "app启动器-starter"
+        const val K_SERIALIZER_DESC = "kotlin自带序列化实现"
+        const val M_SERIALIZER_DESC = "moshi序列化实现"
+        const val G_SERIALIZER_DESC = "gson序列化实现"
+        const val F_SERIALIZER_DESC = "fastJson序列化实现"
     }
 }
 

@@ -6,7 +6,7 @@ import androidx.fragment.app.Fragment
 import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.auto.IAuto
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.Router
 
 @FragmentAnnotation(path = "/module1/test")

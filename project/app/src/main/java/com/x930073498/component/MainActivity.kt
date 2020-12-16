@@ -14,7 +14,7 @@ import com.just.agentweb.AgentWeb
 import com.just.agentweb.AgentWebConfig
 import com.x930073498.component.annotations.ActivityAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.*
 import com.x930073498.component.router.impl.RouterInterceptor
 import com.x930073498.component.router.interceptor.Chain

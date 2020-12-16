@@ -8,7 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import androidx.annotation.CallSuper
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.impl.*
 import com.x930073498.component.router.interceptor.Chain

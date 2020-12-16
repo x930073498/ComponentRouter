@@ -1,13 +1,14 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = "1.4.21"
-    def repositoryUrl = "../project/repository"
+    def repositoryUrl = new File(new File(rootDir.parent,"project"),"repository").absolutePath
     repositories {
-        google()
-        jcenter()
         maven{
             url repositoryUrl
         }
+        google()
+        jcenter()
+
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.1.1"
@@ -24,6 +25,7 @@ apply plugin:"com.x930073498.component.auto.plugin"
 auto{
     mavenUrl=repositoryUrl
     version="0.0.9"
+    serializer="G"
     enableRouter=true
     enableDispatcher=true
     enable=true

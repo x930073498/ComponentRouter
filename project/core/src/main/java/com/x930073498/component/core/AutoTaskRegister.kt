@@ -4,10 +4,10 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import com.x930073498.component.auto.IAuto
-import com.x930073498.component.auto.IRegister
+import com.x930073498.component.auto.*
 
 internal object AutoTaskRegister {
     internal object AutoActivityLifecycle : IActivityLifecycle {
@@ -73,11 +73,6 @@ internal object AutoTaskRegister {
     internal lateinit var app: Application
     private var hasInit = false
 
-    var debugable = true
-        set(value) {
-            LogUtil.debug = debugable
-            field = value
-        }
 
     @JvmStatic
     internal fun init(context: Context) {
@@ -85,7 +80,11 @@ internal object AutoTaskRegister {
         val time = System.currentTimeMillis()
         app = getApplication(context)
         load()
-        AutoConfiguration.init()//初始化配置
+        applyConfiguration {
+            LogUtil.setLogger { tag, msg ->
+                Log.i(tag, getSerializer()?.serialize(msg) ?: msg.toString())
+            }
+        }   //初始化配置
         ModuleHandler.doRegister()//初始化模块
         AutoActivityLifecycle.doRegister()//注册自身activity生命周期监听
         ApplicationLifecycleHandler.onApplicationCreated()//通知application create
@@ -98,6 +97,7 @@ internal object AutoTaskRegister {
         val appContext = context.applicationContext
         return appContext as Application
     }
+
 
     @JvmStatic
     private fun load() {

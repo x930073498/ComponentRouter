@@ -9,13 +9,26 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.kotlin.dsl.*
 
+enum class SerializerType {
+    K,//kotlin自带的序列化工具
+    M,//moshi
+    G,//gson
+    F,//fastjson
+    NONE //没有序列化
+}
+
 open class Auto {
-    var enableDependency=true
+    var enableDependency = true
     var enableRouter = true
     var enableDispatcher = true
     var enable = true
+    private var serializer: String = SerializerType.NONE.name
     var mavenUrl = "https://dl.bintray.com/x930073498/component"
     var version = "+"
+    private val serializerType: SerializerType
+        get() {
+            return SerializerType.valueOf(serializer)
+        }
 
     companion object {
         private const val GROUP = "com.x930073498.component"
@@ -25,8 +38,15 @@ open class Auto {
         const val ARTIFACT_ROUTER_ANNOTATIONS = "router-annotations"
         const val ARTIFACT_ROUTER_API = "router-api"
         const val ARTIFACT_ROUTER_COMPILER = "router-compiler"
+        const val ARTIFACT_K_SERIALIZER = "k-serializer"
+        const val ARTIFACT_M_SERIALIZER = "m-serializer"
+        const val ARTIFACT_G_SERIALIZER = "g-serializer"
+        const val ARTIFACT_F_SERIALIZER = "f-serializer"
         const val ARTIFACT_STARTER_DISPATCHER = "starter-dispatcher"
-
+        const val MOSHI_DEPENDENCY = "com.squareup.moshi:moshi:1.11.0"
+        const val MOSHI_CODEGEN_DEPENDENCY = "com.squareup.moshi:moshi-kotlin-codegen:1.11.0"
+        const val GSON_DEPENDENCY = "com.google.code.gson:gson:2.8.6"
+        const val FAST_JSON_DEPENDENCY = "com.alibaba:fastjson:1.1.72.android"
 //        const val IMPLEMENTATION = "implementation"
 
         const val IMPLEMENTATION = "api"
@@ -52,6 +72,53 @@ open class Auto {
     private fun Project.getDependency(plugin: Plugin<*>): List<Dependency> {
         val result = arrayListOf<Dependency>()
         result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_AUTO)))
+        println("serializerType=$serializerType")
+        when (serializerType) {
+            SerializerType.K -> {
+//                if (KotlinVersion.CURRENT.also {
+//                        println("kotlin version=$it")
+//                    }.run {
+//                        major >= 1 && minor >= 4
+//                    }) {
+//                    plugins.apply {
+//                        apply("org.jetbrains.kotlin.plugin.serialization")
+//                        this.withId("org.jetbrains.kotlin.plugin.serialization") {
+//                            version = "1.4.10"
+//                        }
+//                    }
+//                    result.add(
+//                        Dependency(
+//                            IMPLEMENTATION,
+//                            getDependency(ARTIFACT_K_SERIALIZER)
+//                        )
+//                    )
+//                }
+            }
+            SerializerType.M -> {
+                if (!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
+                    if (plugin !is JavaLibraryPlugin) {
+                        plugins.apply("kotlin-android")
+                    } else {
+                        plugins.apply("kotlin")
+                    }
+                    plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
+                }
+                result.add(Dependency(KAPT, MOSHI_CODEGEN_DEPENDENCY))
+                result.add(Dependency(IMPLEMENTATION, MOSHI_DEPENDENCY))
+                result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_M_SERIALIZER)))
+            }
+            SerializerType.G -> {
+                result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_G_SERIALIZER)))
+                result.add(Dependency(IMPLEMENTATION, GSON_DEPENDENCY))
+            }
+            SerializerType.F -> {
+                result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_F_SERIALIZER)))
+                result.add(Dependency(IMPLEMENTATION, FAST_JSON_DEPENDENCY))
+            }
+            SerializerType.NONE -> {
+//do nothing
+            }
+        }
         if (plugin is AppPlugin || plugin is LibraryPlugin) {
             result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_CORE)))
             if (enableRouter) {
@@ -78,15 +145,16 @@ open class Auto {
                     )
                 )
             }
+
         }
 
         return result
     }
 
 
-    fun isValid() =  enable
+    fun isValid() = enable
     internal fun apply(project: Project) {
-        if (!isValid()||!enableDependency) {
+        if (!isValid() || !enableDependency) {
             return
         }
         project.predicate {

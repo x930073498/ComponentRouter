@@ -4,7 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.x930073498.component.annotations.ActivityAnnotation
 import com.x930073498.component.R
-import com.x930073498.component.core.LogUtil
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.Router
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
