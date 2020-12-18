@@ -7,7 +7,9 @@ import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.auto.IAuto
 import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.auto.getSerializer
 import com.x930073498.component.router.Router
+import java.net.URLEncoder
 
 @FragmentAnnotation(path = "/module1/test")
 class TestFragment : Fragment() {
@@ -21,7 +23,15 @@ class TestAuto: IAuto {
 @MethodAnnotation(path = "/module1/method/test")
 suspend fun doTest(context: Context){
     LogUtil.log("enter this line 7878744")
-    Router.from("/method/toast").bundle {
-        putString("msg","测试")
-    }.forward(context)
+    Router.from("/method/toast?info=${URLEncoder.encode("{msg:\"测试\"}")}").bundle {
+//        put("msg","测试")
+
+    }.uri {
+//        appendQueryParameter("info", getSerializer().serialize(ToastInfo("msg",0).also {
+//            LogUtil.log(it)
+//        }))
+//        appendQueryParameter("info", "{msg:\"测试\",duration:0}")
+    }
+        .forward(context)
 }
+

@@ -5,6 +5,7 @@ import android.os.Looper
 import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.annotation.UiThread
+import com.alibaba.fastjson.annotation.JSONField
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.annotations.MethodBundleNameAnnotation
 import com.x930073498.component.auto.IAuto
@@ -37,13 +38,10 @@ suspend fun testMethod2(context: Context) {
 
 @UiThread
 @MethodAnnotation(path = "/method/toast")
-fun toast(context: Context, msg: String?) {
-    if (msg==null)return
-    Toast.makeText(context.applicationContext, msg, Toast.LENGTH_SHORT).show()
+fun toast(context: Context, info: ToastInfo?) {
+    if (info==null)return
+    Toast.makeText(context.applicationContext, info.msg, info.duration).show()
 }
 
-
-
-interface A:IAuto
-
-class B:A
+//data class ToastInfo(@JSONField(name = "msg")val msg:String, @JSONField(name = "duration")val duration:Int =Toast.LENGTH_SHORT)
+data class ToastInfo(@JSONField(name = "msg")val msg:String, @JSONField(name = "duration")val duration:Int=Toast.LENGTH_SHORT)

@@ -18,12 +18,21 @@ android {
     }
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {
+        signingConfig = signingConfigs.create("release"){
+            storeFile(rootProject.file("../key-store.jks").apply {
+                println(this)
+            })
+            keyAlias("app")
+            storePassword("123456")
+            keyPassword("123456")
+        }
         applicationId("com.x930073498.component")
         minSdkVersion(Versions.minSdk)
         targetSdkVersion(Versions.targetSdk)
         versionCode(Versions.versionCode)
         versionName(Versions.versionName)
     }
+
     buildTypes {
         getByName("release") {
             minifyEnabled(true)

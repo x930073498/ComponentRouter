@@ -7,9 +7,11 @@ import android.net.Uri
 import android.os.*
 import android.util.SparseArray
 import androidx.arch.core.util.Function
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.auto.getSerializer
 import java.io.Serializable
 import java.lang.reflect.Type
+import java.net.URLDecoder
 import java.util.*
 
 /**
@@ -1231,19 +1233,29 @@ object ParameterSupport {
         val serializer = getSerializer()
         if (bundle.containsKey(key)) {
             val result = bundle.get(key) ?: return defaultValue
-            return runCatching { result as T }.getOrNull()?:run {
-                serializer.deserialize(serializer.serialize(result),type)
-            }
-        }else {
-          val result= getQueryString(bundle,key)?:return defaultValue
-            return runCatching {
-                serializer.deserialize<T>(result,type)
-            }.getOrNull()?:defaultValue
+            return runCatching { serializer.deserialize<T>(result as String, type) }
+                .recoverCatching { serializer.deserialize<T>(serializer.serialize(result), type) }
+                .onFailure { it.printStackTrace() }
+                .getOrNull() ?: defaultValue
+        } else {
+            val result = getQueryString(bundle, key) ?: return defaultValue
+            return runCatching { serializer.deserialize<T>(URLDecoder.decode(result), type) }
+                .recoverCatching {
+                    serializer.deserialize<T>(
+                        serializer.serialize(
+                            URLDecoder.decode(
+                                result
+                            )
+                        ), type
+                    )
+                }
+                .onFailure { it.printStackTrace() }
+                .getOrNull() ?: defaultValue
         }
     }
 
-    inline fun<reified T>get(bundle: Bundle?,key: String,defaultValue: T?=null):T?{
-        return get(bundle,key,T::class.java,defaultValue)
+    inline fun <reified T> get(bundle: Bundle?, key: String, defaultValue: T? = null): T? {
+        return get(bundle, key, T::class.java, defaultValue)
     }
 
     fun <T : Parcelable?> getParcelable(

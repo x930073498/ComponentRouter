@@ -16,7 +16,7 @@ class SecondActivity : AppCompatActivity() {
         GlobalScope.launch {
             Router.from("test3?a=4&b=3").navigate<TestService>()?.test()
             LogUtil.log( Router.from("test4?a=4&b=3").bundle {
-                putCharSequence("c","4")
+                put("c","4")
             }.navigate<Any>())
 
         }

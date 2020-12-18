@@ -21,6 +21,7 @@ import com.x930073498.component.core.IApplicationLifecycle
 import com.x930073498.component.auto.IAuto
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.auto.getConfiguration
+import com.x930073498.component.auto.getSerializer
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.NavigateInterceptor
 import com.x930073498.component.router.action.NavigateParams
@@ -47,12 +48,26 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
 
 }
 
+fun interface IBundle {
+    fun put(key: String, value: Any?)
+}
 
 class Router(uri: Uri = Uri.EMPTY, activity: Activity? = null) {
     private var uriBuilder = uri.buildUpon()
     private val mBundle = bundleOf()
 
     private var greenChannel = false
+    private val iBundle = IBundle { key, value ->
+        mBundle.putString(
+            key,
+            when (value) {
+                null -> null
+                else -> getSerializer().serialize(
+                    value
+                )
+            }
+        )
+    }
 
     private val contextHolder = ContextHolder.create(activity)
     fun greenChannel() {
@@ -90,20 +105,20 @@ class Router(uri: Uri = Uri.EMPTY, activity: Activity? = null) {
         return this
     }
 
-    fun bundle(action: Bundle.() -> Unit): Router {
-        action(mBundle)
+    fun bundle(action: IBundle.() -> Unit): Router {
+        action(iBundle)
         return this
     }
 
     fun bundle(bundle: Bundle): Router {
-        mBundle.clear()
-        mBundle.putAll(bundle)
+        bundle.keySet().forEach {
+            put(it, bundle.get(it))
+        }
         return this
     }
 
     fun put(key: String, value: Any?): Router {
-        val bundle = bundleOf(key to value)
-        mBundle.putAll(bundle)
+        iBundle.put(key, value)
         return this
     }
 
@@ -165,7 +180,6 @@ class Router(uri: Uri = Uri.EMPTY, activity: Activity? = null) {
             .apply {
                 if (!greenChannel) add(GlobalInterceptor)
             }
-
             .start()
     }
 

@@ -8,6 +8,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
 import org.gradle.kotlin.dsl.*
+import java.util.*
 
 enum class SerializerType {
     K,//kotlin自带的序列化工具
@@ -27,7 +28,7 @@ open class Auto {
     var version = "+"
     private val serializerType: SerializerType
         get() {
-            return SerializerType.valueOf(serializer)
+            return runCatching { SerializerType.valueOf(serializer.toUpperCase(Locale.getDefault())) }.getOrNull()?:SerializerType.NONE
         }
 
     companion object {
@@ -47,6 +48,7 @@ open class Auto {
         const val MOSHI_CODEGEN_DEPENDENCY = "com.squareup.moshi:moshi-kotlin-codegen:1.11.0"
         const val GSON_DEPENDENCY = "com.google.code.gson:gson:2.8.6"
         const val FAST_JSON_DEPENDENCY = "com.alibaba:fastjson:1.1.72.android"
+        const val KOTLIN_REFLECT_DEPENDENCY = "org.jetbrains.kotlin:kotlin-reflect:1.4.21"
 //        const val IMPLEMENTATION = "implementation"
 
         const val IMPLEMENTATION = "api"
@@ -114,6 +116,7 @@ open class Auto {
             SerializerType.F -> {
                 result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_F_SERIALIZER)))
                 result.add(Dependency(IMPLEMENTATION, FAST_JSON_DEPENDENCY))
+                result.add(Dependency(IMPLEMENTATION, KOTLIN_REFLECT_DEPENDENCY))
             }
             SerializerType.NONE -> {
 //do nothing

@@ -1,22 +1,40 @@
 package com.x930073498.plugin
 
+import com.android.build.gradle.AppPlugin
+import com.android.build.gradle.LibraryPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.javadoc.Javadoc
-import org.jetbrains.kotlin.konan.file.File
 import com.github.panpf.bintray.publish.PublishExtension
-import org.gradle.api.plugins.JavaPlugin
+import com.x930073498.Versions
+import org.gradle.api.JavaVersion
 import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
-import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import kotlin.reflect.KClass
 
 
 fun Project.isRootProject(): Boolean {
     return this == rootProject
 }
 
+
+fun Project.doOn(
+    vararg pluginClass: KClass<out Plugin<*>>,
+    action: Plugin<*>.() -> Unit
+) {
+    val plugin = pluginClass.mapNotNull { plugins.findPlugin(it) }.firstOrNull()
+    if (plugin != null) {
+        action(plugin)
+        return
+    }
+    plugins.whenPluginAdded {
+        if (pluginClass.any { it.isInstance(this) }) {
+            action(this)
+            return@whenPluginAdded
+        }
+    }
+}
 
 class BuildPlugin : Plugin<Project> {
 
@@ -29,10 +47,10 @@ class BuildPlugin : Plugin<Project> {
             println("BinaryInfo=${BinaryInfo}")
             if (isRootProject()) {
                 subprojects {
-                    initPublish(this)
+                    initProject(this)
                 }
             } else {
-                initPublish(this)
+                initProject(this)
             }
         }
     }
@@ -47,8 +65,29 @@ class BuildPlugin : Plugin<Project> {
         }
     }
 
-    private fun initPublish(project: Project) {
+
+    private fun initProject(project: Project) {
+
         with(project) {
+            tasks.withType<KotlinCompile> {
+                kotlinOptions {
+                    jvmTarget = JavaVersion.VERSION_1_8.toString()
+                }
+            }
+            doOn(AppPlugin::class, LibraryPlugin::class) {
+                this@with.android.apply {
+                    compileSdkVersion(Versions.compileSdk)
+                    lintOptions {
+                        isAbortOnError = true
+                        textReport = true
+                        textOutput("stdout")
+                    }
+                    compileOptions {
+                        sourceCompatibility = JavaVersion.VERSION_1_8
+                        targetCompatibility = JavaVersion.VERSION_1_8
+                    }
+                }
+            }
             if (BinaryInfo.valid()) {
                 publishInfo?.let {
                     tasks.withType<Javadoc> {
@@ -74,17 +113,16 @@ class BuildPlugin : Plugin<Project> {
 
                     afterEvaluate {
 //                        if (plugins.hasPlugin(JavaPlugin::class)){
-                            plugins.apply("maven-publish")
-                            configure<PublishingExtension> {
-                                this.repositories {
-                                    maven(uri("../repository"))
-                                }
+                        plugins.apply("maven-publish")
+                        configure<PublishingExtension> {
+                            this.repositories {
+                                maven(uri("../repository"))
                             }
+                        }
 //                        }else{
 //                            val path = "${rootProject.rootDir}${File.separator}upload.gradle"
 //                            this.apply(path)
 //                        }
-
 
 
                     }

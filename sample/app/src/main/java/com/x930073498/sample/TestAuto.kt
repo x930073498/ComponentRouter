@@ -1,13 +1,12 @@
 package com.x930073498.sample
 
-import com.google.gson.annotations.SerializedName
 import java.io.Serializable
 
 
-data class Data(@SerializedName("name") val name: String)
+data class Data(val name: String)
 
 class S : Serializable {
-    private var a = ""
+     var a = ""
 
     fun www(a:String){
         this.a=a
@@ -20,7 +19,7 @@ class S : Serializable {
 
 }
 class W : Serializable {
-    private var a = ""
+     var a = ""
 
     fun www(a:String){
         this.a=a

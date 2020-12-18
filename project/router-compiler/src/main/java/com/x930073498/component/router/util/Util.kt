@@ -379,7 +379,20 @@ private fun BaseProcessor.getParameterMethodName(
     isSubSerializableType: Boolean
 ): String {
     return  "get"
+//    getMethodName(
+//        parameterClassName,
+//        variableTypeMirror,
+//        isSubParcelableType,
+//        isSubSerializableType
+//    )
+}
 
+private fun BaseProcessor.getMethodName(
+    parameterClassName: TypeName,
+    variableTypeMirror: TypeMirror?,
+    isSubParcelableType: Boolean,
+    isSubSerializableType: Boolean
+):String {
     val noNullParameterClassName = parameterClassName.copy(false)
     return if (noNullParameterClassName == mTypeNameString) { // 如果是一个 String
         "getString"
@@ -436,11 +449,11 @@ private fun BaseProcessor.getParameterMethodName(
                             "getIntegerArrayList"
                         }
                         else -> {
-                            ""
+                            "get"
                         }
                     }
                 } else {
-                    ""
+                    "get"
                 }
             } else if (mTypeNameSparseArray == className) { // 如果是 SparseArray
                 val typeArguments = variableTypeMirror.typeArguments
@@ -452,7 +465,7 @@ private fun BaseProcessor.getParameterMethodName(
                     ) { // 如果是 Parcelable 及其子类
                         "getSparseParcelableArray"
                     } else {
-                        ""
+                        "get"
                     }
                 } else { // 其他类型的情况,是实现序列化的对象,这种时候我们直接要从 bundle 中获取
 
@@ -465,7 +478,7 @@ private fun BaseProcessor.getParameterMethodName(
                             "getSerializable"
                         }
                         else -> {
-                            ""
+                            "get"
                         }
                     }
                 }
@@ -474,7 +487,7 @@ private fun BaseProcessor.getParameterMethodName(
             } else if (isSubSerializableType) {
                 "getSerializable"
             } else {
-                ""
+                "get"
             }
         } else if (variableTypeMirror is ArrayType) { // 如果是数组
             val parameterComponentTypeName: TypeName =
@@ -524,7 +537,7 @@ private fun BaseProcessor.getParameterMethodName(
                     "getParcelableArray"
                 }
                 else -> {
-                    ""
+                    "get"
                 }
             }
         } else if (isSubParcelableType) {
@@ -532,7 +545,7 @@ private fun BaseProcessor.getParameterMethodName(
         } else if (isSubSerializableType) {
             "getSerializable"
         } else {
-            ""
+            "get"
         }
 
     } else if (isSubParcelableType) {
@@ -540,6 +553,6 @@ private fun BaseProcessor.getParameterMethodName(
     } else if (isSubSerializableType) {
         "getSerializable"
     } else {
-        ""
+        "get"
     }
 }

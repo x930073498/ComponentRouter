@@ -11,8 +11,11 @@ object StartFragmentResultHandler : ResultHandler {
         if (result is Fragment) {
             val context = params.contextHolder.getContext()
             if (context is FragmentActivity) {
+
                 context.supportFragmentManager.beginTransaction()
-                    .replace(Window.ID_ANDROID_CONTENT, result).commit()
+                    .replace(Window.ID_ANDROID_CONTENT, result,"a")
+                    .addToBackStack("a")
+                    .commit()
                 return null
             }
         }
