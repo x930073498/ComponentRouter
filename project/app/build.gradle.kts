@@ -8,6 +8,7 @@ plugins {
     kotlin("plugin.serialization") version "1.4.20"
 //    id("kotlin-parcelize")
     id("dagger.hilt.android.plugin")
+    id("kotlin-android")
 
 }
 println("group=$group")
@@ -26,6 +27,7 @@ android {
             storePassword("123456")
             keyPassword("123456")
         }
+        multiDexEnabled=true
         applicationId("com.x930073498.component")
         minSdkVersion(Versions.minSdk)
         targetSdkVersion(Versions.targetSdk)
@@ -55,6 +57,9 @@ dependencies {
     implementation(Libraries.androidx_core_ktx)
     implementation(Libraries.hilt_android)
     implementation(Libraries.hilt_lifecycle_viewmodel)
+    implementation("androidx.appcompat:appcompat:1.2.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlin_version"]}")
+    implementation("androidx.constraintlayout:constraintlayout:2.0.4")
     kapt(Libraries.hilt_android_compiler)
     kapt(Libraries.hilt_compiler)
 
@@ -85,4 +90,10 @@ dependencies {
     implementation(Libraries.fastJson)
     implementation(project(":f-serializer"))
     kapt(project(":router-compiler"))
+
+    //navigation
+    implementation(Libraries.navigation_fragment_ktx)
+    implementation(project(":fragmentation"))
+    implementation(Libraries.navigation_ui_ktx)
+
 }

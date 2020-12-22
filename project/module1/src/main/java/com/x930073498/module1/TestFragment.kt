@@ -2,26 +2,44 @@ package com.x930073498.module1
 
 import android.content.Context
 import android.os.Bundle
+import android.view.View
 import androidx.fragment.app.Fragment
 import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.MethodAnnotation
-import com.x930073498.component.auto.IAuto
+import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.auto.LogUtil
-import com.x930073498.component.auto.getSerializer
+import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
+import com.x930073498.module1.databinding.FragmentModuleTestBinding
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 @FragmentAnnotation(path = "/module1/test")
-class TestFragment : Fragment() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+class TestFragment : Fragment(R.layout.fragment_module_test) {
+    @ValueAutowiredAnnotation(name = "name")
+    var name: String = ""
+    private val binding by lazy {
+        FragmentModuleTestBinding.bind(requireView())
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.tv.text=name
+        binding.tv.setOnClickListener {
+            GlobalScope.launch {
+                startWithRouter("/module1/test?name=模块测试2"){
+                    this.withNavOptions {
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
     }
 }
-class TestAuto: IAuto {
 
-}
 @MethodAnnotation(path = "/module1/method/test")
-suspend fun doTest(context: Context){
+suspend fun doTest(context: Context) {
     LogUtil.log("enter this line 7878744")
     Router.from("/method/toast?info=${URLEncoder.encode("{msg:\"测试\"}")}").bundle {
 //        put("msg","测试")

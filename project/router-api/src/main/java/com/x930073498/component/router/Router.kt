@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.interceptor.onInterceptors
 import com.x930073498.component.router.request.routerRequest
@@ -22,6 +24,7 @@ import com.x930073498.component.auto.IAuto
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.auto.getConfiguration
 import com.x930073498.component.auto.getSerializer
+import com.x930073498.component.core.IFragmentLifecycle
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.NavigateInterceptor
 import com.x930073498.component.router.action.NavigateParams
@@ -33,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.properties.Delegates
 
 
-class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
+class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFragmentLifecycle {
     override fun onApplicationCreated(app: Application) {
         Router.init(app).apply {
             checkRouteUnique(getConfiguration().shouldRouterUnique())
@@ -45,11 +48,36 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle {
         Router.inject(activity)
     }
 
+    override fun onFragmentCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
+        super.onFragmentCreated(fm, f, savedInstanceState)
+        Router.inject(f)
+    }
 
 }
 
 fun interface IBundle {
     fun put(key: String, value: Any?)
+
+    fun add(bundle: Bundle){
+        bundle.keySet().forEach {
+            put(it,bundle.get(it))
+        }
+    }
+    companion object{
+      internal  fun createFormBundle(bundle: Bundle):IBundle{
+            return IBundle { key, value ->
+                bundle.putString(
+                    key,
+                    when (value) {
+                        null -> null
+                        else -> getSerializer().serialize(
+                            value
+                        )
+                    }
+                )
+            }
+        }
+    }
 }
 
 class Router(uri: Uri = Uri.EMPTY, activity: Activity? = null) {
@@ -57,17 +85,7 @@ class Router(uri: Uri = Uri.EMPTY, activity: Activity? = null) {
     private val mBundle = bundleOf()
 
     private var greenChannel = false
-    private val iBundle = IBundle { key, value ->
-        mBundle.putString(
-            key,
-            when (value) {
-                null -> null
-                else -> getSerializer().serialize(
-                    value
-                )
-            }
-        )
-    }
+    private val iBundle = IBundle.createFormBundle(mBundle)
 
     private val contextHolder = ContextHolder.create(activity)
     fun greenChannel() {
@@ -239,6 +257,16 @@ class Router(uri: Uri = Uri.EMPTY, activity: Activity? = null) {
             val bundle = intent.extras ?: return
             (center as? ActivityActionDelegate)?.apply {
                 inject(bundle, activity)
+            }
+        }
+
+        internal fun <T> inject(fragment: T) where T : Fragment {
+            val bundle = fragment.arguments ?: return
+            val key = ParameterSupport.getCenterKey(bundle) ?: return
+            val center = ActionCenter.getAction(key)
+            (center as? FragmentActionDelegate)?.apply {
+                inject(bundle, fragment)
+                LogUtil.log("enter this line 64777")
             }
         }
 

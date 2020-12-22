@@ -158,18 +158,14 @@ sealed class Target(
             val (bundle, contextHolder) = params
             return action.run {
                 if (Looper.getMainLooper() == Looper.getMainLooper()) {
-                    factory().create(contextHolder, targetClazz, bundle).apply {
-                        inject(bundle, this)
-                    }
+                    factory().create(contextHolder, targetClazz, bundle)
                 } else {
                     withContext(Dispatchers.Main.immediate) {
                         factory().create(contextHolder, targetClazz, bundle)
-                            .apply {
-                                inject(bundle, this)
-                            }
+
                     }
-                }
-            }.asResult()
+                }.asResult()
+            }
         }
     }
 

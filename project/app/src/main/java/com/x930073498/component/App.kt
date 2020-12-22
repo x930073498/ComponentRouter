@@ -1,6 +1,7 @@
 package com.x930073498.component
 
 import android.app.Application
+import androidx.multidex.MultiDexApplication
 import com.x930073498.component.auto.*
 import com.x930073498.component.test.Data
 import dagger.hilt.android.HiltAndroidApp
@@ -8,7 +9,7 @@ import java.lang.reflect.Type
 import javax.inject.Inject
 
 @HiltAndroidApp
-class App : Application() {
+class App : MultiDexApplication() {
 
     @Inject
     lateinit var foo: Foo

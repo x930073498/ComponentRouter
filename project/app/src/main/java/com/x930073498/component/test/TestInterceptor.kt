@@ -18,3 +18,32 @@ class TestInterceptor : RouterInterceptor {
         return chain.process(chain.request())
     }
 }
+
+@InterceptorAnnotation(
+    path = "/interceptor/scheme-http",
+    scope = InterceptorScope.GLOBAL
+)
+class HttpSchemeInterceptor : RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+        val request = chain.request()
+        val uri = request.uri
+        val scheme = uri.scheme
+        return if (scheme.isNullOrEmpty()) {
+            chain.process(request)
+        } else {
+            if (scheme == "http" || scheme == "https") {
+                chain.process(request.buildUpon()
+                    .uri {
+                        path("/fragment/web")
+                    }
+                    .bundle {
+                        put("url", uri.toString())
+                    }
+                    .build())
+            } else {
+                chain.process(request)
+            }
+        }
+    }
+
+}

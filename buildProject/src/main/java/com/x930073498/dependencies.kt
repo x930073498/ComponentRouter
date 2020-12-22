@@ -52,6 +52,8 @@ object Libraries {
     const val datastore_preferences = "androidx.datastore:datastore-preferences:1.0.0-alpha04"
     const val startup = "androidx.startup:startup-runtime:1.0.0"
     const val agent_web = "com.just.agentweb:agentweb:4.1.3"
+    const val navigation_fragment_ktx="androidx.navigation:navigation-fragment-ktx:2.3.2"
+    const val navigation_ui_ktx="androidx.navigation:navigation-ui-ktx:2.3.2"
 }
 
 

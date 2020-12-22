@@ -27,8 +27,10 @@ android {
 }
 dependencies {
     implementation(Libraries.kotlin)
+    implementation(Libraries.kotlinx_coroutines_android)
     implementation(Libraries.androidx_core_ktx)
     implementation(Libraries.androidx_appcompat)
+    implementation(Libraries.navigation_fragment_ktx)
     kapt(project(":router-compiler"))
     implementation(project(":router-annotations"))
 //    debugImplementation(project(":auto"))
@@ -41,4 +43,5 @@ dependencies {
     implementation(project(":auto"))
     implementation(project(":core"))
     implementation(project(":router-api"))
+    implementation(project(":fragmentation"))
 }

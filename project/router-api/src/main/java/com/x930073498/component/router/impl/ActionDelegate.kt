@@ -3,6 +3,7 @@
 package com.x930073498.component.router.impl
 
 import android.os.Bundle
+import com.x930073498.component.auto.IAuto
 import com.x930073498.component.router.action.NavigateInterceptor
 import com.x930073498.component.router.action.NavigateParams
 import com.x930073498.component.router.action.NavigateResult
@@ -20,7 +21,7 @@ sealed class ActionType {
     internal object SYSTEM : ActionType()
 }
 
-interface ActionDelegate {
+interface ActionDelegate:IAuto {
     fun type(): ActionType
     val path: String
     val thread: IThread
@@ -41,7 +42,7 @@ interface ActionDelegate {
 }
 
 
-internal class SystemActionDelegate() : ActionDelegate {
+ class SystemActionDelegate() : ActionDelegate {
     override fun type(): ActionType {
         return ActionType.SYSTEM
     }

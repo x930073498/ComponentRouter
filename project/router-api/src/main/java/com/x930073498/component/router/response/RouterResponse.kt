@@ -6,9 +6,11 @@ import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.NavigateInterceptor
 import com.x930073498.component.router.action.NavigateParams
+import com.x930073498.component.router.impl.ActionDelegate
 import com.x930073498.component.router.impl.ResultHandler
 import com.x930073498.component.router.impl.getResult
 import com.x930073498.component.router.interceptor.Response
+import com.x930073498.component.router.util.ParameterSupport
 
 interface RouterResponse : Response {
     val uri: Uri
@@ -42,6 +44,11 @@ internal fun RouterResponse.asNavigateParams():NavigateParams{
 
 suspend fun RouterResponse.navigate(navigateInterceptor: NavigateInterceptor?=null,handler: ResultHandler= ResultHandler.Direct): Any? {
     return ActionCenter.getAction(uri).getResult(asNavigateParams(),navigateInterceptor,handler)
+}
+ fun RouterResponse.asActionDelegate():ActionDelegate{
+    return ActionCenter.getAction(uri).apply {
+        ParameterSupport.putCenter(bundle, path)
+    }
 }
 
 
