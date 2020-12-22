@@ -10,28 +10,52 @@ import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.util.ParameterSupport
 import com.x930073498.module1.databinding.FragmentModuleTestBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
+
+
 @FragmentAnnotation(path = "/module1/test")
 class TestFragment : Fragment(R.layout.fragment_module_test) {
     @ValueAutowiredAnnotation(name = "name")
     var name: String = ""
-    private val binding by lazy {
-        FragmentModuleTestBinding.bind(requireView())
+    private val binding: FragmentModuleTestBinding
+        get() = FragmentModuleTestBinding.bind(requireView())
+
+
+    override fun onPause() {
+        super.onPause()
+    }
+
+    override fun onStop() {
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.tv.text=name
+        name = ParameterSupport.get(arguments, "name") ?: ""
+        arguments?.keySet()?.forEach {
+            LogUtil.log("enter this line argument key=$it,value=${arguments?.get(it)}")
+        }
+        LogUtil.log("enter this line onViewCreated title=$name")
+        binding.tv.text = name
         binding.tv.setOnClickListener {
             GlobalScope.launch {
-                startWithRouter("/module1/test?name=模块测试2"){
-                    this.withNavOptions {
-                        launchSingleTop = true
-                    }
+                startWithRouter("/module1/test?name=模块测试2") {
+//                    this.withNavOptions {
+//                        launchSingleTop = true
+//                    }
                 }
             }
         }

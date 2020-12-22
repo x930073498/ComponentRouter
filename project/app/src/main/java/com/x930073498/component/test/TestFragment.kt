@@ -39,9 +39,9 @@ open class TestFragment : TestParentFragment(), IFragmentation {
 //                    }
 //                }
                 startWithRouter("/module1/test?name=模块测试1") {
-                    this.withNavOptions {
-                        launchSingleTop = true
-                    }
+//                    this.withNavOptions {
+//                        launchSingleTop = true
+//                    }
                 }
 //                startWithRouter("yangpijun://yunzhanxinxi.com/taoke/module/main/life/fragment/promote?platform=elm"){
 //

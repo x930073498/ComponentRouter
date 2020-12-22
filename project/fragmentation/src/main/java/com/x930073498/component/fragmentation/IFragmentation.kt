@@ -1,6 +1,7 @@
 package com.x930073498.component.fragmentation
 
 import android.content.Context
+import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -14,6 +15,9 @@ interface IFragmentation {
 }
 
 class FragmentationAuto : IAuto, IFragmentLifecycle {
+    override fun onFragmentSaveInstanceState(fm: FragmentManager, f: Fragment, outState: Bundle) {
+        super.onFragmentSaveInstanceState(fm, f, outState)
+    }
     override fun onFragmentAttached(fm: FragmentManager, f: Fragment, context: Context) {
         super.onFragmentAttached(fm, f, context)
         if (f is IFragmentation) {
