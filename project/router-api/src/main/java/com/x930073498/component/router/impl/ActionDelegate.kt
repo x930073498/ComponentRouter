@@ -21,7 +21,7 @@ sealed class ActionType {
     internal object SYSTEM : ActionType()
 }
 
-interface ActionDelegate:IAuto {
+interface ActionDelegate : IAuto {
     fun type(): ActionType
     val path: String
     val thread: IThread
@@ -31,6 +31,7 @@ interface ActionDelegate:IAuto {
 
     val target: Target
 
+    val autoRegister: Boolean get() = true
 
     fun inject(bundle: Bundle, target: Any)
     val group: String
@@ -42,7 +43,7 @@ interface ActionDelegate:IAuto {
 }
 
 
- class SystemActionDelegate() : ActionDelegate {
+class SystemActionDelegate() : ActionDelegate {
     override fun type(): ActionType {
         return ActionType.SYSTEM
     }

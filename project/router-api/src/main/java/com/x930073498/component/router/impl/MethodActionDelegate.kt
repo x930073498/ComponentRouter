@@ -12,11 +12,11 @@ interface MethodActionDelegate : ActionDelegate {
 
     override fun inject(bundle: Bundle, target: Any) {
     }
-    suspend fun factory(): Factory
+     fun factory(): Factory
 
 
     interface Factory {
-        suspend fun create(
+         fun create(
             contextHolder: ContextHolder,
             clazz: Class<*>,
             bundle: Bundle

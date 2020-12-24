@@ -5,7 +5,7 @@ import org.gradle.kotlin.dsl.extra
 
 object Publish {
     const val GROUP = "com.x930073498.component"
-    const val VERSION = "0.0.10"
+    const val VERSION = "0.0.11"
 
     enum class PublishInfo(
         val group: String,
@@ -48,7 +48,7 @@ object Publish {
             VERSION,
             Desc.STARTER_DISPATCHER_DESC
         ),
-
+        FRAGMENTATION(GROUP, Name.FRAGMENTATION, VERSION, Desc.FRAGMENTATION),
         K_SERIALIZER(
             GROUP,
             Name.K_SERIALIZER,
@@ -109,6 +109,7 @@ object Publish {
         const val ROUTER_API = "router-api"
         const val ROUTER_COMPILER = "router-compiler"
         const val STARTER_DISPATCHER = "starter-dispatcher"
+        const val FRAGMENTATION = "fragmentation"
         const val K_SERIALIZER = "k-serializer"
         const val M_SERIALIZER = "m-serializer"
         const val G_SERIALIZER = "g-serializer"
@@ -129,6 +130,7 @@ object Publish {
         const val M_SERIALIZER_DESC = "moshi序列化实现"
         const val G_SERIALIZER_DESC = "gson序列化实现"
         const val F_SERIALIZER_DESC = "fastJson序列化实现"
+        const val FRAGMENTATION = "基于router的navigation实现"
     }
 }
 

@@ -26,5 +26,4 @@ dependencies {
     implementation(project(":core"))
     implementation(project(":router-api"))
     implementation(Libraries.navigation_fragment_ktx)
-    implementation(Libraries.navigation_ui_ktx)
 }

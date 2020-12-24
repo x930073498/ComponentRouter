@@ -7,18 +7,17 @@ import androidx.fragment.app.Fragment
 import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
-import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.fragmentation.popSelf
+import com.x930073498.component.fragmentation.popTo
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
-import com.x930073498.component.router.util.ParameterSupport
 import com.x930073498.module1.databinding.FragmentModuleTestBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 
-
-@FragmentAnnotation(path = "/module1/test")
+@FragmentAnnotation(path = "/module1/test", autoRegister = false)
 class TestFragment : Fragment(R.layout.fragment_module_test) {
     @ValueAutowiredAnnotation(name = "name")
     var name: String = ""
@@ -26,36 +25,22 @@ class TestFragment : Fragment(R.layout.fragment_module_test) {
         get() = FragmentModuleTestBinding.bind(requireView())
 
 
-    override fun onPause() {
-        super.onPause()
-    }
-
-    override fun onStop() {
-        super.onStop()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        name = ParameterSupport.get(arguments, "name") ?: ""
-        arguments?.keySet()?.forEach {
-            LogUtil.log("enter this line argument key=$it,value=${arguments?.get(it)}")
-        }
-        LogUtil.log("enter this line onViewCreated title=$name")
         binding.tv.text = name
+        binding.tvReturn.setOnClickListener {
+//            pop()
+//            popTo("/test/a", false)
+            popSelf()
+        }
         binding.tv.setOnClickListener {
             GlobalScope.launch {
                 startWithRouter("/module1/test?name=模块测试2") {
-//                    this.withNavOptions {
-//                        launchSingleTop = true
-//                    }
+                    this.withNavOptions {
+                        popUpTo("/test/a")
+                    }
+                    this.withRouter {
+                    }
                 }
             }
         }
@@ -64,7 +49,6 @@ class TestFragment : Fragment(R.layout.fragment_module_test) {
 
 @MethodAnnotation(path = "/module1/method/test")
 suspend fun doTest(context: Context) {
-    LogUtil.log("enter this line 7878744")
     Router.from("/method/toast?info=${URLEncoder.encode("{msg:\"测试\"}")}").bundle {
 //        put("msg","测试")
 

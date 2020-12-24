@@ -6,6 +6,9 @@ plugins {
 android {
     compileSdkVersion 29
 
+    buildFeatures {
+        viewBinding = true
+    }
     defaultConfig {
         applicationId "com.x930073498.sample"
         minSdkVersion 21

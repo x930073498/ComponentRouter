@@ -44,17 +44,10 @@ internal fun BaseProcessor.getInterceptorInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation =
         element.getAnnotation(InterceptorAnnotation::class.java) ?: return emptyTypeInfo
-    val annotationGroup = annotation.group
-    val annotationPath = annotation.path
-    val group: String
-    val path: String
-    if (annotationGroup.isEmpty()) {
-        group = getGroupFromPath(annotationPath) ?: ""
-        path = annotationPath
-    } else {
-        group = annotationGroup
-        path = "/${group}$annotationPath"
-    }
+
+    val group: String=annotation.realGroup()
+    val path: String=annotation.realPath()
+
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}InterceptorActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
@@ -113,17 +106,10 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
         )
     ) return emptyTypeInfo
     val interceptors = annotation.interceptors
-    val annotationGroup = annotation.group
-    val annotationPath = annotation.path
-    val group: String
-    val path: String
-    if (annotationGroup.isEmpty()) {
-        group = getGroupFromPath(annotationPath) ?: ""
-        path = annotationPath
-    } else {
-        group = annotationGroup
-        path = "/${group}$annotationPath"
-    }
+
+    val group: String=annotation.realGroup()
+    val path: String=annotation.realPath()
+
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}FragmentActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
@@ -134,6 +120,7 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
         findParentAnnotation(type, fragmentTypeMirror, FragmentAnnotation::class.java, path)
     return FragmentInfo(
         this,
+        annotation,
         path,
         group,
         classPrefixName,
@@ -167,17 +154,8 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
 internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation = element.getAnnotation(ServiceAnnotation::class.java) ?: return emptyTypeInfo
-    val annotationGroup = annotation.group
-    val annotationPath = annotation.path
-    val group: String
-    val path: String
-    if (annotationGroup.isEmpty()) {
-        group = getGroupFromPath(annotationPath) ?: ""
-        path = annotationPath
-    } else {
-        group = annotationGroup
-        path = "/${group}$annotationPath"
-    }
+    val group: String=annotation.realGroup()
+    val path: String=annotation.realPath()
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}ServiceActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
@@ -186,6 +164,7 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
     val parentAnnotation = findParentAnnotation(type, fragmentTypeMirror, ServiceAnnotation::class.java, path)
     return ServiceInfo(
         this,
+        annotation,
         path,
         group,
         classPrefixName,
@@ -221,17 +200,8 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
 internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation = element.getAnnotation(ActivityAnnotation::class.java) ?: return emptyTypeInfo
-    val annotationGroup = annotation.group
-    val annotationPath = annotation.path
-    val group: String
-    val path: String
-    if (annotationGroup.isEmpty()) {
-        group = getGroupFromPath(annotationPath) ?: ""
-        path = annotationPath
-    } else {
-        group = annotationGroup
-        path = "/${group}$annotationPath"
-    }
+    val group: String=annotation.realGroup()
+    val path: String=annotation.realPath()
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}ActivityActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
@@ -241,6 +211,7 @@ internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
         findParentAnnotation(type, activityTypeMirror, ActivityAnnotation::class.java)
     return ActivityInfo(
         this,
+        annotation,
         path,
         group,
         classPrefixName,
@@ -275,22 +246,15 @@ internal fun BaseProcessor.getMethodInfo(element: Element): MethodInfo {
     element as ExecutableElement
     val annotation =
         element.getAnnotation(MethodAnnotation::class.java) ?: return MethodInfo(emptyTypeInfo)
-    val annotationGroup = annotation.group
-    val annotationPath = annotation.path
-    val group: String
-    val path: String
-    if (annotationGroup.isEmpty()) {
-        group = getGroupFromPath(annotationPath) ?: ""
-        path = annotationPath
-    } else {
-        group = annotationGroup
-        path = "/${group}$annotationPath"
-    }
+    val group: String=annotation.realGroup()
+    val path: String=annotation.realPath()
+
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}MethodActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
     val methodInvokerInfo = MethodInvokerInfo(
         this,
+        annotation,
         path,
         group,
         classPrefixName,
@@ -340,14 +304,6 @@ internal fun pathCapitalize(path: String): String {
     }.toString()
 }
 
-fun getGroupFromPath(path: String?): String? {
-    val group = runCatching { path?.substring(1, path.indexOf("/", 1)) }.onFailure {
-//        messager.printMessage(Diagnostic.Kind.ERROR,
-//            "Failed to extract default group! " + it.message)
-    }.getOrNull() ?: return null
-    if (group.isEmpty()) return null
-    return group
-}
 
 
 fun BaseProcessor.getParameterMethodName(variableElement: VariableElement): String {

@@ -85,20 +85,11 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == 100) {
 
         }
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
 }
 
-class A {
-    init {
-        LogUtil.log("enter this line 11111")
-    }
 
-    companion object {
-        init {
-            LogUtil.log("enter this line 2222")
-        }
-    }
-}
 

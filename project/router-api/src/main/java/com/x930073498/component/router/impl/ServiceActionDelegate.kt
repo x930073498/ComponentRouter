@@ -8,12 +8,12 @@ interface ServiceActionDelegate : ActionDelegate {
         return ActionType.SERVICE
     }
 
-    suspend fun factory(): Factory
+     fun factory(): Factory
 
     fun autoInvoke(): Boolean
 
     interface Factory {
-        suspend fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):IService?
+         fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):IService?
 
     }
 

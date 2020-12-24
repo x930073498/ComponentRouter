@@ -5,9 +5,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import com.squareup.kotlinpoet.*
-import com.x930073498.component.annotations.InterceptorAnnotation
-import com.x930073498.component.annotations.InterceptorScope
-import com.x930073498.component.annotations.ValueAutowiredAnnotation
+import com.x930073498.component.annotations.*
 import com.x930073498.component.router.compiler.BaseProcessor
 import java.lang.StringBuilder
 import javax.lang.model.element.Element
@@ -55,6 +53,9 @@ sealed class TypeInfo constructor(
 
         }
 
+        override fun getAutoRegisterValue(): Boolean {
+            return true
+        }
         override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         }
 
@@ -71,7 +72,7 @@ sealed class TypeInfo constructor(
     init {
         if (paths.contains(path)) {
             setGenerator(processor.emptyTypeInfo)
-            processor.messager.printMessage(Diagnostic.Kind.WARNING, "路径冲突\n${toString()}")
+            processor.messager.printMessage(Diagnostic.Kind.ERROR, "路径冲突\n${toString()}")
         } else {
             paths.add(path)
         }
@@ -164,6 +165,12 @@ sealed class TypeInfo constructor(
     }
 
     abstract fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder)
+    open fun generateAutoRegisterPropertyCode(typeSpec: TypeSpec.Builder){
+        typeSpec.addProperty(PropertySpec.builder("autoRegister",Boolean::class,KModifier.OVERRIDE)
+            .initializer("%L",getAutoRegisterValue())
+            .build())
+    }
+    abstract fun getAutoRegisterValue():Boolean
     open fun generateTargetCode(typeSpec: TypeSpec.Builder) {
 
 
@@ -205,7 +212,7 @@ sealed class TypeInfo constructor(
             .addSuperinterface(factoryTypeName)
             .addFunction(
                 FunSpec.builder("create")
-                    .addModifiers(KModifier.SUSPEND, KModifier.OVERRIDE)
+                    .addModifiers( KModifier.OVERRIDE)
                     .addParameter("contextHolder", CONTEXT_HOLDER_NAME)
                     .addParameter("clazz", CLASS_STAR_NAME)
                     .addParameter("bundle", BUNDLE_NAME)
@@ -216,7 +223,7 @@ sealed class TypeInfo constructor(
             )
             .build()
         val factory = FunSpec.builder("factory")
-            .addModifiers(KModifier.SUSPEND, KModifier.OVERRIDE)
+            .addModifiers(KModifier.OVERRIDE)
             .addStatement("return %L", factoryObject)
         typeSpec.addFunction(factory.build())
     }
@@ -249,6 +256,7 @@ sealed class TypeInfo constructor(
         generateTargetPropertyCode(typeSpec)
         generateGroupCode(typeSpec)
         generateThreadCode(typeSpec)
+        generateAutoRegisterPropertyCode(typeSpec)
         generateInterceptorsCode(typeSpec)
 //        generateParentCode(typeSpec)
         generateInjectCode(typeSpec)
@@ -328,6 +336,9 @@ class InterceptorInfo(
         )
     }
 
+    override fun getAutoRegisterValue(): Boolean {
+        return annotation.autoRegister
+    }
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
             "return %T(%T::class.java,this)",
@@ -354,7 +365,7 @@ class InterceptorInfo(
             .addSuperinterface(factoryTypeName)
             .addFunction(
                 FunSpec.builder("create")
-                    .addModifiers(KModifier.SUSPEND, KModifier.OVERRIDE)
+                    .addModifiers( KModifier.OVERRIDE)
                     .addParameter("contextHolder", CONTEXT_HOLDER_NAME)
                     .addParameter("clazz", CLASS_STAR_NAME)
                     .apply {
@@ -364,7 +375,7 @@ class InterceptorInfo(
             )
             .build()
         val factory = FunSpec.builder("factory")
-            .addModifiers(KModifier.SUSPEND, KModifier.OVERRIDE)
+            .addModifiers( KModifier.OVERRIDE)
             .addStatement("return %L", factoryObject)
         typeSpec.addFunction(factory.build())
     }
@@ -373,6 +384,7 @@ class InterceptorInfo(
 
 class ServiceInfo(
     processor: BaseProcessor,
+    private val annotation:ServiceAnnotation,
     path: String,
     group: String,
     classPrefixName: String,
@@ -434,6 +446,9 @@ class ServiceInfo(
         typeSpec.addFunction(autoInvoke.build())
     }
 
+    override fun getAutoRegisterValue(): Boolean {
+        return annotation.autoRegister
+    }
     override fun generateFactoryReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement("return %T()", type)
     }
@@ -441,6 +456,7 @@ class ServiceInfo(
 
 class ActivityInfo(
     processor: BaseProcessor,
+    private val annotation: ActivityAnnotation,
     path: String,
     group: String,
     classPrefixName: String,
@@ -494,6 +510,10 @@ class ActivityInfo(
         )
     }
 
+    override fun getAutoRegisterValue(): Boolean {
+        return annotation.autoRegister
+    }
+
     override fun generateFactoryReturnCode(funSpec: FunSpec.Builder) {
     }
 
@@ -501,6 +521,7 @@ class ActivityInfo(
 
 class FragmentInfo(
     processor: BaseProcessor,
+    private val annotation: FragmentAnnotation,
     path: String,
     group: String,
     classPrefixName: String,
@@ -558,10 +579,14 @@ class FragmentInfo(
         funSpec.addStatement("return %T().apply{arguments=bundle}", type)
     }
 
+    override fun getAutoRegisterValue(): Boolean {
+        return annotation.autoRegister
+    }
 }
 
 class MethodInvokerInfo(
     processor: BaseProcessor,
+    private val annotation:MethodAnnotation,
     path: String,
     group: String,
     classPrefixName: String,
@@ -636,15 +661,20 @@ class MethodInvokerInfo(
     }
 
     override fun generateStringCode(typeSpec: TypeSpec.Builder) {
+        val currentElement=element?:return
         val target = FunSpec.builder("toString")
             .addModifiers(KModifier.OVERRIDE)
             .addStatement(
-                "return \"path=\$path,group=\$group,targetClass=\${%N::class.java}\"",
-                type
+                "return \"path=\$path,group=\$group,method=%L.%L\"",
+                processor.elements.getPackageOf(currentElement).toString(),
+                currentElement.simpleName.toString(),
             )
         typeSpec.addFunction(target.build())
     }
 
+    override fun getAutoRegisterValue(): Boolean {
+        return annotation.autoRegister
+    }
 
 }
 

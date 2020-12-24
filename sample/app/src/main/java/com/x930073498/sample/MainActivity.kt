@@ -12,7 +12,10 @@ import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.auto.deserialize
 import com.x930073498.component.auto.getSerializer
+import com.x930073498.component.fragmentation.loadRootFromRouter
 import com.x930073498.component.router.Router
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 @ActivityAnnotation(path = "/activity/main")
 class MainActivity : AppCompatActivity() {
@@ -25,13 +28,12 @@ class MainActivity : AppCompatActivity() {
         val s = S().apply { www("测试") }
         val sString = getSerializer().serialize(s)
         println("sString=$sString")
-        val a= getSerializer().deserialize<W>(sString)
+        val a = getSerializer().deserialize<W>(sString)
         println("a=${a?.uuu()}")
-        val fragment = Router.from("/fragment/test?name=测试").syncNavigation<Fragment>(this)
-        if (fragment != null) {
-            supportFragmentManager.beginTransaction()
-                .add(Window.ID_ANDROID_CONTENT, fragment)
-                .commit()
+        GlobalScope.launch {
+            loadRootFromRouter(Window.ID_ANDROID_CONTENT, "/module1/fragment/test?name=测试") {
+                put("name", "AA")
+            }
         }
     }
 }

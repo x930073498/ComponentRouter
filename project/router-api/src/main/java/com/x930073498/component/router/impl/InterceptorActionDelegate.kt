@@ -9,7 +9,7 @@ interface InterceptorActionDelegate : ActionDelegate {
         return ActionType.INTERCEPTOR
     }
 
-    suspend fun factory(): Factory
+     fun factory(): Factory
     val scope: InterceptorScope
         get() = InterceptorScope.NORMAL
 
@@ -19,6 +19,6 @@ interface InterceptorActionDelegate : ActionDelegate {
 
 
     interface Factory {
-        suspend fun create(contextHolder: ContextHolder, clazz: Class<*>): RouterInterceptor
+         fun create(contextHolder: ContextHolder, clazz: Class<*>): RouterInterceptor
     }
 }

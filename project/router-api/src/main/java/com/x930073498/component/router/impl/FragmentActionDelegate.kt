@@ -12,11 +12,11 @@ interface FragmentActionDelegate: ActionDelegate{
 
 
 
-    suspend fun factory(): Factory
+     fun factory(): Factory
 
 
     interface Factory {
-        suspend fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):  Fragment
+         fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):  Fragment
     }
 
 }

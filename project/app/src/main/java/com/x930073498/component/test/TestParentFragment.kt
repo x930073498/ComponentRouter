@@ -40,7 +40,7 @@ open class TestParentFragment : Fragment(R.layout.fragment_test) {
 
     @FactoryAnnotation
     class Factory : FragmentActionDelegate.Factory {
-        override  suspend fun create(
+        override   fun create(
             contextHolder: ContextHolder,
             clazz: Class<*>,
             bundle: Bundle,

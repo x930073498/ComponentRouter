@@ -15,9 +15,6 @@ interface IFragmentation {
 }
 
 class FragmentationAuto : IAuto, IFragmentLifecycle {
-    override fun onFragmentSaveInstanceState(fm: FragmentManager, f: Fragment, outState: Bundle) {
-        super.onFragmentSaveInstanceState(fm, f, outState)
-    }
     override fun onFragmentAttached(fm: FragmentManager, f: Fragment, context: Context) {
         super.onFragmentAttached(fm, f, context)
         if (f is IFragmentation) {

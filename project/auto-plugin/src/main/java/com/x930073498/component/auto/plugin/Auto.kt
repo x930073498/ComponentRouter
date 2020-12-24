@@ -23,12 +23,14 @@ open class Auto {
     var enableRouter = true
     var enableDispatcher = true
     var enable = true
+    var enableFragmentation = true
     private var serializer: String = SerializerType.NONE.name
     var mavenUrl = "https://dl.bintray.com/x930073498/component"
     var version = "+"
     private val serializerType: SerializerType
         get() {
-            return runCatching { SerializerType.valueOf(serializer.toUpperCase(Locale.getDefault())) }.getOrNull()?:SerializerType.NONE
+            return runCatching { SerializerType.valueOf(serializer.toUpperCase(Locale.getDefault())) }.getOrNull()
+                ?: SerializerType.NONE
         }
 
     companion object {
@@ -38,6 +40,7 @@ open class Auto {
         const val ARTIFACT_AUTO_STARTER_DISPATCHER = "auto-starter-dispatcher"
         const val ARTIFACT_ROUTER_ANNOTATIONS = "router-annotations"
         const val ARTIFACT_ROUTER_API = "router-api"
+        const val ARTIFACT_FRAGMENTATION = "fragmentation"
         const val ARTIFACT_ROUTER_COMPILER = "router-compiler"
         const val ARTIFACT_K_SERIALIZER = "k-serializer"
         const val ARTIFACT_M_SERIALIZER = "m-serializer"
@@ -49,6 +52,8 @@ open class Auto {
         const val GSON_DEPENDENCY = "com.google.code.gson:gson:2.8.6"
         const val FAST_JSON_DEPENDENCY = "com.alibaba:fastjson:1.1.72.android"
         const val KOTLIN_REFLECT_DEPENDENCY = "org.jetbrains.kotlin:kotlin-reflect:1.4.21"
+        const val KOTLIN_NAVIGATION_FRAGMENT_KTX_DEPENDENCY =
+            "androidx.navigation:navigation-fragment-ktx:2.3.2"
 //        const val IMPLEMENTATION = "implementation"
 
         const val IMPLEMENTATION = "api"
@@ -122,35 +127,53 @@ open class Auto {
 //do nothing
             }
         }
-        if (plugin is AppPlugin || plugin is LibraryPlugin) {
-            result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_CORE)))
-            if (enableRouter) {
-                if (!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
-                    if (!plugins.hasPlugin("kotlin-android")) {
-                        plugins.apply("kotlin-android")
-                    }
-                    plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
+
+        fun addRouterDependency() {
+            if (!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
+                if (!plugins.hasPlugin("kotlin-android")) {
+                    plugins.apply("kotlin-android")
                 }
-                result.add(
-                    Dependency(IMPLEMENTATION, getDependency(ARTIFACT_ROUTER_API))
-                )
-                result.add(
-                    Dependency(KAPT, getDependency(ARTIFACT_ROUTER_COMPILER))
-                )
-                result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_ROUTER_ANNOTATIONS)))
+                plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
             }
-            if (enableDispatcher) {
-                result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_STARTER_DISPATCHER)))
-                result.add(
-                    Dependency(
-                        IMPLEMENTATION,
-                        getDependency(ARTIFACT_AUTO_STARTER_DISPATCHER)
-                    )
-                )
-            }
+            result.add(
+                Dependency(IMPLEMENTATION, getDependency(ARTIFACT_ROUTER_API))
+            )
+            result.add(
+                Dependency(KAPT, getDependency(ARTIFACT_ROUTER_COMPILER))
+            )
+            result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_ROUTER_ANNOTATIONS)))
 
         }
 
+        fun addDispatcherDependency() {
+            result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_STARTER_DISPATCHER)))
+            result.add(
+                Dependency(
+                    IMPLEMENTATION,
+                    getDependency(ARTIFACT_AUTO_STARTER_DISPATCHER)
+                )
+            )
+        }
+
+        fun addFragmentationDependency() {
+            if (!enableRouter) {
+                addRouterDependency()
+            }
+            result.add(Dependency(IMPLEMENTATION,getDependency(ARTIFACT_FRAGMENTATION)))
+            result.add(Dependency(IMPLEMENTATION, KOTLIN_NAVIGATION_FRAGMENT_KTX_DEPENDENCY))
+        }
+        if (plugin is AppPlugin || plugin is LibraryPlugin) {
+            result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_CORE)))
+            if (enableRouter) {
+                addRouterDependency()
+            }
+            if (enableDispatcher) {
+                addDispatcherDependency()
+            }
+            if (enableFragmentation) {
+                addFragmentationDependency()
+            }
+        }
         return result
     }
 
