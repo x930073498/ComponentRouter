@@ -10,6 +10,7 @@ import androidx.arch.core.util.Function
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.auto.getSerializer
 import java.io.Serializable
+import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.net.URLDecoder
 import java.util.*
@@ -59,6 +60,7 @@ object ParameterSupport {
     const val KEY_URI_QUERY_BUNDLE = "_componentQueryBundle"
     const val KEY_URI = "_componentRouterUri"
     const val KEY_CENTER_KEY = "_routerCenterKey"
+    const val PREFIX_SERIALIZER_KEY="0adf6aa4-91f5-4dce-880e-008c3a11be58"
     fun syncUriToBundle(uri: Uri, bundle: Bundle) {
         val routerParameterBundle = Bundle()
         val queryParameterNames = uri.queryParameterNames

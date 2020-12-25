@@ -44,3 +44,4 @@ class MainActivity : AppCompatActivity() {
 fun toast(context: Context, msg: String) {
     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
 }
+

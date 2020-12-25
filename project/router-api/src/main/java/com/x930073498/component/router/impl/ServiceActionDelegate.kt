@@ -13,7 +13,7 @@ interface ServiceActionDelegate : ActionDelegate {
     fun autoInvoke(): Boolean
 
     interface Factory {
-         fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):IService?
+         fun create(contextHolder: ContextHolder, clazz: Class<*>, bundle: Bundle):IService
 
     }
 

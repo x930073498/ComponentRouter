@@ -134,8 +134,6 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
      */
     fun forwardSync(
         context: Context? = mHandler.contextHolder.getContext(),
-        navigateInterceptor: NavigateInterceptor? = null,
-        handler: ResultHandler = ResultHandler.Direct
     ): Any? {
         val resultRef = AtomicReference<Any>()
         val flagRef = AtomicReference(0)
@@ -143,7 +141,7 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
             if (Looper.getMainLooper() == Looper.myLooper()) Dispatchers.Main.immediate else Dispatchers.IO
         GlobalScope.launch(dispatcher) {
             runCatching {
-                val result = forward(context, navigateInterceptor, handler)
+                val result = forward(context)
                 resultRef.set(result)
             }.onFailure { it.printStackTrace() }
             flagRef.set(1)
@@ -156,10 +154,8 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
 
     suspend fun forward(
         context: Context? = mHandler.contextHolder.getContext(),
-        navigateInterceptor: NavigateInterceptor? = null,
-        handler: ResultHandler = ResultHandler.Direct
     ): Any? {
-        return request(context).navigate(navigateInterceptor, handler)
+        return request(context).navigate()
     }
 
 

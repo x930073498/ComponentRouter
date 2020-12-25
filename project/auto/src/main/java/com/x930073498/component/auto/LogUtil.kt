@@ -18,6 +18,7 @@ object LogUtil {
         this.logger = logger
     }
 
+    @JvmStatic
     fun log(msg: Any?) {
         if (debug) {
             if (msg == null) return

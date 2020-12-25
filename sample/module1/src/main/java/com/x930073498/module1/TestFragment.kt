@@ -37,7 +37,7 @@ class TestFragment : Fragment() {
         binding.btn.setOnClickListener {
 
             GlobalScope.launch {
-                startWithRouter("/app/fragment/test") {
+                startWithRouter("x930073498://x930073498.com/app/fragment/test") {
                     withRouter {
                         put("name", "NAME")
                     }

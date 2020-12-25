@@ -10,8 +10,14 @@ import androidx.fragment.app.FragmentManager
 import com.x930073498.component.auto.*
 
 internal object AutoTaskRegister {
+
     internal object AutoActivityLifecycle : IActivityLifecycle {
         private val activities = arrayListOf<Activity>()
+
+       internal fun getTopActivity(): Activity {
+            return activities.last()
+        }
+
         private var startActivityCount = 0
         private val list = arrayListOf<FragmentManager.FragmentLifecycleCallbacks>()
         fun add(lifecycle: FragmentManager.FragmentLifecycleCallbacks) {

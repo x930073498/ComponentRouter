@@ -6,91 +6,94 @@ import android.os.Bundle
 import com.x930073498.component.auto.IAuto
 
 interface IActivityLifecycle {
-     fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
+    fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
     }
 
-     fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+    fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
     }
 
-     fun onActivityPostCreated(activity: Activity, savedInstanceState: Bundle?) {
+    fun onActivityPostCreated(activity: Activity, savedInstanceState: Bundle?) {
     }
 
-     fun onActivityPreStarted(activity: Activity) {
+    fun onActivityPreStarted(activity: Activity) {
     }
 
-     fun onActivityStarted(activity: Activity) {
+    fun onActivityStarted(activity: Activity) {
     }
 
-     fun onActivityPostStarted(activity: Activity) {
+    fun onActivityPostStarted(activity: Activity) {
     }
 
-     fun onActivityPreResumed(activity: Activity) {
+    fun onActivityPreResumed(activity: Activity) {
     }
 
-     fun onActivityResumed(activity: Activity) {
+    fun onActivityResumed(activity: Activity) {
     }
 
-     fun onActivityPostResumed(activity: Activity) {
+    fun onActivityPostResumed(activity: Activity) {
     }
 
-     fun onActivityPrePaused(activity: Activity) {
+    fun onActivityPrePaused(activity: Activity) {
     }
 
-     fun onActivityPaused(activity: Activity) {
+    fun onActivityPaused(activity: Activity) {
     }
 
-     fun onActivityPostPaused(activity: Activity) {
+    fun onActivityPostPaused(activity: Activity) {
     }
 
-     fun onActivityPreStopped(activity: Activity) {
+    fun onActivityPreStopped(activity: Activity) {
     }
 
-     fun onActivityStopped(activity: Activity) {
+    fun onActivityStopped(activity: Activity) {
     }
 
-     fun onActivityPostStopped(activity: Activity) {
+    fun onActivityPostStopped(activity: Activity) {
     }
 
-     fun onActivityPreSaveInstanceState(activity: Activity, outState: Bundle) {
+    fun onActivityPreSaveInstanceState(activity: Activity, outState: Bundle) {
     }
 
-     fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+    fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
     }
 
-     fun onActivityPostSaveInstanceState(activity: Activity, outState: Bundle) {
+    fun onActivityPostSaveInstanceState(activity: Activity, outState: Bundle) {
     }
 
-     fun onActivityPreDestroyed(activity: Activity) {
+    fun onActivityPreDestroyed(activity: Activity) {
     }
 
-     fun onActivityDestroyed(activity: Activity) {
+    fun onActivityDestroyed(activity: Activity) {
     }
 
-     fun onActivityPostDestroyed(activity: Activity) {
+    fun onActivityPostDestroyed(activity: Activity) {
     }
 }
 
+fun IActivityLifecycle.unregisterActivityLifecycleCallbacks() {
+    app.unregisterActivityLifecycleCallbacks(ActivityLifecycle.get(this))
+}
 
-
-internal fun IActivityLifecycle.doRegister(){
+internal fun IActivityLifecycle.doRegister() {
     ActivityLifecycle.get(this).register()
 }
 
-private class ActivityLifecycle(private val lifecycle: IActivityLifecycle) :
+internal class ActivityLifecycle(private val lifecycle: IActivityLifecycle) :
     Application.ActivityLifecycleCallbacks {
     val app: Application
-    private var hasRegister=false
+    private var hasRegister = false
 
     init {
         map[lifecycle] = this
         app = AutoTaskRegister.app
     }
 
-    fun register(){
-        if (hasRegister)return
+    fun register() {
+        if (hasRegister) return
         app.registerActivityLifecycleCallbacks(this)
-        hasRegister=true
+        hasRegister = true
     }
+
     companion object {
         private val map = mutableMapOf<IActivityLifecycle, ActivityLifecycle>()
 
