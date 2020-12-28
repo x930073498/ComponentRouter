@@ -14,7 +14,7 @@ internal object AutoTaskRegister {
     internal object AutoActivityLifecycle : IActivityLifecycle {
         private val activities = arrayListOf<Activity>()
 
-       internal fun getTopActivity(): Activity {
+        internal fun getTopActivity(): Activity {
             return activities.last()
         }
 
@@ -27,6 +27,11 @@ internal object AutoTaskRegister {
         }
 
         override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
+            registerActivity(activity)
+        }
+
+        private fun registerActivity(activity: Activity) {
+            if (activities.contains(activity)) return
             activities.add(activity)
             if (activity is FragmentActivity) {
                 list.forEach {
@@ -36,8 +41,7 @@ internal object AutoTaskRegister {
         }
 
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            super.onActivityCreated(activity, savedInstanceState)
-
+            registerActivity(activity)
         }
 
         private var isInFront = false
