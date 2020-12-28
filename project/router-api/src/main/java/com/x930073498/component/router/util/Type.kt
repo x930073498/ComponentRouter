@@ -37,14 +37,9 @@ fun TypeToken<*>.isShort() = rawType.isInstance(FLAG_SHORT)
 fun TypeToken<*>.isByte() = rawType.isInstance(FLAG_BYTE)
 
 
-fun TypeToken<*>.isSubtypeOf(type: Type): Boolean {
-    LogUtil.log("isSubtypeOf target=$this")
-    return TypeToken.get(type).apply {
-        LogUtil.log("isSubtypeOf parent=$this")
-    }.isAssignableFrom(this)
-}
+inline fun <reified T> TypeToken<*>.isAssignableFrom() = isAssignableFrom(getType<T>())
 
-inline fun <reified T> TypeToken<*>.isSubtypeOf() = isSubtypeOf(getType<T>())
+inline fun <reified T> TypeToken<*>.isAssignableTo() = getTypeToken<T>().isAssignableFrom(this)
 
 
 fun TypeToken<*>.isArrayOf(type: Type) = isAssignableFrom(TypeToken.getArray(type))
@@ -54,7 +49,7 @@ inline fun <reified T> TypeToken<*>.isArrayOf() = isArrayOf(getType<T>())
 fun TypeToken<*>.isListOf(type: Type): Boolean {
     if (!List::class.java.isAssignableFrom(rawType)) return false
     val componentType = Types.getCollectionElementType(getType(), List::class.java)
-    return componentType.isSubtypeOf(type)
+    return type.isAssignableFrom(componentType)
 }
 
 inline fun <reified T> TypeToken<*>.isListOf(): Boolean {
@@ -64,21 +59,12 @@ inline fun <reified T> TypeToken<*>.isListOf(): Boolean {
 fun TypeToken<*>.isArrayListOf(type: Type): Boolean {
     if (!ArrayList::class.java.isAssignableFrom(rawType)) return false
     val componentType = Types.getCollectionElementType(getType(), ArrayList::class.java)
-    return componentType.isSubtypeOf(type)
+    return type.isAssignableFrom(componentType)
 }
 
 inline fun <reified T> TypeToken<*>.isArrayListOf(): Boolean {
     return isArrayListOf(getType<T>())
 }
-
-
-fun TypeToken<*>.isMapOf(keyType: Type, valueType: Type): Boolean {
-    if (!Map::class.java.isAssignableFrom(rawType)) return false
-    val types = Types.getMapKeyAndValueTypes(getType(), Map::class.java)
-    if (types.size < 2) return false
-    return types[0].isSubtypeOf(keyType) && types[1].isSubtypeOf(valueType)
-}
-
 
 fun Type.isBoolean() = asTypeToken().isBoolean()
 
@@ -96,10 +82,13 @@ fun Type.isShort() = asTypeToken().isShort()
 
 fun Type.isByte() = asTypeToken().isByte()
 
+inline fun <reified T> Type.isAssignableFrom() = asTypeToken().isAssignableFrom<T>()
 
-fun Type.isSubtypeOf(type: Type) = asTypeToken().isSubtypeOf(type)
+inline fun <reified T> Type.isAssignableTo() = getTypeToken<T>().isAssignableFrom(this)
 
-inline fun <reified T> Type.isSubtypeOf() = asTypeToken().isSubtypeOf<T>()
+fun Type.isAssignableFrom(type: Type) = asTypeToken().isAssignableFrom(type)
+
+fun Type.isAssignableTo(type: Type) =type.asTypeToken().isAssignableFrom(this)
 
 
 fun Type.isArrayOf(type: Type) = asTypeToken().isArrayOf(type)

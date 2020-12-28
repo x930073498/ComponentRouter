@@ -52,7 +52,7 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFrag
 
 }
 
-interface IBundle {
+interface ISerializerBundle {
     fun put(key: String, value: Any?)
 
     fun put(bundle: Bundle) {
@@ -64,16 +64,15 @@ interface IBundle {
     fun clear()
 
     companion object {
-        internal fun createFormBundle(bundle: Bundle): IBundle {
-            return object : IBundle {
+        internal fun createFormBundle(bundle: Bundle): ISerializerBundle {
+            return object : ISerializerBundle {
                 override fun put(key: String, value: Any?) {
                     bundle.putString(
-                        key,
+                        ParameterSupport.getSerializerKey(key),
                         when (value) {
                             null -> null
-                            else -> getSerializer().serialize(
-                                value
-                            )
+                            is String -> value
+                            else -> getSerializer().serialize(value)
                         }
                     )
                 }
@@ -96,8 +95,8 @@ interface IRouterHandler<T> where T : IRouterHandler<T> {
     fun authority(authority: String): T
     fun appendQuery(key: String, value: String): T
     fun uri(action: Uri.Builder.() -> Unit): T
-    fun bundle(action: IBundle.() -> Unit): T
-    fun bundle(bundle: Bundle): T
+    fun serializer(action: ISerializerBundle.() -> Unit): T
+    fun bundle(action: Bundle.() -> Unit): T
     fun put(key: String, value: Any?): T
 }
 
@@ -294,7 +293,7 @@ internal class InternalRouterHandler(uri: Uri = Uri.EMPTY, activity: Activity? =
     internal val mBundle = bundleOf()
 
     internal var greenChannel = false
-    private val iBundle = IBundle.createFormBundle(mBundle)
+    private val iBundle = ISerializerBundle.createFormBundle(mBundle)
 
     internal val contextHolder = ContextHolder.create(activity)
     override fun greenChannel(): Router {
@@ -333,15 +332,13 @@ internal class InternalRouterHandler(uri: Uri = Uri.EMPTY, activity: Activity? =
         return router
     }
 
-    override fun bundle(action: IBundle.() -> Unit): Router {
+    override fun serializer(action: ISerializerBundle.() -> Unit): Router {
         action(iBundle)
         return router
     }
 
-    override fun bundle(bundle: Bundle): Router {
-        bundle.keySet().forEach {
-            put(it, bundle.get(it))
-        }
+    override fun bundle(action: Bundle.() -> Unit): Router {
+        action(mBundle)
         return router
     }
 

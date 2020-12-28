@@ -54,7 +54,7 @@ interface ActivityNavigator : ParameterProvider, Navigator {
                     return result
                 }
 
-                override fun getLaunchIntent(): Intent {
+                override fun getLaunchIntent(): Intent? {
                     val context = contextHolder.getContext()
                     val intent = Intent(context, target.targetClazz)
                     if (context is Application) {
@@ -66,7 +66,7 @@ interface ActivityNavigator : ParameterProvider, Navigator {
                 }
 
                 override suspend fun navigateForActivityResult(): ActivityResult {
-                    return coroutineScope<ActivityResult> {
+                    return coroutineScope {
                         async {
                             val activity = listenerActivityCreated()
                             activityRef = WeakReference(activity)
@@ -74,7 +74,6 @@ interface ActivityNavigator : ParameterProvider, Navigator {
                         isInNavigation = true
                         val activity = contextHolder.getActivity()
                         launchAndWaitActivityResult(activity, activityMessenger, getLaunchIntent())
-
                     }
                 }
 
@@ -116,7 +115,7 @@ interface ActivityNavigator : ParameterProvider, Navigator {
         }
     }
 
-    fun getLaunchIntent(): Intent
+    fun getLaunchIntent(): Intent?
 
     suspend fun navigateForActivityResult(): ActivityResult
 

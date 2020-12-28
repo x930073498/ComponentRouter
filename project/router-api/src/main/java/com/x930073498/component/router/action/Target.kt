@@ -182,6 +182,8 @@ sealed class Target(
 
     internal class SystemTarget :
         Target(Unit::class.java), NavigateInterceptor {
+
+
         private var navigateInterceptorRef = WeakReference<NavigateInterceptor>(null)
         internal fun setNavigateInterceptor(navigateInterceptor: NavigateInterceptor? = null) {
             navigateInterceptorRef = WeakReference(navigateInterceptor)

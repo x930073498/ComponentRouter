@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.*
 import android.util.SparseArray
 import androidx.arch.core.util.Function
+import com.x930073498.component.auto.ISerializer
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.auto.getSerializer
 import java.io.Serializable
@@ -60,7 +61,11 @@ object ParameterSupport {
     const val KEY_URI_QUERY_BUNDLE = "_componentQueryBundle"
     const val KEY_URI = "_componentRouterUri"
     const val KEY_CENTER_KEY = "_routerCenterKey"
-    const val PREFIX_SERIALIZER_KEY="0adf6aa4-91f5-4dce-880e-008c3a11be58"
+    const val PREFIX_SERIALIZER_KEY = "0adf6aa4-91f5-4dce-880e-008c3a11be58"
+    fun getSerializerKey(key: String): String {
+        return "${PREFIX_SERIALIZER_KEY}_$key"
+    }
+
     fun syncUriToBundle(uri: Uri, bundle: Bundle) {
         val routerParameterBundle = Bundle()
         val queryParameterNames = uri.queryParameterNames
@@ -1125,7 +1130,7 @@ object ParameterSupport {
     fun <T : Parcelable?> getParcelableArrayList(
         bundle: Bundle?,
         key: String,
-        defaultValue: ArrayList<T>?,
+        defaultValue: ArrayList<T>? = null,
     ): ArrayList<T>? {
         if (bundle == null) {
             return defaultValue
@@ -1232,32 +1237,71 @@ object ParameterSupport {
 
     fun <T : Any> get(bundle: Bundle?, key: String, type: Type, defaultValue: T?): T? {
         if (bundle == null) return defaultValue
-        val serializer = getSerializer()
-        if (bundle.containsKey(key)) {
-            val result = bundle.get(key) ?: return defaultValue
-            return runCatching { serializer.deserialize<T>(result as String, type) }
-                .recoverCatching { serializer.deserialize<T>(serializer.serialize(result), type) }
-                .onFailure { it.printStackTrace() }
-                .getOrNull() ?: defaultValue
-        } else {
-            val result = getQueryString(bundle, key) ?: return defaultValue
-            return runCatching { serializer.deserialize<T>(URLDecoder.decode(result), type) }
-                .recoverCatching {
-                    serializer.deserialize<T>(
-                        serializer.serialize(
-                            URLDecoder.decode(
-                                result
-                            )
-                        ), type
-                    )
-                }
+        val serializerKey = getSerializerKey(key)
+        var serializer: ISerializer? = null
+        LogUtil.log("key =$key, serializerKey=$serializerKey")
+        if (bundle.containsKey(serializerKey)) {
+            serializer = getSerializer()
+            val result = bundle.getString(serializerKey) ?: return defaultValue
+            LogUtil.log("key =$key, result=$result")
+            return runCatching { serializer.deserialize<T>(result, type) }
                 .onFailure { it.printStackTrace() }
                 .getOrNull() ?: defaultValue
         }
+        val query = getQueryString(bundle, key)
+        if (query != null) {
+            return (serializer ?: getSerializer()).deserialize(query, type)
+        }
+        return when {
+            //基础数据类型
+            type.isBoolean() -> bundle.getBoolean(key)
+            type.isShort() -> bundle.getShort(key)
+            type.isInt() -> getInt(bundle, key)
+            type.isFloat() -> getFloat(bundle, key)
+            type.isDouble() -> getDouble(bundle, key)
+            type.isByte() -> getByte(bundle, key)
+            type.isChar() -> getChar(bundle, key)
+            type.isLong() -> getLong(bundle, key)
+
+            //包装数据类型
+            type.isAssignableTo<String>() -> getString(bundle, key)
+            type.isAssignableTo<CharSequence>() -> getCharSequence(bundle, key) as Any?
+            type.isAssignableTo<Parcelable>() -> getParcelable(bundle, key)
+            type.isAssignableTo<Serializable>() -> getSerializable(bundle, key)
+
+            //基础数据类型的数组
+            type.isAssignableTo<ByteArray>() -> getByteArray(bundle, key)
+            type.isAssignableTo<CharArray>() -> getCharArray(bundle, key)
+            type.isAssignableTo<ShortArray>() -> getShortArray(bundle, key)
+            type.isAssignableTo<BooleanArray>() -> getBooleanArray(bundle, key)
+            type.isAssignableTo<DoubleArray>() -> getDoubleArray(bundle, key)
+            type.isAssignableTo<FloatArray>() -> getFloatArray(bundle, key)
+            type.isAssignableTo<IntArray>() -> getIntArray(bundle, key)
+            type.isAssignableTo<LongArray>() -> getLongArray(bundle, key)
+
+            //包装数据类型的数组
+            type.isArrayOf<String>() -> getStringArray(bundle, key)
+            type.isArrayOf<CharSequence>() -> getCharSequenceArray(bundle, key)
+            type.isArrayOf<Parcelable>() -> getParcelableArray(bundle, key)
+
+            // arrayList
+            type.isArrayListOf<String>() -> getStringArrayList(bundle, key)
+            type.isArrayListOf<Int>() -> getIntegerArrayList(bundle, key)
+            type.isArrayListOf<CharSequence>() -> getCharSequenceArrayList(bundle, key)
+            type.isArrayListOf<Parcelable>() -> getParcelableArrayList<Parcelable>(bundle, key)
+
+
+            type.isAssignableTo<SparseArray<Parcelable>>() -> getSparseParcelableArray<Parcelable>(
+                bundle,
+                key
+            )
+
+            else -> null
+        } as? T ?: defaultValue
     }
 
     inline fun <reified T> get(bundle: Bundle?, key: String, defaultValue: T? = null): T? {
-        return get(bundle, key, T::class.java, defaultValue)
+        return get(bundle, key, getType<T>(), defaultValue)
     }
 
     fun <T : Parcelable?> getParcelable(

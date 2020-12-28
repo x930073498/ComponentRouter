@@ -8,7 +8,6 @@ import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.fragmentation.popSelf
-import com.x930073498.component.fragmentation.popTo
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
 import com.x930073498.module1.databinding.FragmentModuleTestBinding
@@ -49,7 +48,7 @@ class TestFragment : Fragment(R.layout.fragment_module_test) {
 
 @MethodAnnotation(path = "/module1/method/test")
 suspend fun doTest(context: Context) {
-    Router.from("/method/toast?info=${URLEncoder.encode("{msg:\"测试\"}")}").bundle {
+    Router.from("/method/toast?info=${URLEncoder.encode("{msg:\"测试\"}")}").serializer {
 //        put("msg","测试")
 
     }.uri {

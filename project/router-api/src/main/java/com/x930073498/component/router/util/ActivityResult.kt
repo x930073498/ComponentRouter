@@ -73,7 +73,7 @@ class OnActivityResultFragment : Fragment() {
 internal suspend fun launchAndWaitActivityResult(
     activity: Activity,
     key: String,
-    launchIntent: Intent
+    launchIntent: Intent?
 ): ActivityResult {
     return if (activity is ActivityResultRegistryOwner) {
         launchAndWaitActivityResultByActivityResultRegistryOwner(
@@ -109,8 +109,11 @@ private fun createResultCallback(continuation: Continuation<ActivityResult>): Ac
 private suspend fun launchAndWaitActivityResultByActivityResultRegistryOwner(
     activityResultRegistryOwner: ActivityResultRegistryOwner,
     key: String,
-    launchIntent: Intent
+    launchIntent: Intent?
 ): ActivityResult {
+    if (launchIntent==null){
+        return ActivityResult(Activity.RESULT_CANCELED,null)
+    }
     val block = suspend {
         suspendCancellableCoroutine<ActivityResult> {
             val contract = createResultContract()
@@ -142,8 +145,11 @@ private suspend fun launchAndWaitActivityResultByFragment(
     activity: Activity,
     mRequestCode: Int,
     key: String,
-    launchIntent: Intent
+    launchIntent: Intent?
 ): ActivityResult {
+    if (launchIntent==null){
+        return ActivityResult(Activity.RESULT_CANCELED,null)
+    }
     val block = suspend {
         val fragment = createOrFindFragment(activity, key)
         fragment.waitCreated()

@@ -36,7 +36,7 @@ class HttpSchemeInterceptor : RouterInterceptor {
                     .uri {
                         path("/fragment/web")
                     }
-                    .bundle {
+                    .serializer {
                         put("url", uri.toString())
                     }
                     .build())

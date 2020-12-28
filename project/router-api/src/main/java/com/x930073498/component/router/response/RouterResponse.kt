@@ -53,7 +53,7 @@ fun RouterResponse.asNavigator(): Navigator {
         is Target.ActivityTarget -> ActivityNavigator.create(target, contextHolder, bundle)
         is Target.FragmentTarget -> FragmentNavigator.create(target, contextHolder, bundle)
         is Target.InterceptorTarget -> InterceptorNavigator.create(target,contextHolder, bundle)
-        is Target.SystemTarget -> SystemActionHolder.create(target, contextHolder, bundle)
+        is Target.SystemTarget -> SystemActionNavigator.create(target, contextHolder, bundle)
     }
 }
 

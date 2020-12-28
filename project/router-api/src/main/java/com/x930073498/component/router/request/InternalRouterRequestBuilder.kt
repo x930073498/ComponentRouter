@@ -2,13 +2,12 @@ package com.x930073498.component.router.request
 
 import android.net.Uri
 import android.os.Bundle
-import com.x930073498.component.auto.getSerializer
-import com.x930073498.component.router.IBundle
+import com.x930073498.component.router.ISerializerBundle
 
 internal class InternalRouterRequestBuilder(request: RouterRequest) : RouterRequest.Builder {
     private var uri = request.uri
     private var bundle = Bundle(request.bundle)
-    private val iBundle = IBundle.createFormBundle(bundle)
+    private val iBundle = ISerializerBundle.createFormBundle(bundle)
 
     override suspend fun uri(uriBuilder: suspend Uri.Builder.(Uri) -> Unit): RouterRequest.Builder {
         val builder = uri.buildUpon()
@@ -17,8 +16,13 @@ internal class InternalRouterRequestBuilder(request: RouterRequest) : RouterRequ
         return this
     }
 
-    override suspend fun bundle(bundleBuilder: suspend IBundle.() -> Unit): RouterRequest.Builder {
-        bundleBuilder(iBundle)
+    override suspend fun serializer(action: suspend ISerializerBundle.() -> Unit): RouterRequest.Builder {
+        action(iBundle)
+        return this
+    }
+
+    override suspend fun bundle(action: Bundle.() -> Unit): RouterRequest.Builder {
+        action(bundle)
         return this
     }
 

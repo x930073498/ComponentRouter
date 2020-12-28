@@ -22,7 +22,7 @@ class ActivityFoo @Inject constructor(@ActivityContext val context: Context) {
                     list.getType().isArrayListOf(Serializable::class.java)
                 }"
             )
-            LogUtil.log("enter this line isSubtypeOf=${c.getType().isSubtypeOf<SparseArray<CharSequence>>()}")
+            LogUtil.log("enter this line isSubtypeOf=${c.getType().isAssignableTo<SparseArray<CharSequence>>()}")
             LogUtil.log(
                 "enter this line isList=${
                     list.getType().isListOf(Serializable::class.java)

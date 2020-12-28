@@ -1,15 +1,7 @@
-
-
 package com.x930073498.component.router.util;
 
-import com.x930073498.component.auto.LogUtil;
-
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.*;
+import java.util.*;
 
 
 public class TypeToken<T> {
@@ -73,7 +65,7 @@ public class TypeToken<T> {
    * Check if this type is assignable from the given class object.
    *
    * @deprecated this implementation may be inconsistent with javac for types
-   *     with wildcards.
+   * with wildcards.
    */
   @Deprecated
   public boolean isAssignableFrom(Class<?> cls) {
@@ -84,10 +76,14 @@ public class TypeToken<T> {
    * Check if this type is assignable from the given Type.
    *
    * @deprecated this implementation may be inconsistent with javac for types
-   *     with wildcards.
+   * with wildcards.
    */
   @Deprecated
   public boolean isAssignableFrom(Type from) {
+    return isAssignableFrom(type, rawType, from);
+  }
+
+  public static boolean isAssignableFrom(Type type, Class<?> rawType, Type from) {
     if (from == null) {
       return false;
     }
@@ -100,22 +96,29 @@ public class TypeToken<T> {
 
       return rawType.isAssignableFrom(Types.getRawType(from));
     } else if (type instanceof ParameterizedType) {
-      return isAssignableFrom(from, (ParameterizedType) type,
-          new HashMap<String, Type>());
+      return isAssignableFrom(from, (ParameterizedType) type);
     } else if (type instanceof GenericArrayType) {
       return rawType.isAssignableFrom(Types.getRawType(from))
-          && isAssignableFrom(from, (GenericArrayType) type);
+              && isAssignableFrom(from, (GenericArrayType) type);
+    } else if (type instanceof WildcardType) {
+      return isAssignableFrom(from, (WildcardType) type);
     } else {
       throw buildUnexpectedTypeError(
-          type, Class.class, ParameterizedType.class, GenericArrayType.class);
+              type, Class.class, ParameterizedType.class, GenericArrayType.class);
     }
+  }
+
+  public static boolean isAssignableFrom(Type from, WildcardType type) {
+    Type currentType = type.getUpperBounds()[0];
+    Class<?> currentRawType = Types.getRawType(currentType);
+    return isAssignableFrom(currentType, currentRawType, from);
   }
 
   /**
    * Check if this type is assignable from the given type token.
    *
    * @deprecated this implementation may be inconsistent with javac for types
-   *     with wildcards.
+   * with wildcards.
    */
   @Deprecated
   public boolean isAssignableFrom(TypeToken<?> token) {
@@ -139,8 +142,7 @@ public class TypeToken<T> {
         }
         t = classType;
       }
-      return isAssignableFrom(t, (ParameterizedType) toGenericComponentType,
-          new HashMap<String, Type>());
+      return isAssignableFrom(t, (ParameterizedType) toGenericComponentType);
     }
     // No generic defined on "to"; therefore, return true and let other
     // checks determine assignability
@@ -151,8 +153,7 @@ public class TypeToken<T> {
    * Private recursive helper function to actually do the type-safe checking
    * of assignability.
    */
-  private static boolean isAssignableFrom(Type from, ParameterizedType to,
-      Map<String, Type> typeVarMap) {
+  private static boolean isAssignableFrom(Type from, ParameterizedType to) {
 
     if (from == null) {
       return false;
@@ -170,35 +171,49 @@ public class TypeToken<T> {
     }
 
     // Load up parameterized variable info if it was parameterized.
+//        if (ptype != null) {
+//            Type[] tArgs = ptype.getActualTypeArguments();
+//            TypeVariable<?>[] tParams = clazz.getTypeParameters();
+//            for (int i = 0; i < tArgs.length; i++) {
+//                Type arg = tArgs[i];
+//                TypeVariable<?> var = tParams[i];
+//                while (arg instanceof TypeVariable<?>) {
+//                    TypeVariable<?> v = (TypeVariable<?>) arg;
+//                    arg = typeVarMap.get(v.getName());
+//                }
+//                typeVarMap.put(var.getName(), arg);
+//            }
+//
+//
+//            // check if they are equivalent under our current mapping.
+//            if (typeEquals(ptype, to, typeVarMap)) {
+//                return true;
+//            }
+//        }
     if (ptype != null) {
-      Type[] tArgs = ptype.getActualTypeArguments();
-      TypeVariable<?>[] tParams = clazz.getTypeParameters();
-      for (int i = 0; i < tArgs.length; i++) {
-        Type arg = tArgs[i];
-        TypeVariable<?> var = tParams[i];
-        while (arg instanceof TypeVariable<?>) {
-          TypeVariable<?> v = (TypeVariable<?>) arg;
-          arg = typeVarMap.get(v.getName());
+      Class<?> toType = Types.getRawType(to);
+      if (toType == clazz) {
+        Type[] fA = ptype.getActualTypeArguments();
+        Type[] tA = to.getActualTypeArguments();
+        boolean result = true;
+        for (int i = 0; i < fA.length; i++) {
+          Type f = fA[i];
+          Type t = tA[i];
+          result = result && isAssignableFrom(t, Types.getRawType(t), f);
         }
-        typeVarMap.put(var.getName(), arg);
-      }
-
-      // check if they are equivalent under our current mapping.
-      if (typeEquals(ptype, to, typeVarMap)) {
-
-        return true;
+        return result;
       }
     }
 
     for (Type itype : clazz.getGenericInterfaces()) {
-      if (isAssignableFrom(itype, to, new HashMap<String, Type>(typeVarMap))) {
+      Class<?> temp = Types.getRawType(itype);
+      Type tempType = Types.getSupertype(from, clazz, temp);
+      if (isAssignableFrom(to, Types.getRawType(to), tempType)) {
         return true;
       }
     }
 
-    // Interfaces didn't work, try the superclass.
-    Type sType = clazz.getGenericSuperclass();
-    return isAssignableFrom(sType, to, new HashMap<String, Type>(typeVarMap));
+    return isAssignableFrom(to, Types.getRawType(to), Types.getSupertype(from, clazz, Types.getRawType(clazz.getGenericSuperclass())));
   }
 
   /**
@@ -206,7 +221,7 @@ public class TypeToken<T> {
    * replacement described in the typeVarMap.
    */
   private static boolean typeEquals(ParameterizedType from,
-      ParameterizedType to, Map<String, Type> typeVarMap) {
+                                    ParameterizedType to, Map<String, Type> typeVarMap) {
     if (from.getRawType().equals(to.getRawType())) {
       Type[] fromArgs = from.getActualTypeArguments();
       Type[] toArgs = to.getActualTypeArguments();
@@ -221,16 +236,16 @@ public class TypeToken<T> {
   }
 
   private static AssertionError buildUnexpectedTypeError(
-      Type token, Class<?>... expected) {
+          Type token, Class<?>... expected) {
 
     // Build exception message
     StringBuilder exceptionMessage =
-        new StringBuilder("Unexpected type. Expected one of: ");
+            new StringBuilder("Unexpected type. Expected one of: ");
     for (Class<?> clazz : expected) {
       exceptionMessage.append(clazz.getName()).append(", ");
     }
     exceptionMessage.append("but got: ").append(token.getClass().getName())
-        .append(", for type token: ").append(token.toString()).append('.');
+            .append(", for type token: ").append(token.toString()).append('.');
 
     return new AssertionError(exceptionMessage.toString());
   }
@@ -238,25 +253,27 @@ public class TypeToken<T> {
   /**
    * Checks if two types are the same or are equivalent under a variable mapping
    * given in the type map that was provided.
-   *
    */
   private static boolean matches(Type from, Type to, Map<String, Type> typeMap) {
     return to.equals(from)
-        || (from instanceof TypeVariable
-        && to.equals(typeMap.get(((TypeVariable<?>) from).getName())));
+            || (from instanceof TypeVariable
+            && to.equals(typeMap.get(((TypeVariable<?>) from).getName())));
 
   }
 
-  @Override public final int hashCode() {
+  @Override
+  public final int hashCode() {
     return this.hashCode;
   }
 
-  @Override public final boolean equals(Object o) {
+  @Override
+  public final boolean equals(Object o) {
     return o instanceof TypeToken<?>
-        && Types.equals(type, ((TypeToken<?>) o).type);
+            && Types.equals(type, ((TypeToken<?>) o).type);
   }
 
-  @Override public final String toString() {
+  @Override
+  public final String toString() {
     return Types.typeToString(type);
   }
 
