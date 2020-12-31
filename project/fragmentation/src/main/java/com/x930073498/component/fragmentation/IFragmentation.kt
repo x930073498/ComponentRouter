@@ -12,6 +12,7 @@ interface IFragmentation {
     fun onBackPressedSupport(): Boolean {
         return false
     }
+    fun onHiddenChanged(hidden: Boolean)
 }
 
 class FragmentationAuto : IAuto, IFragmentLifecycle {

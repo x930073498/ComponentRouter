@@ -1,4 +1,4 @@
-package com.x930073498.plugin.register
+package com.x930073498.component.auto.plugin.register
 
 data class ScanJarHarvest(val harvestList:MutableList<Harvest>)
 

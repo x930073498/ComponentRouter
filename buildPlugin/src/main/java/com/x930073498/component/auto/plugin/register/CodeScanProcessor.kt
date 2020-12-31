@@ -1,9 +1,6 @@
-package com.x930073498.plugin.register
+package com.x930073498.component.auto.plugin.register
 
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.*
 import java.io.File
 import java.io.InputStream
 import java.util.jar.JarEntry
@@ -47,7 +44,7 @@ internal class CodeScanProcessor(
         return true
     }
 
-   private fun hitCache(jarFile: File, destFile: File): Boolean {
+    private fun hitCache(jarFile: File, destFile: File): Boolean {
         val jarFilePath = jarFile.absolutePath
         if (cacheMap != null) {
             val scanJarHarvest = cacheMap[jarFilePath]
@@ -74,7 +71,7 @@ internal class CodeScanProcessor(
         return checkInitClass(entryName, destFile, "")
     }
 
-   private fun checkInitClass(entryName: String?, destFile: File, srcFilePath: String): Boolean {
+    private fun checkInitClass(entryName: String?, destFile: File, srcFilePath: String): Boolean {
         if (entryName == null || !entryName.endsWith(".class"))
             return false
         var found = false
@@ -166,6 +163,7 @@ internal class CodeScanProcessor(
             return found
         }
 
+
         override fun visit(
             version: Int,
             access: Int,
@@ -175,23 +173,24 @@ internal class CodeScanProcessor(
             interfaces: Array<out String>?
         ) {
             super.visit(version, access, name, signature, superName, interfaces)
-            if (asIs(access, Opcodes.ACC_ABSTRACT) || asIs(access, Opcodes.ACC_INTERFACE) || !asIs(
-                    access,
-                    Opcodes.ACC_PUBLIC
-                )
+            if (asIs(access, Opcodes.ACC_ABSTRACT)
+                || asIs(access, Opcodes.ACC_INTERFACE)
+                || !asIs(access, Opcodes.ACC_PUBLIC)
             ) {
                 return
             }
             val ext = info
+
+
             if (shouldProcessThisClassForRegister(ext, name)) {
-                interfaces?.forEach {
-                    if (it == INTERFACE_NAME_SCAN) {
-                        if (!ext.classList.contains(name))
-                            ext.classList.add(name)//需要把对象注入到管理类  就是fileContainsInitClass
-                        addToCacheMap(it, name, filePath)
-                        found = true
-                    }
+                val scanInterfaceName = interfaces?.firstOrNull { it == INTERFACE_NAME_SCAN }
+                if (scanInterfaceName != null) {
+                    if (!ext.classList.contains(name))
+                        ext.classList.add(name)//需要把对象注入到管理类  就是fileContainsInitClass
+                    addToCacheMap(scanInterfaceName, name, filePath)
+                    found = true
                 }
+
             }
         }
 

@@ -15,17 +15,18 @@ plugins {
 gradlePlugin {
     plugins {
         create("defaultCompose") {
-            id = "com.x930073498.compose"
-            implementationClass = "com.x930073498.plugin.StubPlugin"
+            id = "com.x930073498.component.auto.plugin"
+            implementationClass = "com.x930073498.component.auto.plugin.AutoPlugin"
         }
     }
 }
 
 dependencies {
     implementation(gradleApi())
-    implementation("com.android.tools.build:gradle:4.1.1")
+    implementation("com.android.tools.build:gradle:3.6.3")
     implementation("org.jacoco:org.jacoco.core:0.8.5")
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.20")
+    implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
     implementation(kotlin("stdlib-jdk8"))
 }
 val compileKotlin: KotlinCompile by tasks

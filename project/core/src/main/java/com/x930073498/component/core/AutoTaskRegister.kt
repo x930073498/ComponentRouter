@@ -89,6 +89,7 @@ internal object AutoTaskRegister {
         if (hasInit) return
         val time = System.currentTimeMillis()
         app = getApplication(context)
+        println("enter this line 9989797")
         load()
         applyConfiguration {
             LogUtil.setLogger { tag, msg ->
@@ -109,11 +110,13 @@ internal object AutoTaskRegister {
     }
 
 
+    @InjectLocation("autoRegister")
     @JvmStatic
     private fun load() {
 
     }
 
+    @ClassInjector("autoRegister")
     @JvmStatic
     private fun register(task: IAuto) {
         if (task is IConfiguration) {
@@ -139,4 +142,6 @@ internal object AutoTaskRegister {
     }
 
 }
+
+
 

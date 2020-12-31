@@ -20,7 +20,9 @@ import kotlinx.coroutines.launch
 open class TestFragment : TestParentFragment(), IFragmentation {
     @ValueAutowiredAnnotation
     var title = ""
-
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+    }
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         requireView().findViewById<TextView>(R.id.tvTitle)?.apply {

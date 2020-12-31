@@ -1,9 +1,6 @@
 package com.x930073498.component.auto.plugin.register
 
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.ClassVisitor
-import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.Opcodes
+import org.objectweb.asm.*
 import java.io.File
 import java.io.InputStream
 import java.util.jar.JarEntry
@@ -165,6 +162,7 @@ internal class CodeScanProcessor(
         fun isFound(): Boolean {
             return found
         }
+
 
         override fun visit(
             version: Int,

@@ -1,4 +1,4 @@
-package com.x930073498.plugin.register
+package com.x930073498.component.auto.plugin.register
 
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -11,7 +11,7 @@ import java.io.File
 import java.io.FileNotFoundException
 
 internal class RegisterTransform constructor(
-    private val project: Project
+     val project: Project
 ) : Transform() {
 
     lateinit var config: AutoRegisterConfig
@@ -57,6 +57,7 @@ internal class RegisterTransform constructor(
         val scanProcessor = CodeScanProcessor(config.info, cacheMap)
         transformInvocation.inputs.forEach { input ->
             input.jarInputs.forEach { jarInput ->
+                println("path=${jarInput.file.absolutePath}")
                 if (jarInput.status != Status.NOTCHANGED && cacheMap != null) {
                     cacheMap.remove(jarInput.file.absolutePath)
                 }
@@ -121,7 +122,7 @@ internal class RegisterTransform constructor(
         project.logger.error("register cost time: " + (finishTime - time) + " ms")
     }
 
-   private fun scanJar(
+    private fun scanJar(
         jarInput: JarInput,
         outputProvider: TransformOutputProvider,
         scanProcessor: CodeScanProcessor

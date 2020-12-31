@@ -1,5 +1,7 @@
-package com.x930073498.plugin.register
+package com.x930073498.component.auto.plugin.register
 
+import jdk.internal.org.objectweb.asm.commons.Method
+import jdk.internal.org.objectweb.asm.tree.AnnotationNode
 import org.apache.commons.io.IOUtils
 import org.objectweb.asm.*
 import java.io.File
@@ -49,15 +51,19 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
             }
             jarOutputStream.close()
             file.close()
+            println("jarFilePath=${jarFile.absolutePath}")
             if (jarFile.exists()) {
                 jarFile.delete()
             }
-            optJar.renameTo(jarFile)
+            runCatching {
+                val renameResult = optJar.renameTo(jarFile)
+                println("renameResult=$renameResult")
+            }.onFailure { it.printStackTrace() }
         }
         return jarFile
     }
 
-   private fun isInitClass(entryName: String?): Boolean {
+    private fun isInitClass(entryName: String?): Boolean {
         if (entryName == null || !entryName.endsWith(".class"))
             return false
         return NAME_CODE_INSERT_TO_CLASS == entryName
@@ -78,7 +84,7 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
         return bytes
     }
 
-   private fun doGenerateCode(inputStream: InputStream): ByteArray {
+    private fun doGenerateCode(inputStream: InputStream): ByteArray {
         val cr = ClassReader(inputStream)
         val cw = ClassWriter(cr, 0)
         val cv = MyClassVisitor(Opcodes.ASM6, cw)
@@ -88,6 +94,11 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
 
     inner class MyClassVisitor(api: Int, classVisitor: ClassVisitor?) :
         ClassVisitor(api, classVisitor) {
+
+        override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
+            return super.visitAnnotation(descriptor, visible)
+
+        }
 
         override fun visitMethod(
             access: Int,
@@ -126,7 +137,7 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
                             Opcodes.INVOKESTATIC,
                             CLASS_NAME_CODE_INSERT_TO,
                             METHOD_NAME_REGISTER,
-                            "(L${INTERFACE_NAME_SCAN};)V",
+                            "(L$INTERFACE_NAME_SCAN;)V",
                             false
                         )
                     } else {
@@ -134,7 +145,7 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
                             Opcodes.INVOKEVIRTUAL,
                             CLASS_NAME_CODE_INSERT_TO,
                             METHOD_NAME_REGISTER,
-                            "(L${INTERFACE_NAME_SCAN};)V",
+                            "(L$INTERFACE_NAME_SCAN;)V",
                             false
                         )
                     }

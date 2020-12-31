@@ -1,5 +1,7 @@
 package com.x930073498.component.auto.plugin.register
 
+import jdk.internal.org.objectweb.asm.commons.Method
+import jdk.internal.org.objectweb.asm.tree.AnnotationNode
 import org.apache.commons.io.IOUtils
 import org.objectweb.asm.*
 import java.io.File
@@ -57,7 +59,7 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
         return jarFile
     }
 
-   private fun isInitClass(entryName: String?): Boolean {
+    private fun isInitClass(entryName: String?): Boolean {
         if (entryName == null || !entryName.endsWith(".class"))
             return false
         return NAME_CODE_INSERT_TO_CLASS == entryName
@@ -78,7 +80,7 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
         return bytes
     }
 
-   private fun doGenerateCode(inputStream: InputStream): ByteArray {
+    private fun doGenerateCode(inputStream: InputStream): ByteArray {
         val cr = ClassReader(inputStream)
         val cw = ClassWriter(cr, 0)
         val cv = MyClassVisitor(Opcodes.ASM6, cw)
@@ -88,6 +90,11 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
 
     inner class MyClassVisitor(api: Int, classVisitor: ClassVisitor?) :
         ClassVisitor(api, classVisitor) {
+
+        override fun visitAnnotation(descriptor: String?, visible: Boolean): AnnotationVisitor {
+            return super.visitAnnotation(descriptor, visible)
+
+        }
 
         override fun visitMethod(
             access: Int,
@@ -110,6 +117,8 @@ internal class CodeInsertProcessor(private val extension: RegisterInfo) {
         private val _static: Boolean
     ) :
         MethodVisitor(api, methodVisitor) {
+
+
         override fun visitInsn(opcode: Int) {
             if (opcode >= Opcodes.IRETURN && opcode <= Opcodes.RETURN) {
                 extension.classList.forEach { name ->

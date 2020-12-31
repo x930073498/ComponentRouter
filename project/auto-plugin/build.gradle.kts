@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 repositories {
     google()
     maven(url = "https://plugins.gradle.org/m2/")
@@ -7,13 +8,19 @@ repositories {
 }
 
 plugins {
-println("org.gradle.kotlin.dsl.embeddedKotlinVersion=$embeddedKotlinVersion")
     java
     `kotlin-dsl`
     kotlin("jvm")
 }
 
 
+sourceSets {
+    var dir = project.rootDir.parentFile
+    dir = File(dir, "buildPlugin")
+    getByName("main").java.apply {
+        setSrcDirs(mutableListOf(File(dir,"src/main/java")))
+    }
+}
 
 dependencies {
     implementation(gradleApi())

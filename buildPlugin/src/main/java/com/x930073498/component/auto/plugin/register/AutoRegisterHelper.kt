@@ -1,15 +1,16 @@
-package com.x930073498.plugin.register
+package com.x930073498.component.auto.plugin.register
 
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.x930073498.component.auto.plugin.getCacheFile
+import com.x930073498.component.auto.plugin.read
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.internal.ensureParentDirsCreated
 import java.io.File
 import java.io.FileNotFoundException
 
 object AutoRegisterHelper {
-  private const val CACHE_INFO_DIR = "auto-register"
+    private const val CACHE_INFO_DIR = "auto-injector"
 
 
     /**
@@ -32,12 +33,8 @@ object AutoRegisterHelper {
      * @return File
      */
     fun getRegisterCacheFile(project: Project): File {
-        val baseDir = getCacheFileDir(project)
-        if (mkdirs(baseDir)) {
-            return File(baseDir + "register-cache.json")
-        } else {
-            throw  FileNotFoundException("Not found  path:$baseDir")
-        }
+        return getCacheFile(project, "register-cache.json")
+
     }
 
     /**
@@ -54,7 +51,7 @@ object AutoRegisterHelper {
         cacheFile.writeText(harvests)
     }
 
-   private fun getCacheFileDir(project: Project): String {
+    fun getCacheFileDir(project: Project): String {
         return project.run {
             buildDir.absolutePath + File.separator + FD_INTERMEDIATES + File.separator + CACHE_INFO_DIR + File.separator
         }
@@ -66,20 +63,12 @@ object AutoRegisterHelper {
      * @param gson Gson
      * @return
      */
-    fun readToMap(gson:Gson,file: File):HashMap<String,ScanJarHarvest> {
-        return if (file.exists()) {
-                val text = file.readText()
-                if (text.isNotEmpty()) {
-                    gson.fromJson(text, object:TypeToken<HashMap<String, ScanJarHarvest>>() {}.type)
-                } else {
-                    hashMapOf()
-                }
-            } else {
-                hashMapOf()
-            }
+    fun readToMap(gson: Gson, file: File): HashMap<String, ScanJarHarvest> {
+        return read<HashMap<String, ScanJarHarvest>>(gson, file) ?: hashMapOf()
     }
 
-   private fun mkdirs(path: String): Boolean {
+
+    fun mkdirs(path: String): Boolean {
         val baseDirFile = File(path)
         var result = true
         if (!baseDirFile.isDirectory) {

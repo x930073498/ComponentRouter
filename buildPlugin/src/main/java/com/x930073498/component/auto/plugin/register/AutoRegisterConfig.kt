@@ -1,4 +1,4 @@
-package com.x930073498.plugin.register
+package com.x930073498.component.auto.plugin.register
 
 import org.gradle.api.Project
 import java.io.File
