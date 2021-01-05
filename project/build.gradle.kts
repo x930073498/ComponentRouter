@@ -33,13 +33,13 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.11.1")
         classpath("com.google.dagger:hilt-android-gradle-plugin:+")
-//        classpath("com.x930073498.component:auto-plugin:0.0.11")
+        classpath("com.x930073498.component:auto-plugin:0.0.11")
     }
 
 }
 
 
-//plugins.apply("com.x930073498.component.auto.plugin")
+plugins.apply("com.x930073498.component.auto.plugin")
 
 configure<Auto> {
 //    val repository = rootDir.absolutePath + File.separator + "repository"
@@ -49,7 +49,7 @@ configure<Auto> {
 }
 plugins {
     id("com.x930073498.build")
-    id("com.x930073498.component.auto.plugin")
+//    id("com.x930073498.component.auto.plugin")
 }
 
 allprojects {

@@ -2,9 +2,9 @@
 rootProject.name = "Component"
 rootProject.buildFileName = "build.gradle.kts"
 includeBuild "../buildProject"
-includeBuild "../buildPlugin"
+//includeBuild "../buildPlugin"
 include ':module1'
-//include ':auto-plugin'
+include ':auto-plugin'
 include ':core'
 include ':k-serializer'
 include ':m-serializer'
