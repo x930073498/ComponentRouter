@@ -16,19 +16,7 @@
 
 package com.x930073498.component.router.util;
 
-/**
- * A simple utility class used to check method Preconditions.
- *
- * <pre>
- * public long divideBy(long value) {
- *   Preconditions.checkArgument(value != 0);
- *   return this.value / value;
- * }
- * </pre>
- *
- * @author Inderjeet Singh
- * @author Joel Leitch
- */
+
 public final class Preconditions {
   private Preconditions() {
     throw new UnsupportedOperationException();

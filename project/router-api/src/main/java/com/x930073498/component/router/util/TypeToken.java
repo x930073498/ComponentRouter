@@ -9,14 +9,7 @@ public class TypeToken<T> {
   final Type type;
   final int hashCode;
 
-  /**
-   * Constructs a new type literal. Derives represented class from type
-   * parameter.
-   *
-   * <p>Clients create an empty anonymous subclass. Doing so embeds the type
-   * parameter in the anonymous class's type hierarchy so we can reconstitute it
-   * at runtime despite erasure.
-   */
+
   @SuppressWarnings("unchecked")
   protected TypeToken() {
     this.type = getSuperclassTypeParameter(getClass());
@@ -24,9 +17,7 @@ public class TypeToken<T> {
     this.hashCode = type.hashCode();
   }
 
-  /**
-   * Unsafe. Constructs a type literal manually.
-   */
+
   @SuppressWarnings("unchecked")
   TypeToken(Type type) {
     this.type = Types.canonicalize(Preconditions.checkNotNull(type));
@@ -34,10 +25,7 @@ public class TypeToken<T> {
     this.hashCode = this.type.hashCode();
   }
 
-  /**
-   * Returns the type from super class's type parameter in {@link Types#canonicalize
-   * canonical form}.
-   */
+
   static Type getSuperclassTypeParameter(Class<?> subclass) {
     Type superclass = subclass.getGenericSuperclass();
     if (superclass instanceof Class) {
@@ -47,38 +35,21 @@ public class TypeToken<T> {
     return Types.canonicalize(parameterized.getActualTypeArguments()[0]);
   }
 
-  /**
-   * Returns the raw (non-generic) type for this type.
-   */
+
   public final Class<? super T> getRawType() {
     return rawType;
   }
 
-  /**
-   * Gets underlying {@code Type} instance.
-   */
+
   public final Type getType() {
     return type;
   }
 
-  /**
-   * Check if this type is assignable from the given class object.
-   *
-   * @deprecated this implementation may be inconsistent with javac for types
-   * with wildcards.
-   */
-  @Deprecated
   public boolean isAssignableFrom(Class<?> cls) {
     return isAssignableFrom((Type) cls);
   }
 
-  /**
-   * Check if this type is assignable from the given Type.
-   *
-   * @deprecated this implementation may be inconsistent with javac for types
-   * with wildcards.
-   */
-  @Deprecated
+
   public boolean isAssignableFrom(Type from) {
     return isAssignableFrom(type, rawType, from);
   }
@@ -114,21 +85,13 @@ public class TypeToken<T> {
     return isAssignableFrom(currentType, currentRawType, from);
   }
 
-  /**
-   * Check if this type is assignable from the given type token.
-   *
-   * @deprecated this implementation may be inconsistent with javac for types
-   * with wildcards.
-   */
+
   @Deprecated
   public boolean isAssignableFrom(TypeToken<?> token) {
     return isAssignableFrom(token.getType());
   }
 
-  /**
-   * Private helper function that performs some assignability checks for
-   * the provided GenericArrayType.
-   */
+
   private static boolean isAssignableFrom(Type from, GenericArrayType to) {
     Type toGenericComponentType = to.getGenericComponentType();
     if (toGenericComponentType instanceof ParameterizedType) {
@@ -149,10 +112,7 @@ public class TypeToken<T> {
     return true;
   }
 
-  /**
-   * Private recursive helper function to actually do the type-safe checking
-   * of assignability.
-   */
+
   private static boolean isAssignableFrom(Type from, ParameterizedType to) {
 
     if (from == null) {
@@ -163,33 +123,12 @@ public class TypeToken<T> {
       return true;
     }
 
-    // First figure out the class and any type information.
     Class<?> clazz = Types.getRawType(from);
     ParameterizedType ptype = null;
     if (from instanceof ParameterizedType) {
       ptype = (ParameterizedType) from;
     }
 
-    // Load up parameterized variable info if it was parameterized.
-//        if (ptype != null) {
-//            Type[] tArgs = ptype.getActualTypeArguments();
-//            TypeVariable<?>[] tParams = clazz.getTypeParameters();
-//            for (int i = 0; i < tArgs.length; i++) {
-//                Type arg = tArgs[i];
-//                TypeVariable<?> var = tParams[i];
-//                while (arg instanceof TypeVariable<?>) {
-//                    TypeVariable<?> v = (TypeVariable<?>) arg;
-//                    arg = typeVarMap.get(v.getName());
-//                }
-//                typeVarMap.put(var.getName(), arg);
-//            }
-//
-//
-//            // check if they are equivalent under our current mapping.
-//            if (typeEquals(ptype, to, typeVarMap)) {
-//                return true;
-//            }
-//        }
     if (ptype != null) {
       Class<?> toType = Types.getRawType(to);
       if (toType == clazz) {
@@ -216,10 +155,7 @@ public class TypeToken<T> {
     return isAssignableFrom(to, Types.getRawType(to), Types.getSupertype(from, clazz, Types.getRawType(clazz.getGenericSuperclass())));
   }
 
-  /**
-   * Checks if two parameterized types are exactly equal, under the variable
-   * replacement described in the typeVarMap.
-   */
+
   private static boolean typeEquals(ParameterizedType from,
                                     ParameterizedType to, Map<String, Type> typeVarMap) {
     if (from.getRawType().equals(to.getRawType())) {
@@ -250,10 +186,7 @@ public class TypeToken<T> {
     return new AssertionError(exceptionMessage.toString());
   }
 
-  /**
-   * Checks if two types are the same or are equivalent under a variable mapping
-   * given in the type map that was provided.
-   */
+
   private static boolean matches(Type from, Type to, Map<String, Type> typeMap) {
     return to.equals(from)
             || (from instanceof TypeVariable
@@ -277,31 +210,20 @@ public class TypeToken<T> {
     return Types.typeToString(type);
   }
 
-  /**
-   * Gets type literal for the given {@code Type} instance.
-   */
   public static TypeToken<?> get(Type type) {
     return new TypeToken<Object>(type);
   }
 
-  /**
-   * Gets type literal for the given {@code Class} instance.
-   */
+
   public static <T> TypeToken<T> get(Class<T> type) {
     return new TypeToken<T>(type);
   }
 
-  /**
-   * Gets type literal for the parameterized type represented by applying {@code typeArguments} to
-   * {@code rawType}.
-   */
   public static TypeToken<?> getParameterized(Type rawType, Type... typeArguments) {
     return new TypeToken<Object>(Types.newParameterizedTypeWithOwner(null, rawType, typeArguments));
   }
 
-  /**
-   * Gets type literal for the array type whose elements are all instances of {@code componentType}.
-   */
+
   public static TypeToken<?> getArray(Type componentType) {
     return new TypeToken<Object>(Types.arrayOf(componentType));
   }
