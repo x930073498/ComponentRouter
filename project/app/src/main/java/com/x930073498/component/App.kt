@@ -34,14 +34,14 @@ class AutoConfig : IConfiguration(), IAuto {
     }
 
 }
-@AutoClass("autoRegister")
-class A : IAuto {
+//@AutoClass("autoRegister")
+class A  {
     init {
         println("enter this line 99999")
     }
 }
-@AutoClass("autoRegister")
-class B : IAuto {
+@AutoClass("annotation")
+class B  {
     init {
         println("enter this line 9898")
     }

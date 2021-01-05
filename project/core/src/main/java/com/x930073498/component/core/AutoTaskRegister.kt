@@ -89,7 +89,6 @@ internal object AutoTaskRegister {
         if (hasInit) return
         val time = System.currentTimeMillis()
         app = getApplication(context)
-        println("enter this line 9989797")
         load()
         applyConfiguration {
             LogUtil.setLogger { tag, msg ->
@@ -100,6 +99,7 @@ internal object AutoTaskRegister {
         AutoActivityLifecycle.doRegister()//注册自身activity生命周期监听
         ApplicationLifecycleHandler.onApplicationCreated()//通知application create
         RegisterHandler.doRegister()//注册器进行注册操作
+        loadAnnotation()
         LogUtil.log("初始化耗时，${System.currentTimeMillis() - time}ms")
     }
 
@@ -110,13 +110,17 @@ internal object AutoTaskRegister {
     }
 
 
-    @InjectLocation("autoRegister")
+    @InjectLocation("annotation")
+    private fun loadAnnotation() {
+
+    }
+
+
     @JvmStatic
     private fun load() {
 
     }
 
-    @ClassInjector("autoRegister")
     @JvmStatic
     private fun register(task: IAuto) {
         if (task is IConfiguration) {
@@ -142,6 +146,5 @@ internal object AutoTaskRegister {
     }
 
 }
-
 
 

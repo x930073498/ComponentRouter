@@ -17,6 +17,13 @@ object InternalScanner : Scanner {
         cacheEnable: Boolean,
         scanInfoHolder: ScanInfoHolder
     ): Boolean {
+        if (fileChanged) {
+            scanInfoHolder.removeFilePath(filePath)
+            return true
+        }
+        if (cacheEnable) {
+            return fileChanged
+        }
         return true
     }
 
@@ -28,7 +35,7 @@ object InternalScanner : Scanner {
         jarFile: JarFile,
         scanInfoHolder: ScanInfoHolder
     ): Boolean {
-      return true
+        return true
     }
 
     override fun shouldScanJarEntry(
@@ -40,7 +47,7 @@ object InternalScanner : Scanner {
         jarEntry: JarEntry,
         scanInfoHolder: ScanInfoHolder
     ): Boolean {
-    return true
+        return true
     }
 
     override fun shouldScanClass(
@@ -62,6 +69,6 @@ object InternalScanner : Scanner {
         cacheEnable: Boolean,
         scanInfoHolder: ScanInfoHolder
     ): ClassVisitor {
-        return InternalClassVisitor(api,cv,filePath,scanInfoHolder)
+        return InternalClassVisitor(api, cv, filePath, scanInfoHolder)
     }
 }

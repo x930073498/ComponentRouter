@@ -23,6 +23,10 @@ object ClassInjectScanner : Scanner {
         cacheEnable: Boolean,
         scanInfoHolder: ScanInfoHolder
     ): Boolean {
+        if (fileChanged) {
+            scanInfoHolder.removeFilePath(filePath)
+            return true
+        }
         if (cacheEnable) {
             return fileChanged
         }

@@ -62,7 +62,16 @@ class ScanClassVisitor(
         exceptions: Array<out String>?
     ): MethodVisitor {
         val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-        return AnnotationMethodVisitor(api, mv, info, filePath, this.classPath, access, name, descriptor)
+        return AnnotationMethodVisitor(
+            api,
+            mv,
+            info,
+            filePath,
+            this.classPath,
+            access,
+            name,
+            descriptor
+        )
     }
 
     override fun visitEnd() {
@@ -95,7 +104,7 @@ class InjectLocationAnnotationVisitor(
                 classPath,
                 this.name,
                 descriptor,
-                asIs(access, Opcodes.ACC_STATIC)
+                access
             )
         )
     }
@@ -175,8 +184,7 @@ class AutoClassInjectorAnnotationVisitor(
         val key = value.toString()
         info.addClassInjector(
             MethodInfo(
-                key, filePath, classPath, this.name, descriptor,
-                asIs(access, Opcodes.ACC_STATIC)
+                key, filePath, classPath, this.name, descriptor,access
             )
         )
     }

@@ -17,7 +17,7 @@ class InternalClassVisitor(
     private val holder: ScanInfoHolder
 ) :
     ClassVisitor(api, classVisitor) {
-    private val key = "02472c7c-7e28-4d0f-9298-825564a5a89b"
+
     private val info = ScanFileInfo(filePath)
     private var classPath = filePath
     override fun visit(
@@ -37,7 +37,14 @@ class InternalClassVisitor(
 
         if (interfaces != null) {
             if (interfaces.contains(INTERFACE_NAME_SCAN)) {
-                info.addAutoClass(ClassInfo(key, filePath, classPath, classPath.replace("/", ".")))
+                info.addAutoClass(
+                    ClassInfo(
+                        INTERNAL_SCANNER_KEY,
+                        filePath,
+                        classPath,
+                        classPath.replace("/", ".")
+                    )
+                )
             }
         }
     }
@@ -57,25 +64,28 @@ class InternalClassVisitor(
         if (classPath == NAME_CODE_INSERT_TO_CLASS_PATH) {
             //"load"  location
             if (name == METHOD_NAME_CODE_INSERT_TO && descriptor == "()V") {
+                if (holder.hasInjectLocationMethod(INTERNAL_SCANNER_KEY)) {
+                    holder.removeInjectLocationMethod(INTERNAL_SCANNER_KEY)
+                }
                 info.addInjectLocation(
                     MethodInfo(
-                        key,
+                        INTERNAL_SCANNER_KEY,
                         filePath,
                         classPath,
                         name,
                         descriptor,
-                        asIs(access, ACC_STATIC)
+                        access
                     )
                 )
             } else if (name == METHOD_NAME_REGISTER
                 && descriptor == "(L${INTERFACE_NAME_SCAN};)V"
             ) {
+                if (holder.hasClassInjectorMethod(INTERNAL_SCANNER_KEY)) {
+                    holder.removeClassInjectorMethod(INTERNAL_SCANNER_KEY)
+                }
                 info.addClassInjector(
                     MethodInfo(
-                        key, filePath, classPath, name, descriptor, asIs(
-                            access,
-                            ACC_STATIC
-                        )
+                        INTERNAL_SCANNER_KEY, filePath, classPath, name, descriptor, access
                     )
                 )
             }

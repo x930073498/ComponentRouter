@@ -19,7 +19,7 @@ class InjectClassVisitor(
         exceptions: Array<out String>?
     ): MethodVisitor {
         val mv = super.visitMethod(access, name, descriptor, signature, exceptions)
-        val result = getScanResult(name, descriptor, asIs(access, Opcodes.ACC_STATIC))
+        val result = getScanResult(name, descriptor, access)
         if (result.isNotEmpty()) {
             return InjectMethodVisitor(api, mv, result)
         }
@@ -30,10 +30,10 @@ class InjectClassVisitor(
     private fun getScanResult(
         name: String?,
         descriptor: String?,
-        isStatic: Boolean
+        access: Int
     ): List<ScanResult> {
         return list.filter {
-            it.injectLocationMethod?.run { this.isStatic == isStatic && this.name == name && this.descriptor == descriptor }
+            it.injectLocationMethod?.run { this.access == access && this.name == name && this.descriptor == descriptor }
                 ?: false
         }
     }
@@ -47,13 +47,20 @@ class InjectClassVisitor(
         override fun visitInsn(opcode: Int) {
             if (opcode >= Opcodes.IRETURN && opcode <= Opcodes.RETURN) {
                 list.forEach { result ->
-                    val classInjectorMethod = result.classInjectorMethod ?: return
-                    val injectLocationMethod = result.injectLocationMethod ?: return
+                    val classInjectorMethod = result.classInjectorMethod ?: return@forEach
+                    val injectLocationMethod = result.injectLocationMethod ?: return@forEach
                     val classes = result.autoClasses
-                    if (injectLocationMethod.isStatic) {
-                        if (!classInjectorMethod.isStatic) return
+
+                    if (!classInjectorMethod.isStatic) {
+                        //不是静态方法
+                        if (classInjectorMethod.classPath != injectLocationMethod.classPath) return@forEach
                     } else {
-                        if (classInjectorMethod.classPath != injectLocationMethod.classPath) return
+                        //静态方法
+                        if (classInjectorMethod.isProtected) {
+                            if (classInjectorMethod.getPackageName() != injectLocationMethod.getPackageName()) return@forEach
+                        } else if (classInjectorMethod.isPrivate) {
+                            if (classInjectorMethod.classPath != injectLocationMethod.classPath) return@forEach
+                        }
                     }
                     classes.forEach {
                         if (!injectLocationMethod.isStatic) {
@@ -68,7 +75,7 @@ class InjectClassVisitor(
                             "()V",
                             false
                         )
-                        if (injectLocationMethod.isStatic) {
+                        if (classInjectorMethod.isStatic) {
                             mv.visitMethodInsn(
                                 Opcodes.INVOKESTATIC,
                                 classInjectorMethod.classPath,

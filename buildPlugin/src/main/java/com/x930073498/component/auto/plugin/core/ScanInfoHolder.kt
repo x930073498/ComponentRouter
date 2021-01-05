@@ -27,8 +27,33 @@ class ScanInfoHolder(private val project: Project) {
     }
 
     fun saveCache() {
-        println("cache is Empty=${isEmpty()}")
         write(gson, cacheFile, HashMap<String, ScanFileInfo>(scanPathMap))
+    }
+
+
+    fun hasInjectLocationMethod(key: String): Boolean {
+        val result = injectHolder.get(key) ?: return false
+        return result.injectLocationMethod != null
+    }
+
+    fun removeInjectLocationMethod(key: String) {
+        val result = injectHolder.get(key) ?: return
+        result.removeInjectLocationMethod()
+    }
+
+    fun hasClassInjectorMethod(key: String): Boolean {
+        val result = injectHolder.get(key) ?: return false
+        return result.classInjectorMethod != null
+    }
+
+    fun removeClassInjectorMethod(key: String) {
+        val result = injectHolder.get(key) ?: return
+        result.removeClassInjectorMethod()
+    }
+
+    fun removeAutoClass(classInfo: ClassInfo) {
+        val result = injectHolder.get(classInfo.key) ?: return
+        result.removeAutoClass(classInfo)
     }
 
     fun hasInfo(filePath: String): Boolean {
@@ -41,7 +66,7 @@ class ScanInfoHolder(private val project: Project) {
         }
     }
 
-   private fun push(scanFileInfo: ScanFileInfo) {
+    private fun push(scanFileInfo: ScanFileInfo) {
         val filePath = scanFileInfo.filePath
         var info = scanPathMap[filePath]
         if (info == null) {
@@ -66,7 +91,16 @@ class ScanInfoHolder(private val project: Project) {
     }
 
     fun removeFilePath(filePath: String) {
-        scanPathMap.remove(filePath)
+        val scanFileInfo = scanPathMap.remove(filePath) ?: return
+        scanFileInfo.injectLocationMethods.forEach {
+            removeInjectLocationMethod(it.key)
+        }
+        scanFileInfo.classInjectorMethods.forEach {
+            removeClassInjectorMethod(it.key)
+        }
+        scanFileInfo.autoClasses.forEach {
+            removeAutoClass(it)
+        }
     }
 
     private fun transformToInjectInfoHolder() {

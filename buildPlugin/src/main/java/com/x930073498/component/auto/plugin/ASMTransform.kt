@@ -35,6 +35,7 @@ class ASMTransform constructor(
     override fun transform(transformInvocation: TransformInvocation?) {
         super.transform(transformInvocation)
         if (transformInvocation == null) return
+        val time = System.currentTimeMillis()
         val clearCache = !transformInvocation.isIncremental
         if (clearCache) {
             transformInvocation.outputProvider.deleteAll()
@@ -42,22 +43,26 @@ class ASMTransform constructor(
         val cacheEnable = transformInvocation.isIncremental
         val holder = ScanInfoHolder(project)
         val fileScan = FileScan()
-        fileScan.addScanner(ClassInjectScanner)
         fileScan.addScanner(InternalScanner)
+        fileScan.addScanner(ClassInjectScanner)
         if (cacheEnable) {
             holder.loadCache()
         } else {
             holder.clearCache()
         }
-        val time = System.currentTimeMillis()
-        scan(transformInvocation, holder, fileScan, cacheEnable)
-        holder.saveCache()
+//        scanWithCopy(transformInvocation, holder, fileScan, cacheEnable,time)
+        scan(transformInvocation, holder, fileScan, cacheEnable, time)
         val scanFinishTime = System.currentTimeMillis()
         project.logger.error("injector scan all class cost time: " + (scanFinishTime - time) + " ms")
+
         holder.generate()
-//        copy(transformInvocation)
+        val insertTime = System.currentTimeMillis()
+        project.logger.error("injector insert code cost time: " + (insertTime - scanFinishTime) + " ms")
+        copy(transformInvocation)
+        val copyTime = System.currentTimeMillis()
+        project.logger.error("injector copy code cost time: " + (copyTime - insertTime) + " ms")
+        holder.saveCache()
         val finishTime = System.currentTimeMillis()
-        project.logger.error("injector insert code cost time: " + (finishTime - scanFinishTime) + " ms")
         project.logger.error("injector cost time: " + (finishTime - time) + " ms")
     }
 
@@ -71,7 +76,6 @@ class ASMTransform constructor(
             }
 
             input.directoryInputs.forEach { directoryInput ->
-                val dirTime = System.currentTimeMillis()
                 val dest = transformInvocation.outputProvider.getContentLocation(
                     directoryInput.name,
                     directoryInput.contentTypes,
@@ -83,20 +87,19 @@ class ASMTransform constructor(
         }
     }
 
-    private fun scan(
+    private fun scanWithCopy(
         transformInvocation: TransformInvocation,
         holder: ScanInfoHolder,
         fileScan: FileScan,
-        cacheEnable: Boolean
+        cacheEnable: Boolean,
+        time: Long
     ) {
         transformInvocation.inputs.forEach { input ->
             input.jarInputs.forEach { jarInput ->
-                val time = System.currentTimeMillis()
                 val dest = getDestFile(jarInput, transformInvocation.outputProvider)
                 val src = jarInput.file
                 FileUtils.copyFile(src, dest)
                 if (jarInput.status != Status.NOTCHANGED) {
-                    holder.removeFilePath(jarInput.file.absolutePath)
                     fileScan.scan(
                         dest,
                         holder,
@@ -111,7 +114,7 @@ class ASMTransform constructor(
                         cacheEnable
                     )
                 }
-                println("auto-register cost time: " + (System.currentTimeMillis() - time) + " ms to scan jar file:" + dest.absolutePath)
+                project.logger.info("auto-injector cost time: " + (System.currentTimeMillis() - time) + " ms to scan jar file:" + dest.absolutePath)
             }
 
             input.directoryInputs.forEach { directoryInput ->
@@ -138,7 +141,60 @@ class ASMTransform constructor(
                     }
                 }
                 val scanTime = System.currentTimeMillis()
-                println("auto-injector cost time: ${System.currentTimeMillis() - dirTime}, scan time: ${scanTime - dirTime}. path=${root}")
+                project.logger.info("auto-injector cost time: ${System.currentTimeMillis() - time}, scan time: ${scanTime - dirTime}. path=${root}")
+            }
+        }
+
+    }
+
+    private fun scan(
+        transformInvocation: TransformInvocation,
+        holder: ScanInfoHolder,
+        fileScan: FileScan,
+        cacheEnable: Boolean,
+        time: Long
+    ) {
+        transformInvocation.inputs.forEach { input ->
+            input.jarInputs.forEach { jarInput ->
+                val scanStartTime = System.currentTimeMillis()
+                val src = jarInput.file
+                if (jarInput.status != Status.NOTCHANGED) {
+                    fileScan.scan(
+                        src,
+                        holder,
+                        true,
+                        cacheEnable
+                    )
+                } else {
+                    fileScan.scan(
+                        src,
+                        holder,
+                        false,
+                        cacheEnable
+                    )
+                }
+                val scanEndTime = System.currentTimeMillis()
+                project.logger.info("auto-injector cost time: ${scanEndTime - time}, scan time: ${scanEndTime - scanStartTime}. path=${src.absolutePath}")
+            }
+
+            input.directoryInputs.forEach { directoryInput ->
+                val dirTime = System.currentTimeMillis()
+                var root = directoryInput.file.absolutePath
+                if (!root.endsWith(File.separator))
+                    root += File.separator
+                val changeMap = directoryInput.changedFiles
+                directoryInput.file.eachFileRecurse { file ->
+                    if (file.isFile) {
+                        fileScan.scan(
+                            file,
+                            holder,
+                            changeMap[file] != Status.NOTCHANGED,
+                            cacheEnable
+                        )
+                    }
+                }
+                val scanTime = System.currentTimeMillis()
+                project.logger.info("auto-injector cost time: ${System.currentTimeMillis() - time}, scan time: ${scanTime - dirTime}. path=${root}")
             }
         }
 

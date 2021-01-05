@@ -7,6 +7,7 @@ import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.Opcodes
 import java.io.File
 import java.io.InputStream
+import java.lang.StringBuilder
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import java.util.zip.ZipEntry
@@ -24,6 +25,10 @@ class InjectInfoHolder {
      * key 为定义注解value值
      */
     private val keyMap = mutableMapOf<String, ScanResult>()
+
+    internal fun get(key: String): ScanResult? {
+        return keyMap[key]
+    }
 
     internal fun getOrCreate(key: String): ScanResult {
         var result = keyMap[key]
@@ -56,11 +61,12 @@ class InjectInfoHolder {
     }
 
     private fun generateCode(filePath: String) {
-
         val resultList = map[filePath] ?: return
         if (resultList.isEmpty()) return
         val file = File(filePath)
-        if (!file.exists()) return
+        if (!file.exists()) {
+            return
+        }
         if (filePath.endsWith(".jar")) generateJarCode(filePath, file, resultList)
         else if (filePath.endsWith(".class")) generateClassCode(filePath, file, resultList)
     }
@@ -68,8 +74,6 @@ class InjectInfoHolder {
     private fun generateJarCode(filePath: String, file: File, list: List<ScanResult>) {
 
         val optJar = File(file.parent, file.name + ".opt")
-        println("jarFileName=${file.name}")
-        println("jarFilePath=${file.absolutePath}")
         if (optJar.exists())
             optJar.delete()
         JarFile(file).use { jar ->
@@ -87,9 +91,13 @@ class InjectInfoHolder {
                                 list.filter { it.injectLocationMethod?.classPath == classPath }
                             if (classList.isNotEmpty()) {
                                 println(
-                                    "generate code into:$entryName,classList=${
-                                        Gson().toJson(classList)
-                                    }"
+                                    "generate code into:$entryName,\nclassList=[\n${
+                                        classList.map {
+                                            it.toSimpleString()
+                                        }.fold(StringBuilder()) { builder, result ->
+                                            builder.append(result).append("\n")
+                                        }
+                                    }]"
                                 )
                                 val bytes = doGenerateCode(inputStream, classList)
                                 outputStream.write(bytes)
@@ -106,9 +114,9 @@ class InjectInfoHolder {
         }
 
         if (file.exists()) {
-            println("deleteResult=${file.delete()}")
+            file.delete()
         }
-        println("renameResult=${optJar.renameTo(file)}")
+        optJar.renameTo(file)
     }
 
 
