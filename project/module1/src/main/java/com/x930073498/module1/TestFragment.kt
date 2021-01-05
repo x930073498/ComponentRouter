@@ -7,8 +7,6 @@ import androidx.fragment.app.Fragment
 import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
-import com.x930073498.component.auto.ClassInjector
-import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.fragmentation.popSelf
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router

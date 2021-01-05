@@ -1,8 +1,8 @@
 package com.x930073498.component.auto.plugin.register
 
-const val ANNOTATION_CLASS_SIGNATURE = "Lcom/x930073498/component/auto/AutoClass;"
-const val ANNOTATION_METHOD_CLASS_INJECTOR_SIGNATURE = "Lcom/x930073498/component/auto/ClassInjector;"
-const val ANNOTATION_METHOD_INJECT_TO_SIGNATURE = "Lcom/x930073498/component/auto/InjectLocation;"
+const val ANNOTATION_CLASS_SIGNATURE = "Lcom/x930073498/component/auto/annotations/AutoClass;"
+const val ANNOTATION_METHOD_CLASS_INJECTOR_SIGNATURE = "Lcom/x930073498/component/auto/annotations/ClassInjector;"
+const val ANNOTATION_METHOD_INJECT_TO_SIGNATURE = "Lcom/x930073498/component/auto/annotations/InjectLocation;"
 /**
  * 方法插入的类名
  */

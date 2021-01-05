@@ -1,4 +1,4 @@
-package com.x930073498.component.auto
+package com.x930073498.component.auto.annotations
 
 /**
  * 标记注册方法

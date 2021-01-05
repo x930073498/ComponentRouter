@@ -1,11 +1,10 @@
 package com.x930073498.component
 
-import android.app.Application
 import androidx.multidex.MultiDexApplication
 import com.x930073498.component.auto.*
+import com.x930073498.component.auto.annotations.AutoClass
 import com.x930073498.component.test.Data
 import dagger.hilt.android.HiltAndroidApp
-import java.lang.reflect.Type
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -34,13 +33,13 @@ class AutoConfig : IConfiguration(), IAuto {
     }
 
 }
-//@AutoClass("autoRegister")
+@AutoClass("annotation")
 class A  {
     init {
         println("enter this line 99999")
     }
 }
-@AutoClass("annotation")
+//@AutoClass("annotation")
 class B  {
     init {
         println("enter this line 9898")

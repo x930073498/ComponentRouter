@@ -10,6 +10,10 @@ class ScanResult internal constructor(
     internal var injectLocationMethod: MethodInfo? = null
     internal var classInjectorMethod: MethodInfo? = null
 
+    val valid: Boolean
+        get() {
+           return autoClasses.isNotEmpty() && injectLocationMethod != null && classInjectorMethod != null
+        }
 
     fun toSimpleString(): String {
         val classString = autoClasses.fold(StringBuilder()) { builder, clazz ->

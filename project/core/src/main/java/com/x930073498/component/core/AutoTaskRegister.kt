@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.x930073498.component.auto.*
+import com.x930073498.component.auto.annotations.InjectLocation
 
 internal object AutoTaskRegister {
 

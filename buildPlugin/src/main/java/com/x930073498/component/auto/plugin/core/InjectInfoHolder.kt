@@ -88,7 +88,7 @@ class InjectInfoHolder {
                         if (entryName.endsWith(".class")) {
                             val classPath = entryName.substring(0, entryName.lastIndexOf("."))
                             val classList =
-                                list.filter { it.injectLocationMethod?.classPath == classPath }
+                                list.filter { it.valid && it.injectLocationMethod?.classPath == classPath }
                             if (classList.isNotEmpty()) {
                                 println(
                                     "generate code into:$entryName,\nclassList=[\n${
@@ -102,10 +102,10 @@ class InjectInfoHolder {
                                 val bytes = doGenerateCode(inputStream, classList)
                                 outputStream.write(bytes)
                             } else {
-                                outputStream.write(IOUtils.toByteArray(inputStream))
+                                outputStream.write(inputStream.readBytes())
                             }
                         } else {
-                            outputStream.write(IOUtils.toByteArray(inputStream))
+                            outputStream.write(inputStream.readBytes())
                         }
                     }
                     outputStream.closeEntry()
@@ -130,17 +130,19 @@ class InjectInfoHolder {
 
     private fun generateClassCode(filePath: String, file: File, list: List<ScanResult>): ByteArray {
         val optClass = File(file.parent, file.name + ".opt")
-        val inputStream = file.inputStream()
-        val outputStream = optClass.outputStream()
-        val bytes = doGenerateCode(inputStream, list)
-        outputStream.write(bytes)
-        inputStream.close()
-        outputStream.close()
-        if (file.exists()) {
-            file.delete()
+        file.inputStream().use { inputStream ->
+            optClass.outputStream().use { outputStream ->
+                val bytes = doGenerateCode(inputStream, list)
+                outputStream.write(bytes)
+                if (file.exists()) {
+                    file.delete()
+                }
+                optClass.renameTo(file)
+                return bytes
+            }
         }
-        optClass.renameTo(file)
-        return bytes
+
+
     }
 
 
