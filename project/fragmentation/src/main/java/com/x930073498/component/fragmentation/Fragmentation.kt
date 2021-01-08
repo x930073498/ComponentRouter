@@ -22,6 +22,7 @@ import com.x930073498.component.router.response.RouterResponse
 import com.x930073498.component.router.response.asActionDelegate
 import com.x930073498.component.router.util.ParameterSupport
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.withContext
 
 private fun FragmentActionDelegate.asDestination(controller: NavController): NavDestination {
@@ -189,7 +190,7 @@ suspend fun Fragment.startWithRouter(path: String, action: NavRouter.() -> Unit 
 
 
 fun Fragment.popSelf() {
-    val path = Router.ofHandle().getRealPathFromTarget(this) ?: return
+    val path =routerPath ?: return
     popTo(path, true)
 }
 
@@ -205,10 +206,15 @@ fun Fragment.popTo(path: String, inclusive: Boolean = false) {
             LogUtil.log("请先调用loadRootFromRouter")
             return
         }
-    controller.popBackStack(id, inclusive)
+    Dispatchers.Main.asExecutor().execute {
+        controller.popBackStack(id, inclusive)
+    }
 }
 
-private suspend fun NavController.loadRootFromRouter(path: String, action: IRouterHandler<*>.() -> Unit = {}) {
+private suspend fun NavController.loadRootFromRouter(
+    path: String,
+    action: IRouterHandler<*>.() -> Unit = {}
+) {
     val response = Router.from(path)
         .apply { action() }
         .request()
@@ -282,3 +288,8 @@ class NavRouter internal constructor(private val router: IRouterHandler<*>) {
 
 
 }
+
+val Fragment.routerPath: String?
+    get() {
+        return Router.ofHandle().getRealPathFromTarget(this)
+    }
