@@ -2,37 +2,28 @@ package com.x930073498.component
 
 import android.Manifest
 import android.app.Activity
-import android.app.Application
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.ViewModelProvider
 import com.just.agentweb.AgentWebConfig
 import com.x930073498.component.annotations.ActivityAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.auto.LogUtil
-import com.x930073498.component.router.*
-import com.x930073498.component.router.response.asActivity
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
+import com.x930073498.component.router.Router
+import com.x930073498.component.router.coroutines.bindLifecycle
+import com.x930073498.component.router.coroutines.end
+import com.x930073498.component.router.coroutines.flatMap
+import com.x930073498.component.router.coroutines.map
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 
 @ActivityAnnotation(path = "/test/test")
-//@AndroidEntryPoint
-class MainActivity : Activity() {
-//    @Inject
-//    lateinit var app: Application
-//
-//    @Inject
-//    lateinit var foo: ActivityFoo
+class MainActivity : AppCompatActivity() {
+
 
 //    private val viewModel by lazy {
 //        ViewModelProvider(this)[MainViewModel::class.java]
@@ -54,10 +45,18 @@ class MainActivity : Activity() {
         AgentWebConfig.debug()
 
         findViewById<View>(Window.ID_ANDROID_CONTENT).setOnClickListener {
-            GlobalScope.launch(Dispatchers.IO) {
-                val result = Router.from("/activity/second").request().asActivity()
-                    .navigateForActivityResult()
-                LogUtil.log("enter this line result=${result.data?.getStringExtra("result")}")
+            val handle = Router.from("/activity/second")
+                .asActivity()
+                .navigateForActivityResult()
+                .end {
+                    LogUtil.log("enter this line result=${it.data?.getStringExtra("result")}")
+                }
+                .bindLifecycle(this)
+
+            GlobalScope.launch {
+                delay(1000)
+                LogUtil.log("enter this line hasResult=${handle.hasResult()}")
+                handle.cancel()
             }
         }
 

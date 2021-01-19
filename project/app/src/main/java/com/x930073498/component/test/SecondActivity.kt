@@ -9,7 +9,9 @@ import com.x930073498.component.R
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.databinding.ActivitySecondBinding
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.coroutines.bindLifecycle
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -49,6 +51,13 @@ class SecondActivity : AppCompatActivity() {
 //                        .put("duration", duration).toString()
 //                )
             }
-            .forwardSync()
+            .navigate()
+            .bindLifecycle(this)
+            .listen {
+                while (true){
+                    LogUtil.log("enter this line 989777777777")
+                    delay(1000)
+                }
+            }
     }
 }

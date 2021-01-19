@@ -14,7 +14,6 @@ import com.x930073498.component.router.response.RouterResponse
 )
 class TestInterceptor : RouterInterceptor {
     override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
-        LogUtil.log("enter this line interceptor test")
         return chain.process(chain.request())
     }
 }

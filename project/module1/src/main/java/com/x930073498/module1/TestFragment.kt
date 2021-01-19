@@ -33,13 +33,11 @@ class TestFragment : Fragment(R.layout.fragment_module_test) {
             popSelf()
         }
         binding.tv.setOnClickListener {
-            GlobalScope.launch {
-                startWithRouter("/module1/test?name=模块测试2") {
-                    this.withNavOptions {
-                        popUpTo("/test/a")
-                    }
-                    this.withRouter {
-                    }
+            startWithRouter("/module1/test?name=模块测试2") {
+                this.withNavOptions {
+                    popUpTo("/test/a")
+                }
+                this.withRouter {
                 }
             }
         }
@@ -57,7 +55,7 @@ suspend fun doTest(context: Context) {
 //        }))
 //        appendQueryParameter("info", "{msg:\"测试\",duration:0}")
     }
-        .forward(context)
+        .navigate(context = context)
 }
 
 

@@ -37,10 +37,10 @@ class TestFragment : Fragment(R.layout.app_fragment_test) {
 //            Router.from("/method/toast?msg=测试").forwardSync(requireContext())
 
             GlobalScope.launch(Dispatchers.IO) {
-                startWithRouter("/app/activity/second"){
+                startWithRouter("/app/activity/second") {
                     withNavOptions {
-                        popUpTo( "/app/fragment/test"){
-                            this.inclusive=true
+                        popUpTo(Router.ofHandle().getRealPathFromTarget(this@TestFragment)!!) {
+                            this.inclusive = true
                         }
                     }
                 }

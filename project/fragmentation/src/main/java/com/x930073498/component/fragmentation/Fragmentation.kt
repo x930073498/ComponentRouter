@@ -1,9 +1,11 @@
 package com.x930073498.component.fragmentation
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -13,7 +15,8 @@ import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.core.app
 import com.x930073498.component.router.IRouterHandler
 import com.x930073498.component.router.Router
-import com.x930073498.component.router.action.NavigateParams
+import com.x930073498.component.router.action.ContextHolder
+import com.x930073498.component.router.coroutines.*
 import com.x930073498.component.router.impl.ActionDelegate
 import com.x930073498.component.router.impl.ActivityActionDelegate
 import com.x930073498.component.router.impl.FragmentActionDelegate
@@ -21,9 +24,11 @@ import com.x930073498.component.router.impl.SystemActionDelegate
 import com.x930073498.component.router.response.RouterResponse
 import com.x930073498.component.router.response.asActionDelegate
 import com.x930073498.component.router.util.ParameterSupport
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 private fun FragmentActionDelegate.asDestination(controller: NavController): NavDestination {
     val navigator = controller.navigatorProvider[FragmentNavigator::class]
@@ -106,91 +111,131 @@ private fun RouterResponse.asDestination(controller: NavController): NavDestinat
     return asActionDelegate().asDestination(controller, asNavigateParams())
 }
 
+private data class NavigateParams(val bundle: Bundle, val contextHolder: ContextHolder)
+
 private fun RouterResponse.asNavigateParams(): NavigateParams {
     return NavigateParams(bundle, contextHolder)
 }
 
-suspend fun Fragment.loadRootFromRouter(
+fun Fragment.loadRootFromRouter(
     containerId: Int,
     path: String,
+    scope: CoroutineScope = AwaitResultCoroutineScope,
+    coroutineContext: CoroutineContext = scope.coroutineContext,
     action: IRouterHandler<*>.() -> Unit = {}
-) {
-    withContext(Dispatchers.Main) {
-        val view = requireView().findViewById<View>(containerId) ?: return@withContext
-        val controller = NavHostController(requireContext())
-        controller.setLifecycleOwner(this@loadRootFromRouter)
-        controller.setViewModelStore(viewModelStore)
-        controller.setOnBackPressedDispatcher(requireActivity().onBackPressedDispatcher)
-        controller.navigatorProvider.apply {
-            addNavigator(
-                FragmentNavigator(
-                    requireContext(),
-                    childFragmentManager,
-                    containerId
+): ResultListenable<Any> {
+    return createAwaitResult(scope, coroutineContext) {
+        withContext(Dispatchers.Main) {
+            val view = requireView().findViewById<View>(containerId)
+                ?: return@withContext createAwaitResult<Any>(scope, coroutineContext, Unit)
+            val controller = NavHostController(requireContext())
+            controller.setLifecycleOwner(this@loadRootFromRouter)
+            controller.setViewModelStore(viewModelStore)
+            controller.setOnBackPressedDispatcher(requireActivity().onBackPressedDispatcher)
+            controller.navigatorProvider.apply {
+                addNavigator(
+                    FragmentNavigator(
+                        requireContext(),
+                        childFragmentManager,
+                        containerId
+                    )
                 )
-            )
-            addNavigator(ActivityNavigator(requireContext()))
+                addNavigator(ActivityNavigator(requireContext()))
+            }
+            Navigation.setViewNavController(view, controller)
+            controller.loadRootFromRouter(
+                path,
+                scope,
+                coroutineContext,
+                requireContext(),
+                action
+            ).await()
         }
-        Navigation.setViewNavController(view, controller)
-        controller.loadRootFromRouter(path, action)
     }
+
+
 }
 
-suspend fun FragmentActivity.loadRootFromRouter(
+fun FragmentActivity.loadRootFromRouter(
     containerId: Int,
     path: String,
+    scope: CoroutineScope = AwaitResultCoroutineScope,
+    coroutineContext: CoroutineContext = scope.coroutineContext,
     action: IRouterHandler<*>.() -> Unit = {}
-) {
-    withContext(Dispatchers.Main) {
-        val view = findViewById<View>(containerId) ?: return@withContext
-        val controller = NavHostController(this@loadRootFromRouter)
-        controller.setLifecycleOwner(this@loadRootFromRouter)
-        controller.setViewModelStore(viewModelStore)
-        controller.setOnBackPressedDispatcher(onBackPressedDispatcher)
-        controller.navigatorProvider.apply {
-            addNavigator(
-                FragmentNavigator(
-                    this@loadRootFromRouter,
-                    supportFragmentManager,
-                    containerId
-                )
+): ResultListenable<Any> {
+    return createAwaitResult(scope, coroutineContext) {
+        withContext(Dispatchers.Main) {
+            val view = findViewById<View>(containerId) ?: return@withContext createAwaitResult(
+                scope,
+                coroutineContext,
+                Unit
             )
-            addNavigator(ActivityNavigator(this@loadRootFromRouter))
+            val controller = NavHostController(this@loadRootFromRouter)
+            controller.setLifecycleOwner(this@loadRootFromRouter)
+            controller.setViewModelStore(viewModelStore)
+            controller.setOnBackPressedDispatcher(onBackPressedDispatcher)
+            controller.navigatorProvider.apply {
+                addNavigator(
+                    FragmentNavigator(
+                        this@loadRootFromRouter,
+                        supportFragmentManager,
+                        containerId
+                    )
+                )
+                addNavigator(ActivityNavigator(this@loadRootFromRouter))
+            }
+            Navigation.setViewNavController(view, controller)
+            controller.loadRootFromRouter(
+                path,
+                scope,
+                coroutineContext,
+                this@loadRootFromRouter,
+                action
+            ).await()
         }
-        Navigation.setViewNavController(view, controller)
-        controller.loadRootFromRouter(path, action)
+
     }
+
 }
 
 
-suspend fun Fragment.startWithRouter(path: String, action: NavRouter.() -> Unit = {}) {
+fun Fragment.startWithRouter(
+    path: String,
+    scope: CoroutineScope = AwaitResultCoroutineScope,
+    coroutineContext: CoroutineContext = scope.coroutineContext,
+    action: NavRouter.() -> Unit = {}
+): ResultListenable<Any> {
     val controller = runCatching {
         Navigation.findNavController(requireView())
     }.getOrNull() ?: run {
-        LogUtil.log("请先调用loadRootFromRouter")
-        return
+        return createAwaitResult(scope, coroutineContext, LogUtil.log("请先调用loadRootFromRouter"))
     }
     val router = Router.from(path)
     val nav = NavRouter(router)
     action(nav)
-    val response = router
-        .request()
-    val destination = response.asDestination(controller) ?: run {
-        LogUtil.log("path:$path 没有对应的Router，请检查路由定义是否正确或者检查路由是否已经被卸载")
-        return
-    }
-    val graph = controller.graph
-    runCatching {
-        graph[destination.id]
-    }.onFailure { graph.addDestination(destination) }
-    withContext(Dispatchers.Main) {
-        controller.navigate(destination.id, response.asNavigateParams().bundle, nav.getNavOptions())
-    }
+    return router.request(scope, coroutineContext, requireContext())
+        .map {
+            val destination = it.asDestination(controller) ?: run {
+                LogUtil.log("path:$path 没有对应的Router，请检查路由定义是否正确或者检查路由是否已经被卸载")
+                return@map
+            }
+            val graph = controller.graph
+            runCatching {
+                graph[destination.id]
+            }.onFailure { graph.addDestination(destination) }
+            withContext(Dispatchers.Main) {
+                controller.navigate(
+                    destination.id,
+                    it.asNavigateParams().bundle,
+                    nav.getNavOptions()
+                )
+            }
+        }
 }
 
 
 fun Fragment.popSelf() {
-    val path =routerPath ?: return
+    val path = routerPath ?: return
     popTo(path, true)
 }
 
@@ -211,22 +256,28 @@ fun Fragment.popTo(path: String, inclusive: Boolean = false) {
     }
 }
 
-private suspend fun NavController.loadRootFromRouter(
+private fun NavController.loadRootFromRouter(
     path: String,
+    scope: CoroutineScope = AwaitResultCoroutineScope,
+    coroutineContext: CoroutineContext = scope.coroutineContext,
+    context: Context,
     action: IRouterHandler<*>.() -> Unit = {}
-) {
-    val response = Router.from(path)
+): ResultListenable<Any> {
+    return Router.from(path)
         .apply { action() }
-        .request()
-    val destination = response.asDestination(this) ?: return
-    val params = response.asNavigateParams()
-    val mNavGraph = NavGraph(NavGraphNavigator(navigatorProvider))
-    mNavGraph.addDestination(destination)
-    mNavGraph.startDestination = destination.id
-    mNavGraph.id = pathToDestinationId("nav") ?: 1
-    withContext(Dispatchers.Main) {
-        setGraph(mNavGraph, params.bundle)
-    }
+        .request(scope, coroutineContext, context)
+        .map {
+            val destination = it.asDestination(this) ?: return@map
+            val params = it.asNavigateParams()
+            val mNavGraph = NavGraph(NavGraphNavigator(navigatorProvider))
+            mNavGraph.addDestination(destination)
+            mNavGraph.startDestination = destination.id
+            mNavGraph.id = pathToDestinationId("nav") ?: 1
+            withContext(Dispatchers.Main) {
+                setGraph(mNavGraph, params.bundle)
+            }
+        }
+
 
 }
 

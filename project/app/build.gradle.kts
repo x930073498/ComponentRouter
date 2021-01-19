@@ -7,7 +7,6 @@ plugins {
     kotlin("kapt")
     kotlin("plugin.serialization") version "1.4.20"
 //    id("kotlin-parcelize")
-    id("dagger.hilt.android.plugin")
     id("kotlin-android")
 
 }
@@ -55,10 +54,9 @@ dependencies {
     implementation(Libraries.kotlin)
 
     implementation(Libraries.androidx_core_ktx)
-    implementation(Libraries.hilt_android)
-    implementation(Libraries.hilt_lifecycle_viewmodel)
+    implementation(Libraries.multidex)
     implementation("androidx.appcompat:appcompat:1.2.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:${rootProject.extra["kotlin_version"]}")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}")
     implementation("androidx.constraintlayout:constraintlayout:2.0.4")
     kapt(Libraries.hilt_android_compiler)
     kapt(Libraries.hilt_compiler)

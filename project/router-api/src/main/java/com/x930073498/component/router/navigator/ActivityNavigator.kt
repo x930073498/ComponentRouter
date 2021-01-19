@@ -2,126 +2,132 @@ package com.x930073498.component.router.navigator
 
 import android.app.Activity
 import android.app.Application
-import android.app.Fragment
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultCallback
-import androidx.activity.result.ActivityResultRegistryOwner
-import androidx.activity.result.contract.ActivityResultContract
-import androidx.core.os.bundleOf
-import com.x930073498.component.auto.LogUtil
-import com.x930073498.component.core.*
 import com.x930073498.component.router.action.*
 import com.x930073498.component.router.action.Target
+import com.x930073498.component.router.coroutines.AwaitResult
+import com.x930073498.component.router.coroutines.ResultListenable
+import com.x930073498.component.router.coroutines.cast
+import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.util.launchAndWaitActivityResult
 import com.x930073498.component.router.util.listenActivityCreated
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.selects.select
 import java.lang.RuntimeException
 import java.lang.ref.WeakReference
 import java.util.*
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+
+internal open class ActivityNavigatorImpl internal constructor(
+    private val listenable: ResultListenable<ActivityNavigatorParams>,
+) : ActivityNavigator {
+    private val activityMessenger = UUID.randomUUID().toString()
+    private var hasNavigated = false
+    private var isInNavigation = false
 
 
+    private var activityRef = WeakReference<Activity>(null)
 
-interface ActivityNavigator : ParameterProvider, Navigator {
-
-    companion object {
-
-
-        internal fun create(
-            target: Target.ActivityTarget,
-            contextHolder: ContextHolder,
-            bundle: Bundle
-        ): ActivityNavigator {
-            return object : ActivityNavigator {
-
-                private val activityMessenger = UUID.randomUUID().toString()
-                private var hasNavigated = false
-                private var isInNavigation = false
-
-
-                private var activityRef = WeakReference<Activity>(null)
-                private suspend fun listenerActivityCreated(): Activity? {
-                    val result = listenActivityCreated(activityMessenger, activityMessenger).await()
-                    hasNavigated = true
-                    isInNavigation = false
-                    return result
-                }
-
-                override fun getLaunchIntent(): Intent? {
-                    val context = contextHolder.getContext()
-                    val intent = Intent(context, target.targetClazz)
+    private val launchIntentLazy by lazy {
+        listenable.map<ActivityNavigatorParams, Intent?> {
+            it.run {
+                val context = contextHolder.getContext()
+                Intent(context, target.targetClazz).apply {
                     if (context is Application) {
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     bundle.putString(activityMessenger, activityMessenger)
-                    intent.putExtras(bundle)
-                    return intent
+                    putExtras(bundle)
                 }
-
-                override suspend fun navigateForActivityResult(): ActivityResult {
-                    return coroutineScope {
-                        async {
-                            val activity = listenerActivityCreated()
-                            activityRef = WeakReference(activity)
-                        }.start()
-                        isInNavigation = true
-                        val activity = contextHolder.getActivity()
-                        launchAndWaitActivityResult(activity, activityMessenger, getLaunchIntent())
-                    }
-                }
-
-                override suspend fun requestActivity(): Activity {
-                    if (hasNavigated) return activityRef.get()!!
-                    isInNavigation = true
-                    return coroutineScope {
-                        val job = async {
-                            val activity = listenerActivityCreated()
-                            activityRef = WeakReference(activity)
-                            activity
-                        }
-                        contextHolder.getContext().startActivity(getLaunchIntent())
-                        job.await()!!
-                    }
-                }
-
-                override suspend fun <T : Activity> requestInstanceActivity(clazz: Class<T>): T {
-                    return runCatching { requestActivity() as T }.getOrElse {
-                        throw  RuntimeException("目标activity 不是 $clazz")
-                    }
-                }
-
-                override fun getBundle(): Bundle {
-                    return bundle
-                }
-
-                override fun getContextHolder(): ContextHolder {
-                    return contextHolder
-                }
-
-                override suspend fun navigate(
-                ): Any? {
-                    requestActivity()
-                    return null
-                }
-
             }
         }
     }
 
-    fun getLaunchIntent(): Intent?
+    private val createRequestActivityListenable by lazy {
+        launchIntentLazy.map {
+            if (it == null) {
+                return@map null
+            }
+            coroutineScope {
+                val job = async {
+                    val activity = listenerActivityCreated()
+                    activityRef = WeakReference(activity)
+                    activity
+                }
+                listenable.await().contextHolder.getContext().startActivity(it)
+                job.await()
+            }
+        }
+    }
 
-    suspend fun navigateForActivityResult(): ActivityResult
+    private val requestActivityLazy: ResultListenable<Activity?>
+        get() {
+            if (hasNavigated) return listenable.map { activityRef.get() }
+            isInNavigation = true
+            return createRequestActivityListenable
+        }
+
+    private suspend fun listenerActivityCreated(): Activity? {
+        val result = listenActivityCreated(activityMessenger, activityMessenger).await()
+        hasNavigated = true
+        isInNavigation = false
+        return result
+    }
 
 
-    suspend fun requestActivity(): Activity
+    override fun getLaunchIntent(): ResultListenable<Intent?> {
+        return launchIntentLazy
+    }
 
-    suspend fun <T : Activity> requestInstanceActivity(clazz: Class<T>): T
+    override fun navigateForActivityResult(): ResultListenable<ActivityResult> {
+        return launchIntentLazy.map {
+            coroutineScope {
+                async {
+                    val activity = listenerActivityCreated()
+                    activityRef = WeakReference(activity)
+                }.start()
+                isInNavigation = true
+                val activity = listenable.await().contextHolder.getActivity()
+                launchAndWaitActivityResult(activity, activityMessenger, it)
+            }
+        }
+    }
+
+    override fun requestActivity(): ResultListenable<Activity?> {
+        return requestActivityLazy
+    }
+
+    override fun <T : Activity> requestInstanceActivity(clazz: Class<T>): ResultListenable<T> {
+        return requestActivity().cast()
+    }
+
+    override fun navigate(): ResultListenable<NavigatorResult> {
+        return requestActivity().map {
+            NavigatorResult.ACTIVITY(it)
+        }
+    }
 
 }
+
+
+interface ActivityNavigator : Navigator {
+
+    companion object {
+        internal fun create(
+            listenable: ResultListenable<ActivityNavigatorParams>,
+        ): ActivityNavigator {
+            return ActivityNavigatorImpl(listenable)
+        }
+    }
+
+    fun getLaunchIntent(): ResultListenable<Intent?>
+
+    fun navigateForActivityResult(): ResultListenable<ActivityResult>
+
+
+    fun requestActivity(): ResultListenable<Activity?>
+
+    fun <T : Activity> requestInstanceActivity(clazz: Class<T>): ResultListenable<T>
+
+}
+

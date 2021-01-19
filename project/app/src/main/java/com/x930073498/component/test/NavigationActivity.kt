@@ -13,8 +13,6 @@ class NavigationActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navigation)
-        GlobalScope.launch {
-            loadRootFromRouter(R.id.container, "/test/a?name=24254&title=测试")
-        }
+        loadRootFromRouter(R.id.container, "/test/a?name=24254&title=测试")
     }
 }

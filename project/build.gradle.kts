@@ -3,7 +3,6 @@ import com.x930073498.plugin.BinaryInfo
 import java.util.Properties
 import com.x930073498.component.auto.plugin.Auto
 buildscript {
-    val kotlin_version by extra("1.4.21")
     val properties = mapOf<String, String>().toProperties()
     val file = file("local.properties")
     println("enter this line local.properties isExit=${file.exists()}")
@@ -32,8 +31,7 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-android-extensions:1.4.21")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.11.1")
-        classpath("com.google.dagger:hilt-android-gradle-plugin:+")
-        classpath("com.x930073498.component:auto-plugin:0.0.11")
+        classpath("com.x930073498.component:auto-plugin:0.0.13")
     }
 
 }

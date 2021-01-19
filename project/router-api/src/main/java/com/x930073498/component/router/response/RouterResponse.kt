@@ -4,6 +4,9 @@ import android.net.Uri
 import android.os.Bundle
 import com.x930073498.component.router.action.*
 import com.x930073498.component.router.action.Target
+import com.x930073498.component.router.coroutines.AwaitResult
+import com.x930073498.component.router.coroutines.ResultListenable
+import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.*
 import com.x930073498.component.router.interceptor.Response
 import com.x930073498.component.router.navigator.*
@@ -36,51 +39,13 @@ fun RouterResponse.success(isSuccess: Boolean = true): RouterResponse {
     return InternalResponse(this).also { it.mSuccess = isSuccess }
 }
 
-internal fun RouterResponse.asNavigateParams(): NavigateParams {
-    return NavigateParams(bundle, contextHolder)
+
+
+
+fun ResultListenable<RouterResponse>.asNavigator():DispatcherNavigator {
+    return DispatcherNavigator(this)
 }
 
-
-suspend fun RouterResponse.navigate(): Any? {
-    return asNavigator().navigate()
-}
-
-fun RouterResponse.asNavigator(): Navigator {
-    val action = ActionCenter.getAction(uri)
-    return when (val target = action.target) {
-        is Target.ServiceTarget -> ServiceNavigator.create(target, contextHolder, bundle)
-        is Target.MethodTarget -> MethodNavigator.create(target, contextHolder, bundle)
-        is Target.ActivityTarget -> ActivityNavigator.create(target, contextHolder, bundle)
-        is Target.FragmentTarget -> FragmentNavigator.create(target, contextHolder, bundle)
-        is Target.InterceptorTarget -> InterceptorNavigator.create(target,contextHolder, bundle)
-        is Target.SystemTarget -> SystemActionNavigator.create(target, contextHolder, bundle)
-    }
-}
-
-fun RouterResponse.asActivity(): ActivityNavigator {
-    return runCatching { asNavigator() as ActivityNavigator }.getOrElse {
-        throw RuntimeException("当前路由结果不是一个Activity")
-    }
-}
-
-fun RouterResponse.asFragment(): FragmentNavigator {
-    return runCatching { asNavigator() as FragmentNavigator }.getOrElse {
-        throw RuntimeException("当前路由结果不是一个fragment")
-    }
-}
-
-fun RouterResponse.asMethod(): MethodNavigator {
-    return runCatching { asNavigator() as MethodNavigator }.getOrElse {
-        throw RuntimeException("当前路由结果不是一个方法")
-    }
-
-}
-
-fun RouterResponse.asService(): ServiceNavigator {
-    return runCatching { asNavigator() as ServiceNavigator }.getOrElse {
-        throw RuntimeException("当前路由结果不是一个IService")
-    }
-}
 
 fun RouterResponse.asActionDelegate(): ActionDelegate {
     return ActionCenter.getAction(uri).apply {

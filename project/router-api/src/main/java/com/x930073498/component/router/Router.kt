@@ -7,29 +7,29 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import android.os.Looper
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.x930073498.component.router.interceptor.onInterceptors
-import com.x930073498.component.router.request.routerRequest
-import com.x930073498.component.router.response.RouterResponse
-import com.x930073498.component.router.response.navigate
-import com.x930073498.component.router.response.routerResponse
-import com.x930073498.component.router.util.ParameterSupport
-import com.x930073498.component.core.IActivityLifecycle
-import com.x930073498.component.core.IApplicationLifecycle
 import com.x930073498.component.auto.IAuto
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.auto.getConfiguration
 import com.x930073498.component.auto.getSerializer
+import com.x930073498.component.core.IActivityLifecycle
+import com.x930073498.component.core.IApplicationLifecycle
 import com.x930073498.component.core.IFragmentLifecycle
 import com.x930073498.component.router.action.*
+import com.x930073498.component.router.coroutines.*
 import com.x930073498.component.router.impl.*
 import com.x930073498.component.router.interceptor.Chain
+import com.x930073498.component.router.interceptor.onInterceptors
+import com.x930073498.component.router.navigator.*
 import com.x930073498.component.router.request.RouterRequest
-import kotlinx.coroutines.*
-import java.util.concurrent.atomic.AtomicReference
+import com.x930073498.component.router.request.routerRequest
+import com.x930073498.component.router.response.*
+import com.x930073498.component.router.util.ParameterSupport
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlin.coroutines.CoroutineContext
 import kotlin.properties.Delegates
 
 
@@ -116,61 +116,84 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     }
 
 
-    suspend fun <T> navigate(context: Context? = null): T? {
-        return forward(context) as? T
-    }
-
-
-    /**
-     * 创建
-     */
-    fun <T> syncNavigation(context: Context? = null): T? {
-        return forwardSync(context) as? T
-    }
-
-    /**
-     * 主线程谨慎使用，因为可能会导致主线程卡住。
-     */
-    fun forwardSync(
+    fun navigate(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
         context: Context? = mHandler.contextHolder.getContext(),
-    ): Any? {
-        val resultRef = AtomicReference<Any>()
-        val flagRef = AtomicReference(0)
-        val dispatcher =
-            if (Looper.getMainLooper() == Looper.myLooper()) Dispatchers.Main.immediate else Dispatchers.IO
-        GlobalScope.launch(dispatcher) {
-            runCatching {
-                val result = forward(context)
-                resultRef.set(result)
-            }.onFailure { it.printStackTrace() }
-            flagRef.set(1)
-        }
-        while (flagRef.get() == 0) {
-            //do nothing,Thread loop
-        }
-        return resultRef.get()
-    }
-
-    suspend fun forward(
-        context: Context? = mHandler.contextHolder.getContext(),
-    ): Any? {
-        return request(context).navigate()
+    ): ResultListenable<NavigatorResult> {
+        return requestInternal(scope, coroutineContext, context)
+            .asNavigator()
+            .navigate()
     }
 
 
-    suspend fun request(context: Context? = mHandler.contextHolder.getContext()): RouterResponse {
+    fun asNavigator(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
+        context: Context? = mHandler.contextHolder.getContext()
+    ): Navigator {
+        return requestInternal(scope, coroutineContext, context).asNavigator()
+    }
 
-        return routerRequest(mHandler.uriBuilder.build(), mHandler.mBundle, context)
-            .onInterceptors {
-                val request = request()
-                routerResponse(request.uri, request.bundle, request.contextHolder)
-            }.beforeIntercept {
-                request().syncUriToBundle()
-            }.add(ActionDelegateRouterInterceptor())
-            .apply {
-                if (!mHandler.greenChannel) add(GlobalInterceptor)
-            }
-            .start()
+    fun asActivity(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
+        context: Context? = mHandler.contextHolder.getContext()
+    ): ActivityNavigator {
+        return requestInternal(scope, coroutineContext, context).asNavigator().asActivity()
+    }
+
+    fun asFragment(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
+        context: Context? = mHandler.contextHolder.getContext()
+    ): FragmentNavigator {
+        return requestInternal(scope, coroutineContext, context).asNavigator().asFragment()
+    }
+
+    fun asMethod(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
+        context: Context? = mHandler.contextHolder.getContext()
+    ): MethodNavigator {
+        return requestInternal(scope, coroutineContext, context).asNavigator().asMethod()
+    }
+
+    fun asService(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
+        context: Context? = mHandler.contextHolder.getContext()
+    ): ServiceNavigator {
+        return requestInternal(scope, coroutineContext, context).asNavigator().asService()
+    }
+
+
+    private fun requestInternal(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
+        context: Context? = mHandler.contextHolder.getContext()
+    ): ResultListenable<RouterResponse> {
+        return createAwaitResult(scope, coroutineContext) {
+            routerRequest(mHandler.uriBuilder.build(), mHandler.mBundle, context)
+                .onInterceptors {
+                    val request = request()
+                    routerResponse(request.uri, request.bundle, request.contextHolder)
+                }.beforeIntercept {
+                    request().syncUriToBundle()
+                }.add(ActionDelegateRouterInterceptor())
+                .apply {
+                    if (!mHandler.greenChannel) add(GlobalInterceptor)
+                }
+                .start()
+        }
+    }
+
+    fun request(
+        scope: CoroutineScope = AwaitResultCoroutineScope,
+        coroutineContext: CoroutineContext = scope.coroutineContext,
+        context: Context? = mHandler.contextHolder.getContext()
+    ): ResultListenable<RouterResponse> {
+        return requestInternal(scope, coroutineContext, context)
     }
 
 
@@ -183,7 +206,6 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
 
         private val globalInterceptors = arrayListOf<Any>()
 
-        internal var navigateInterceptor: NavigateInterceptor? = null
 
         fun addGlobalInterceptor(vararg interceptor: RouterInterceptor) {
             globalInterceptors.addAll(interceptor.asList())
@@ -198,23 +220,13 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
         }
 
 
-        fun setNavigateInterceptor(interceptor: NavigateInterceptor) {
-            navigateInterceptor = interceptor
-        }
-
-
         internal object GlobalInterceptor : RouterInterceptor {
             override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
                 val request = chain.request()
                 globalInterceptors.reversed().mapNotNull {
                     when (it) {
-                        is String -> ActionCenter.getAction(it)
-                            .getResult(
-                                NavigateParams(
-                                    request.bundle,
-                                    request.contextHolder
-                                )
-                            ) as? RouterInterceptor
+                        is String -> from(it).asNavigator().navigate().await()
+                            .getResult() as? RouterInterceptor
                         is RouterInterceptor -> it
                         is InterceptorActionDelegate -> it.factory()
                             .create(request.contextHolder, it.target.targetClazz)

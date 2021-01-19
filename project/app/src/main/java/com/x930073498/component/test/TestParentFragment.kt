@@ -28,7 +28,6 @@ open class TestParentFragment : Fragment(R.layout.fragment_test) {
 //            Router.from("http://www.baidu.com").syncNavigation<Any>()
             Router.getServiceSync<TestService>()?.test()
             GlobalScope.launch {
-                LogUtil.log("enter this line 987456")
 //                Router.from("/a/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
 //                    println(it)
 //                }

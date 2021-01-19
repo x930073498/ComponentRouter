@@ -23,14 +23,15 @@ open class TestFragment : TestParentFragment(), IFragmentation {
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         requireView().findViewById<TextView>(R.id.tvTitle)?.apply {
             text = title
             setOnClickListener {
-               if ( Router.loadRealPath("/module1/test")){
-                   toast("路径加载成功")
-               }
+                if (Router.loadRealPath("/module1/test")) {
+                    toast("路径加载成功")
+                }
             }
         }
         view.setOnClickListener {
@@ -40,46 +41,42 @@ open class TestFragment : TestParentFragment(), IFragmentation {
 //                WebFragmentNavigateInterceptor,
 //                StartFragmentResultHandler
 //            )
-            GlobalScope.launch {
 //                startWithRouter("http://www.baidu.com") {
 //                    this.withNavOptions {
 //                        launchSingleTop = true
 //                    }
 //                }
-                when (Router.ofHandle().getRealPathState("/module1/test")) {
-                    PathState.NONE -> {
-                        toast("路径尚未注册")
-                    }
+            when (Router.ofHandle().getRealPathState("/module1/test")) {
+                PathState.NONE -> {
+                    toast("路径尚未注册")
+                }
 
-                    is PathState.LOADED -> {
-
-                        startWithRouter("/module1/test?name=模块测试1") {
-                            this.withNavOptions {
-                                launchSingleTop = true
-                            }
+                is PathState.LOADED -> {
+                    startWithRouter("/module1/test?name=模块测试1") {
+                        this.withNavOptions {
+                            launchSingleTop = true
                         }
                     }
-                    is PathState.UNLOADED -> {
-                        toast("路径尚未加载")
-                    }
                 }
+                is PathState.UNLOADED -> {
+                    toast("路径尚未加载")
+                }
+            }
 
 //                startWithRouter("yangpijun://yunzhanxinxi.com/taoke/module/main/life/fragment/promote?platform=elm"){
 //
 //                }
-            }
-
         }
-    }
 
+    }
 
 
 }
 
- fun toast(msg: String, duration: Int = Toast.LENGTH_SHORT) {
+fun toast(msg: String, duration: Int = Toast.LENGTH_SHORT) {
     Router.from("/method/toast").uri {
         appendQueryParameter("info", "{msg:\"$msg\",duration:$duration}")
-    }.forwardSync()
+    }.navigate()
 }
 
 

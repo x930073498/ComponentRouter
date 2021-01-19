@@ -1,19 +1,13 @@
 package com.x930073498.component.test
 
 import android.content.Context
-import android.os.Looper
 import android.widget.Toast
-import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import com.alibaba.fastjson.annotation.JSONField
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.annotations.MethodBundleNameAnnotation
-import com.x930073498.component.auto.IAuto
 import com.x930073498.component.auto.LogUtil
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import javax.annotation.concurrent.ThreadSafe
 
 
 @MethodAnnotation(path = "/test/test4", group = "a", interceptors = ["/test/interceptors/test1"])

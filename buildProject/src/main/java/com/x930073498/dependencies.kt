@@ -1,3 +1,5 @@
+@file:Suppress("SpellCheckingInspection")
+
 package com.x930073498
 
 import com.x930073498.plugin.Publish
@@ -6,7 +8,7 @@ object Versions {
     const val compileSdk = 29
     const val gradlePlugin = "4.0.0"
     const val kotlin = "1.4.20"
-    const val minSdk = 16
+    const val minSdk = 21
     const val targetSdk = 29
     const val core = "1.2.0"
     const val versionCode = 1
@@ -29,6 +31,7 @@ object PublishLibraries {
 object Libraries {
     const val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
     const val androidx_core_ktx = "androidx.core:core-ktx:1.3.1"
+    const val multidex = "androidx.multidex:multidex:2.0.1"
     const val androidx_appcompat = "androidx.appcompat:appcompat:1.2.0"
     const val androidx_annotation = "androidx.annotation:annotation:1.1.0"
     const val androidx_fragment_ktx = "androidx.fragment:fragment-ktx:1.3.0-beta01"

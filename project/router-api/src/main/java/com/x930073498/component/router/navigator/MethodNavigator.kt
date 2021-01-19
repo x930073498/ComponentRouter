@@ -4,77 +4,75 @@ import android.os.Bundle
 import com.x930073498.component.core.isMainThread
 import com.x930073498.component.router.action.*
 import com.x930073498.component.router.action.Target
+import com.x930073498.component.router.coroutines.ResultListenable
+import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.MethodInvoker
-import com.x930073498.component.router.impl.ResultHandler
 import com.x930073498.component.router.thread.IThread
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
 
-interface MethodNavigator : ParameterProvider, Navigator {
-    companion object {
-        internal fun create(
-            target: Target.MethodTarget,
-            contextHolder: ContextHolder,
-            bundle: Bundle
-        ): MethodNavigator {
-            return object : MethodNavigator {
+internal class MethodNavigatorImpl(
+    private val listenable: ResultListenable<MethodNavigatorParams>,
 
-                private var methodInvokerRef = WeakReference<MethodInvoker>(null)
-                override suspend fun invoke(): Any? {
-                    val invoker = getMethodInvoker()
-                    return when (target.action.thread) {
-                        IThread.UI -> {
-                            if (isMainThread) {
-                                invoker.invoke(contextHolder, bundle)
-                            }else{
-                                withContext(Dispatchers.Main.immediate){
-                                    invoker.invoke(contextHolder, bundle)
-                                }
-                            }
+    ) : MethodNavigator {
+    private var methodInvokerRef = WeakReference<MethodInvoker>(null)
+    override fun invoke(): ResultListenable<Any?> {
+        return getMethodInvoker().map { invoker ->
+            listenable.await().run {
+                when (target.action.thread) {
+                    IThread.UI -> {
+                        withContext(Dispatchers.Main.immediate) {
+                            invoker.invoke(contextHolder, bundle)
                         }
-                        IThread.WORKER ->{
-                            if (isMainThread){
-                                withContext(Dispatchers.IO){
-                                    invoker.invoke(contextHolder, bundle)
-                                }
-                            }else{
-                                invoker.invoke(contextHolder, bundle)
-                            }
+                    }
+                    IThread.WORKER -> {
+                        withContext(Dispatchers.IO) {
+                            invoker.invoke(contextHolder, bundle)
                         }
-                        IThread.ANY -> invoker.invoke(contextHolder, bundle)
                     }
-
+                    IThread.ANY -> invoker.invoke(contextHolder, bundle)
                 }
+            }
 
-                override suspend fun getMethodInvoker(): MethodInvoker {
-                    var invoker = methodInvokerRef.get()
-                    if (invoker != null) return invoker
-                    val factory = target.action.factory()
-                    invoker = factory.create(contextHolder, target.targetClazz, bundle)
-                    return invoker.apply {
-                        methodInvokerRef = WeakReference(this)
-                    }
+        }
+
+
+    }
+
+    override fun getMethodInvoker(): ResultListenable<MethodInvoker> {
+        return listenable.map {
+            it.run {
+                var invoker = methodInvokerRef.get()
+                if (invoker != null) return@map invoker
+                val factory = target.action.factory()
+                invoker = factory.create(contextHolder, target.targetClazz, bundle)
+                invoker.apply {
+                    methodInvokerRef = WeakReference(this)
                 }
-
-                override fun getBundle(): Bundle {
-                    return bundle
-                }
-
-                override fun getContextHolder(): ContextHolder {
-                    return contextHolder
-                }
-
-                override suspend fun navigate(
-
-                ): Any? {
-                    return invoke()
-                }
-
             }
         }
     }
 
-    suspend fun invoke(): Any?
-    suspend fun getMethodInvoker(): MethodInvoker
+
+    override fun navigate(): ResultListenable<NavigatorResult> {
+        return invoke().map {
+            NavigatorResult.METHOD(it)
+        }
+    }
+
+}
+
+interface MethodNavigator : Navigator {
+    companion object {
+        internal fun create(
+            listenable: ResultListenable<MethodNavigatorParams>,
+
+            ): MethodNavigator {
+            return MethodNavigatorImpl(listenable)
+        }
+    }
+
+    fun invoke(): ResultListenable<Any?>
+    fun getMethodInvoker(): ResultListenable<MethodInvoker>
 }
