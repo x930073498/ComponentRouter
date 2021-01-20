@@ -21,15 +21,15 @@ internal class MethodNavigatorImpl(
                 when (target.action.thread) {
                     IThread.UI -> {
                         withContext(Dispatchers.Main.immediate) {
-                            invoker.invoke(contextHolder, bundle)
+                            invoker.invoke()
                         }
                     }
                     IThread.WORKER -> {
                         withContext(Dispatchers.IO) {
-                            invoker.invoke(contextHolder, bundle)
+                            invoker.invoke()
                         }
                     }
-                    IThread.ANY -> invoker.invoke(contextHolder, bundle)
+                    IThread.ANY -> invoker.invoke()
                 }
             }
 

@@ -13,6 +13,7 @@ import com.x930073498.component.auto.getSerializer
 import com.x930073498.component.fragmentation.popSelf
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.coroutines.bindLifecycle
 import com.x930073498.component.router.util.ParameterSupport
 import com.x930073498.sample.databinding.AppFragmentTestBinding
 import kotlinx.coroutines.Dispatchers
@@ -34,18 +35,17 @@ class TestFragment : Fragment(R.layout.app_fragment_test) {
         binding.tv.text = title
 
         binding.tv.setOnClickListener {
-//            Router.from("/method/toast?msg=测试").forwardSync(requireContext())
-
-            GlobalScope.launch(Dispatchers.IO) {
-                startWithRouter("/app/activity/second") {
-                    withNavOptions {
-                        popUpTo(Router.ofHandle().getRealPathFromTarget(this@TestFragment)!!) {
-                            this.inclusive = true
-                        }
+            Router.from("/method/toast?msg=测试").asMethod().getMethodInvoker().listen {
+                it.invoke()
+            }
+            startWithRouter("/app/activity/second") {
+                withNavOptions {
+                    popUpTo(Router.ofHandle().getRealPathFromTarget(this@TestFragment)!!) {
+                        this.inclusive = true
                     }
                 }
             }
-
+                .bindLifecycle(this)
         }
     }
 

@@ -8,9 +8,12 @@ class MethodInfo(
     private val parameters: List<ParameterInfo> = arrayListOf()
 ) : Generator {
     private var generator: Generator? = null
+
     init {
-        if (typeInfo.getGenerator()==typeInfo.processor.emptyTypeInfo)generator=typeInfo.processor.emptyTypeInfo
+        if (typeInfo.getGenerator() == typeInfo.processor.emptyTypeInfo) generator =
+            typeInfo.processor.emptyTypeInfo
     }
+
     private fun generateInvokerFunction(funSpec: FunSpec.Builder) {
         if (methodMemberName == null) return
         val parameter = parameters.foldIndexed(StringBuilder()) { index, builder, it ->
@@ -26,19 +29,11 @@ class MethodInfo(
         typeSpec.addFunction(FunSpec.builder("invoke")
             .returns(ANY.copy(nullable = true))
             .addModifiers(KModifier.SUSPEND, KModifier.OVERRIDE)
-            .addParameter(
-                ParameterSpec.builder(
-                    "contextHolder",
-                    CONTEXT_HOLDER_NAME
-                ).build()
-            )
-            .addParameter(
-                ParameterSpec.builder("bundle", BUNDLE_NAME).build()
-            )
             .apply {
                 generateInvokerFunction(this)
             }
             .build())
+
     }
 
     fun getGenerator(): Generator {
@@ -52,7 +47,32 @@ class MethodInfo(
                 typeInfo.packageName,
                 "${typeInfo.classPrefixName}MethodInvoker"
             )
-        ).addSuperinterface(MethodConstants.METHOD_INVOKER_NAME)
+        )
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter(
+                        ParameterSpec.builder("contextHolder", CONTEXT_HOLDER_NAME)
+                            .build()
+                    )
+                    .addParameter(
+                        ParameterSpec.builder("bundle", BUNDLE_NAME)
+                            .build()
+                    )
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("contextHolder", CONTEXT_HOLDER_NAME)
+                    .initializer("contextHolder")
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("bundle", BUNDLE_NAME)
+                    .initializer("bundle")
+                    .addModifiers(KModifier.PRIVATE)
+                    .build()
+            )
+            .addSuperinterface(MethodConstants.METHOD_INVOKER_NAME)
         generateInvoker(invokerSpecBuilder)
         val invokerTypeSpec = invokerSpecBuilder.build();
 

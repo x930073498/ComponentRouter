@@ -10,6 +10,7 @@ import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.auto.IAuto
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.coroutines.bindLifecycle
 import com.x930073498.module1.databinding.FragmentTestBinding
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -35,14 +36,12 @@ class TestFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.tv.text = name
         binding.btn.setOnClickListener {
-
-            GlobalScope.launch {
-                startWithRouter("x930073498://x930073498.com/app/fragment/test") {
-                    withRouter {
-                        put("name", "NAME")
-                    }
+            startWithRouter("x930073498://x930073498.com/app/fragment/test") {
+                withRouter {
+                    put("name", "NAME")
                 }
-            }
+            }.bindLifecycle(this)
+
         }
     }
 }

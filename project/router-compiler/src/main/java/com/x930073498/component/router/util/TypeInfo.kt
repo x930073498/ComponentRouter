@@ -618,6 +618,9 @@ class MethodInvokerInfo(
     interceptors,
     autoInjectList
 ) {
+    override fun generateFactoryCode(typeSpec: TypeSpec.Builder) {
+        super.generateFactoryCode(typeSpec)
+    }
     override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
         typeSpec.addProperty(
             PropertySpec.builder("target", MethodConstants.METHOD_TARGET_NAME, KModifier.OVERRIDE)
@@ -657,7 +660,7 @@ class MethodInvokerInfo(
     }
 
     override fun generateFactoryReturnCode(funSpec: FunSpec.Builder) {
-        funSpec.addStatement("return %N()", type)
+        funSpec.addStatement("return %N(contextHolder,bundle)", type)
     }
 
     override fun generateStringCode(typeSpec: TypeSpec.Builder) {

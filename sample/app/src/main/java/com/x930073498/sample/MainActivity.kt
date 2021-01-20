@@ -14,6 +14,7 @@ import com.x930073498.component.auto.deserialize
 import com.x930073498.component.auto.getSerializer
 import com.x930073498.component.fragmentation.loadRootFromRouter
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.coroutines.bindLifecycle
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -30,11 +31,9 @@ class MainActivity : AppCompatActivity() {
         println("sString=$sString")
         val a = getSerializer().deserialize<W>(sString)
         println("a=${a?.uuu()}")
-        GlobalScope.launch {
-            loadRootFromRouter(Window.ID_ANDROID_CONTENT, "/module1/fragment/test?name=测试") {
-                put("name", "AA")
-            }
-        }
+        loadRootFromRouter(Window.ID_ANDROID_CONTENT, "/module1/fragment/test?name=测试") {
+            put("name", "AA")
+        }.bindLifecycle(this)
     }
 }
 
