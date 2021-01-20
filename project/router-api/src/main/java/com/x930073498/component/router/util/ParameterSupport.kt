@@ -63,7 +63,7 @@ object ParameterSupport {
     const val KEY_CENTER_KEY = "_routerCenterKey"
     const val PREFIX_SERIALIZER_KEY = "0adf6aa4-91f5-4dce-880e-008c3a11be58"
     fun getSerializerKey(key: String): String {
-        return "${PREFIX_SERIALIZER_KEY}_$key"
+        return "${"${PREFIX_SERIALIZER_KEY}_$key".hashCode()}"
     }
 
     fun syncUriToBundle(uri: Uri, bundle: Bundle) {
@@ -1243,6 +1243,11 @@ object ParameterSupport {
         if (bundle.containsKey(serializerKey)) {
             serializer = getSerializer()
             val result = bundle.getString(serializerKey) ?: return defaultValue
+            if (type.isAssignableTo<String>()) {
+                (result as? T)?.let {
+                    return it
+                }
+            }
             LogUtil.log("key =$key, result=$result")
             return runCatching { serializer.deserialize<T>(result, type) }
                 .onFailure { it.printStackTrace() }
@@ -1250,6 +1255,11 @@ object ParameterSupport {
         }
         val query = getQueryString(bundle, key)
         if (query != null) {
+            if (type.isAssignableTo<String>()) {
+                (query as? T)?.let {
+                    return it
+                }
+            }
             return (serializer ?: getSerializer()).deserialize(query, type)
         }
         return when {

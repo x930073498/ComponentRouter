@@ -3,7 +3,7 @@ package com.x930073498.component.test
 import android.content.Context
 import android.widget.Toast
 import androidx.annotation.UiThread
-import com.alibaba.fastjson.annotation.JSONField
+import com.google.gson.annotations.SerializedName
 import com.x930073498.component.annotations.MethodAnnotation
 import com.x930073498.component.annotations.MethodBundleNameAnnotation
 import com.x930073498.component.auto.LogUtil
@@ -38,4 +38,4 @@ fun toast(context: Context, info: ToastInfo?) {
 }
 
 //data class ToastInfo(@JSONField(name = "msg")val msg:String, @JSONField(name = "duration")val duration:Int =Toast.LENGTH_SHORT)
-data class ToastInfo(@JSONField(name = "msg")val msg:String, @JSONField(name = "duration")val duration:Int=Toast.LENGTH_SHORT)
+data class ToastInfo(@SerializedName( "msg")val msg:String, @SerializedName("duration")val duration:Int=Toast.LENGTH_SHORT)

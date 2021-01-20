@@ -67,14 +67,17 @@ fun <T> createAwaitResult(
 
 fun <T> T.bindLifecycle(lifecycle: Lifecycle): T where T : Cancelable {
     Dispatchers.Main.immediate.asExecutor().execute {
-        lifecycle.addObserver(object : LifecycleEventObserver {
-            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-                if (event == Lifecycle.Event.ON_DESTROY) {
-                    cancel()
+        if (lifecycle.currentState == Lifecycle.State.DESTROYED) {
+            cancel()
+        } else
+            lifecycle.addObserver(object : LifecycleEventObserver {
+                override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                    if (event == Lifecycle.Event.ON_DESTROY) {
+                        cancel()
+                    }
                 }
-            }
 
-        })
+            })
     }
     return this
 }
@@ -84,7 +87,7 @@ fun <T> T.bindLifecycle(lifecycleOwner: LifecycleOwner): T where T : Cancelable 
 }
 
 fun <T, R> ResultListenable<T>.map(
-    async: Boolean = true,
+    async: Boolean = false,
     transform: suspend (T) -> R
 ): ResultListenable<R> {
     return createUpon(async) {
@@ -92,14 +95,14 @@ fun <T, R> ResultListenable<T>.map(
     }
 }
 
-fun <T, R> ResultListenable<T>.end(async: Boolean = true, transform: suspend (T) -> R): Cancelable {
-    return createUpon<R>(async) {
-        setResult(transform(it))
+fun <T> ResultListenable<T>.end(async: Boolean = false, action: suspend (T) -> Unit): Cancelable {
+    return createUpon<Unit>(async) {
+        setResult(action(it))
     }
 }
 
 fun <T, R> ResultListenable<T>.flatMap(
-    async: Boolean = true,
+    async: Boolean = false,
     transform: suspend (T) -> ResultListenable<R>
 ): ResultListenable<R> {
     return createUpon(async) {
@@ -117,16 +120,16 @@ fun <T, R> ResultListenable<T>.cast(): ResultListenable<R> {
 interface ResultListenable<T> : Cancelable {
     suspend fun await(): T
     fun <R> createUpon(
-        async: Boolean = true,
+        async: Boolean = false,
         setter: suspend ResultSetter<R>.(T) -> Unit
     ): ResultListenable<R>
 
-    fun listen(async: Boolean = true, callback: suspend (T) -> Unit): ResultListenable<T>
+    fun listen(async: Boolean = false, callback: suspend (T) -> Unit): ResultListenable<T>
 
 }
 
 interface ResultSetter<T> : Cancelable {
-    fun setResult(result: T)
+    fun setResult(result: T): ResultListenable<T>
 }
 
 
@@ -180,6 +183,7 @@ open class AwaitResult<T : Any?> protected constructor(
                 it.listener(data)
             }
         }
+        listeners.clear()
 
     }
 
@@ -215,13 +219,17 @@ open class AwaitResult<T : Any?> protected constructor(
                                 } else {
                                     action.listener(result as T)
                                 }
-                            }
-                            listeners.add(action)
+                            } else listeners.add(action)
                         }
                         is AwaitResultAction.SetResult -> {
-                            val data = action.result
-                            channel.send(data)
-                            callback.invoke(data)
+                            if (!hasResult) {
+                                val data = action.result
+                                hasResult = true
+                                result = data
+                                channel.send(data)
+                                callback.invoke(data)
+                            }
+                            hasResult = true
                         }
                     }
                 }.onFailure {
@@ -231,12 +239,10 @@ open class AwaitResult<T : Any?> protected constructor(
         }
     }
 
-    override fun setResult(result: T) {
-        if (isCanceled || hasResult) return
-        hasResult = true
-        this.result = result
+    override fun setResult(result: T): ResultListenable<T> {
+        if (isCanceled) return this
         actionChannel.offer(AwaitResultAction.SetResult(result))
-
+        return this
     }
 
 

@@ -20,6 +20,9 @@ import com.x930073498.component.router.util.authorityAndPath
 import java.util.concurrent.locks.ReentrantLock
 
 
+/**
+ * 用于记录路由是否被注册
+ */
 sealed class PathState {
     object NONE : PathState()
     class LOADED(val delegate: ActionDelegate) : PathState()

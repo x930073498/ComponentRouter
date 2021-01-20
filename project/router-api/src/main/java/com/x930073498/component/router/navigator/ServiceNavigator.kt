@@ -1,6 +1,7 @@
 package com.x930073498.component.router.navigator
 
 import android.os.Bundle
+import androidx.collection.arrayMapOf
 import com.x930073498.component.router.action.*
 import com.x930073498.component.router.action.Target
 import com.x930073498.component.router.coroutines.ResultListenable
@@ -12,39 +13,51 @@ import java.lang.ref.WeakReference
 
 internal class ServiceNavigatorImpl(
     private val listenable: ResultListenable<ServiceNavigatorParams>,
+    private val navigatorOption: NavigatorOption.ServiceNavigatorOption
+) : ServiceNavigator {
 
-    ) : ServiceNavigator {
+    companion object {
+        private val singletonMap = arrayMapOf<Class<*>, IService>()
+    }
 
-    private val serviceLazy by lazy {
+    private val serviceLazy: ResultListenable<IService> by lazy {
         listenable.map {
             with(it) {
-                val service = serviceRef.get()
+                var service = serviceRef.get()
+                if (service != null) return@with service
+                val currentSingleton = navigatorOption.singleton ?: target.isSingleTon
+                if (currentSingleton) {
+                    service = singletonMap[target.targetClazz]
+                }
                 if (service != null) return@with service
                 val factory = target.action.factory()
                 factory.create(contextHolder, target.targetClazz, bundle).apply {
+                    target.action.inject(bundle, this)
                     init(contextHolder, bundle)
-                    serviceRef = WeakReference(service)
+                    serviceRef = WeakReference(this)
+                    if (target.isSingleTon) {
+                        singletonMap[target.targetClazz] = this
+                    }
                 }
 
             }
         }
     }
     private var serviceRef = WeakReference<IService>(null)
-    override suspend fun getService(): IService {
-        return serviceLazy.await()
+    override fun getService(): ResultListenable<IService> {
+        return serviceLazy
     }
 
-    override suspend fun <T : IService> getInstanceService(clazz: Class<T>): T {
-        return runCatching { getService() as T }.getOrElse {
-            throw RuntimeException("目标${serviceRef.get()} 不能强转为$clazz")
-        }
+    override fun <T : IService> getInstanceService(clazz: Class<T>): ResultListenable<T> {
+        return serviceLazy.map { clazz.cast(it) as T }
     }
 
 
     override fun navigate(): ResultListenable<NavigatorResult> {
         return serviceLazy.map {
-            val action=listenable.await().target.action
-            if (action.autoInvoke()) {
+            val action = listenable.await().target.action
+            val currentAutoInvoke = navigatorOption.autoInvoke ?: action.autoInvoke()
+            if (currentAutoInvoke) {
                 NavigatorResult.SERVICE(true, it, it.invoke())
             } else {
                 NavigatorResult.SERVICE(false, it, null)
@@ -56,15 +69,32 @@ internal class ServiceNavigatorImpl(
 
 }
 
+
+suspend inline fun ServiceNavigator.service(): IService {
+    return getService().await()
+}
+
+inline fun <reified T : IService> ServiceNavigator.getInstanceService(): ResultListenable<T> {
+    return getInstanceService(T::class.java)
+}
+
+suspend inline fun <reified T : IService> ServiceNavigator.instanceService(): T {
+    return getInstanceService<T>().await()
+}
+
 interface ServiceNavigator : Navigator {
-    suspend fun getService(): IService
-    suspend fun <T : IService> getInstanceService(clazz: Class<T>): T
+    fun getService(): ResultListenable<IService>
+    fun <T : IService> getInstanceService(clazz: Class<T>): ResultListenable<T>
 
 
     companion object {
         internal fun create(
-            listenable: ResultListenable<ServiceNavigatorParams>): ServiceNavigator {
-            return ServiceNavigatorImpl(listenable)
+            listenable: ResultListenable<ServiceNavigatorParams>,
+            navigatorOption: NavigatorOption
+        ): ServiceNavigator {
+            val serviceNavigatorOption = navigatorOption as? NavigatorOption.ServiceNavigatorOption
+                ?: NavigatorOption.ServiceNavigatorOption()
+            return ServiceNavigatorImpl(listenable, serviceNavigatorOption)
         }
     }
 }

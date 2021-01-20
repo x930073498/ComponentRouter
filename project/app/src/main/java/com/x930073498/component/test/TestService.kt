@@ -9,14 +9,23 @@ interface TestService : IService {
     fun test()
 }
 
-@ServiceAnnotation(path = "/test/service")
+@ServiceAnnotation(
+    path = "/test/service",
+    singleton = true,
+    autoInvoke = true,
+)
 class TestServiceImpl : TestService {
+    init {
+        LogUtil.log("enter this line init TestServiceImpl")
+    }
+
     @ValueAutowiredAnnotation("testA")
-    var a:String?=""
+    var a: String? = ""
 
     override suspend fun invoke() {
         LogUtil.log(a)
     }
+
     override fun test() {
         LogUtil.log("enter this line TestService")
     }

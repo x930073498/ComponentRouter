@@ -1,9 +1,9 @@
 package com.x930073498.component.test
 
-import com.alibaba.fastjson.annotation.JSONField
+import com.google.gson.annotations.SerializedName
 
 
 data class Data(
-    @JSONField(name = "name")
+    @SerializedName("name")
     val name: String
 )

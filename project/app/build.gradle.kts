@@ -58,8 +58,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.2.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}")
     implementation("androidx.constraintlayout:constraintlayout:2.0.4")
-    kapt(Libraries.hilt_android_compiler)
-    kapt(Libraries.hilt_compiler)
+
 
     implementation(Libraries.androidx_appcompat)
     implementation(Libraries.constraintlayout)
@@ -82,11 +81,11 @@ dependencies {
 //    kapt(Libraries.moshi_codegen)
 //    implementation(Libraries.moshi)
     //gson
-//    implementation(Libraries.gson)
-//    implementation(project(":g-serializer"))
+    implementation(Libraries.gson)
+    implementation(project(":g-serializer"))
 //fastjson
-    implementation(Libraries.fastJson)
-    implementation(project(":f-serializer"))
+//    implementation(Libraries.fastJson)
+//    implementation(project(":f-serializer"))
     kapt(project(":router-compiler"))
 
     //navigation

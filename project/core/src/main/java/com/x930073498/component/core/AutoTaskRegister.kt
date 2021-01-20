@@ -93,7 +93,10 @@ internal object AutoTaskRegister {
         load()
         applyConfiguration {
             LogUtil.setLogger { tag, msg ->
-                Log.i(tag, getSerializer()?.serialize(msg) ?: msg.toString())
+                Log.i(
+                    tag,
+                    if (msg is String) msg else getSerializer()?.serialize(msg) ?: msg.toString()
+                )
             }
         }   //初始化配置
         ModuleHandler.doRegister()//初始化模块

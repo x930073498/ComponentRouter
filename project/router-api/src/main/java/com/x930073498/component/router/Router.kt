@@ -5,6 +5,7 @@ package com.x930073498.component.router
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
@@ -28,7 +29,6 @@ import com.x930073498.component.router.request.routerRequest
 import com.x930073498.component.router.response.*
 import com.x930073498.component.router.util.ParameterSupport
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlin.coroutines.CoroutineContext
 import kotlin.properties.Delegates
 
@@ -40,14 +40,40 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFrag
         }
     }
 
+    private val activityInjectList = arrayListOf<Activity>()
+    private val fragmentInjectedList = arrayListOf<Fragment>()
 
     override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
         Router.inject(activity)
+        activityInjectList.add(activity)
+    }
+
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+        super.onActivityCreated(activity, savedInstanceState)
+        if (!activityInjectList.contains(activity)) {
+            Router.inject(activity)
+        } else {
+            activityInjectList.remove(activity)
+        }
+    }
+
+    override fun onFragmentPreCreated(
+        fm: FragmentManager,
+        f: Fragment,
+        savedInstanceState: Bundle?
+    ) {
+        super.onFragmentPreCreated(fm, f, savedInstanceState)
+        Router.inject(f)
+        fragmentInjectedList.add(f)
     }
 
     override fun onFragmentCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
         super.onFragmentCreated(fm, f, savedInstanceState)
-        Router.inject(f)
+        if (!fragmentInjectedList.contains(f)) {
+            Router.inject(f)
+        } else {
+            fragmentInjectedList.remove(f)
+        }
     }
 
 }
@@ -119,7 +145,7 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     fun navigate(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext(),
+        context: Context? = null,
     ): ResultListenable<NavigatorResult> {
         return requestInternal(scope, coroutineContext, context)
             .asNavigator()
@@ -130,7 +156,7 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     fun asNavigator(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext()
+        context: Context? = null
     ): Navigator {
         return requestInternal(scope, coroutineContext, context).asNavigator()
     }
@@ -138,40 +164,51 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     fun asActivity(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext()
+        navigatorOption: NavigatorOption.ActivityNavigatorOption = NavigatorOption.ActivityNavigatorOption(),
+        context: Context? = null
     ): ActivityNavigator {
-        return requestInternal(scope, coroutineContext, context).asNavigator().asActivity()
+        return requestInternal(scope, coroutineContext, context).asNavigator()
+            .asActivity(navigatorOption)
     }
 
     fun asFragment(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext()
+        navigatorOption: NavigatorOption.FragmentNavigatorOption = NavigatorOption.FragmentNavigatorOption(),
+        context: Context? = null
     ): FragmentNavigator {
-        return requestInternal(scope, coroutineContext, context).asNavigator().asFragment()
+        return requestInternal(scope, coroutineContext, context)
+            .asNavigator()
+            .asFragment(navigatorOption)
     }
 
     fun asMethod(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext()
+        navigatorOption: NavigatorOption.MethodNavigatorOption = NavigatorOption.MethodNavigatorOption(),
+        context: Context? = null
     ): MethodNavigator {
-        return requestInternal(scope, coroutineContext, context).asNavigator().asMethod()
+        return requestInternal(scope, coroutineContext, context)
+            .asNavigator()
+            .asMethod(navigatorOption)
     }
 
     fun asService(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext()
+        navigatorOption: NavigatorOption.ServiceNavigatorOption = NavigatorOption.ServiceNavigatorOption(),
+        context: Context? = null
     ): ServiceNavigator {
-        return requestInternal(scope, coroutineContext, context).asNavigator().asService()
+        return requestInternal(scope, coroutineContext, context)
+            .asNavigator()
+            .asService(navigatorOption)
     }
 
 
     private fun requestInternal(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext()
+        context: Context? = null
     ): ResultListenable<RouterResponse> {
         return createAwaitResult(scope, coroutineContext) {
             routerRequest(mHandler.uriBuilder.build(), mHandler.mBundle, context)
@@ -191,7 +228,7 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     fun request(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
-        context: Context? = mHandler.contextHolder.getContext()
+        context: Context? = null
     ): ResultListenable<RouterResponse> {
         return requestInternal(scope, coroutineContext, context)
     }
@@ -282,14 +319,14 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
         }
 
 
-        inline fun <reified T> getServiceSync(): T? where T : IService {
-            return ActionCenter.getService(T::class.java)
-        }
-
-
         fun from(url: String): Router {
             return from(Uri.parse(url))
         }
+
+        fun from(intent: Intent): Router {
+            return from(intent.toUri(0))
+        }
+
 
         fun create(): Router {
             return from(Uri.EMPTY)
@@ -307,7 +344,6 @@ internal class InternalRouterHandler(uri: Uri = Uri.EMPTY, activity: Activity? =
     internal var greenChannel = false
     private val iBundle = ISerializerBundle.createFormBundle(mBundle)
 
-    internal val contextHolder = ContextHolder.create(activity)
     override fun greenChannel(): Router {
         this.greenChannel = true
         return router

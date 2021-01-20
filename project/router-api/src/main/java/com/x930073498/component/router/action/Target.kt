@@ -26,38 +26,27 @@ sealed class Target(
 
     class ServiceTarget(
         targetClazz: Class<*>,
-        private val isSingleTon: Boolean,
+        internal val isSingleTon: Boolean,
         val action: ServiceActionDelegate
     ) :
-        Target(targetClazz) {
-
-    }
+        Target(targetClazz)
 
 
     class MethodTarget(targetClazz: Class<*>, val action: MethodActionDelegate) :
-        Target(targetClazz) {
-
-
-    }
+        Target(targetClazz)
 
 
     class ActivityTarget(targetClazz: Class<*>, val action: ActivityActionDelegate) :
-        Target(targetClazz) {
-
-    }
+        Target(targetClazz)
 
     class FragmentTarget(targetClazz: Class<*>, val action: FragmentActionDelegate) :
-        Target(targetClazz) {
-    }
+        Target(targetClazz)
 
     class InterceptorTarget(targetClazz: Class<*>, val action: InterceptorActionDelegate) :
-        Target(targetClazz) {
-    }
+        Target(targetClazz)
 
     internal class SystemTarget :
-        Target(Unit::class.java) {
-
-    }
+        Target(Unit::class.java)
 }
 
 

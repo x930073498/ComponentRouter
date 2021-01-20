@@ -74,9 +74,11 @@ open class TestFragment : TestParentFragment(), IFragmentation {
 }
 
 fun toast(msg: String, duration: Int = Toast.LENGTH_SHORT) {
-    Router.from("/method/toast").uri {
-        appendQueryParameter("info", "{msg:\"$msg\",duration:$duration}")
-    }.navigate()
+    Router.from("/method/toast")
+        .serializer {
+            put("info", mapOf("msg" to msg, "duration" to "$duration"))
+        }
+        .navigate()
 }
 
 

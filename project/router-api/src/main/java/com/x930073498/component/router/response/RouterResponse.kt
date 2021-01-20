@@ -42,8 +42,8 @@ fun RouterResponse.success(isSuccess: Boolean = true): RouterResponse {
 
 
 
-fun ResultListenable<RouterResponse>.asNavigator():DispatcherNavigator {
-    return DispatcherNavigator(this)
+fun ResultListenable<RouterResponse>.asNavigator(navigatorOption: NavigatorOption=NavigatorOption.Empty):DispatcherNavigator {
+    return DispatcherNavigator(this,navigatorOption)
 }
 
 

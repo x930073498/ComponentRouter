@@ -3,7 +3,6 @@ package com.x930073498.component.router.navigator
 import android.app.Activity
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.Target
@@ -20,19 +19,32 @@ interface Navigator {
     fun navigate(): ResultListenable<NavigatorResult>
 }
 
+sealed class NavigatorOption {
+    object Empty : NavigatorOption()
+    class ServiceNavigatorOption(val autoInvoke: Boolean? = null, val singleton: Boolean? = null) :
+        NavigatorOption()
+
+    class MethodNavigatorOption : NavigatorOption()
+    class ActivityNavigatorOption : NavigatorOption()
+    class FragmentNavigatorOption : NavigatorOption()
+}
+
 sealed class NavigatorParams(
     open val target: Target,
     val contextHolder: ContextHolder,
     val bundle: Bundle
 ) {
-    fun mapToNavigator(parent: ResultListenable<NavigatorParams>): Navigator {
+    fun mapToNavigator(
+        parent: ResultListenable<NavigatorParams>,
+        navigatorOption: NavigatorOption
+    ): Navigator {
         return when (target) {
-            is Target.ServiceTarget -> ServiceNavigator.create(parent.cast())
-            is Target.MethodTarget -> MethodNavigator.create(parent.cast())
-            is Target.ActivityTarget -> ActivityNavigator.create(parent.cast())
-            is Target.FragmentTarget -> FragmentNavigator.create(parent.cast())
+            is Target.ServiceTarget -> ServiceNavigator.create(parent.cast(), navigatorOption)
+            is Target.MethodTarget -> MethodNavigator.create(parent.cast(), navigatorOption)
+            is Target.ActivityTarget -> ActivityNavigator.create(parent.cast(), navigatorOption)
+            is Target.FragmentTarget -> FragmentNavigator.create(parent.cast(), navigatorOption)
             is Target.InterceptorTarget -> InterceptorNavigator.create(parent.cast())
-            is Target.SystemTarget -> SystemActionNavigator.create(parent.cast())
+            is Target.SystemTarget -> ActivityNavigator.create(parent.cast(), navigatorOption)
         }
 
     }
@@ -47,8 +59,8 @@ internal class ServiceNavigatorParams(
 ) :
     NavigatorParams(target, contextHolder, bundle)
 
-internal class ActivityNavigatorParams(
-    override val target: Target.ActivityTarget,
+internal open class ActivityNavigatorParams(
+    override val target: Target,
     contextHolder: ContextHolder,
     bundle: Bundle
 ) :
@@ -68,12 +80,7 @@ internal class FragmentNavigatorParams(
 ) :
     NavigatorParams(target, contextHolder, bundle)
 
-internal class SystemNavigatorParams(
-    override val target: Target.SystemTarget,
-    contextHolder: ContextHolder,
-    bundle: Bundle
-) :
-    NavigatorParams(target, contextHolder, bundle)
+
 
 internal class InterceptorNavigatorParams(
     override val target: Target.InterceptorTarget,
@@ -83,8 +90,10 @@ internal class InterceptorNavigatorParams(
     NavigatorParams(target, contextHolder, bundle)
 
 
-class DispatcherNavigator(private val listenable: ResultListenable<RouterResponse>) :
-    Navigator {
+class DispatcherNavigator internal constructor(
+    private val listenable: ResultListenable<RouterResponse>,
+    private val navigatorOption: NavigatorOption = NavigatorOption.Empty
+) : Navigator {
     private val navigatorParamsListenable by lazy {
         listenable.createUpon<NavigatorParams> {
             val action = ActionCenter.getAction(it.uri)
@@ -110,36 +119,52 @@ class DispatcherNavigator(private val listenable: ResultListenable<RouterRespons
                     it.contextHolder,
                     it.bundle
                 )
-                is Target.SystemTarget -> SystemNavigatorParams(target, it.contextHolder, it.bundle)
+                is Target.SystemTarget -> ActivityNavigatorParams(target, it.contextHolder, it.bundle)
             }
             setResult(result)
         }
     }
 
 
-    internal fun asActivity(): ActivityNavigator {
-        return ActivityNavigator.create(navigatorParamsListenable.cast())
+    internal fun asActivity(activityNavigatorOption: NavigatorOption.ActivityNavigatorOption? = null): ActivityNavigator {
+        return ActivityNavigator.create(
+            navigatorParamsListenable.cast(),
+            activityNavigatorOption ?: navigatorOption
+        )
     }
 
-    internal fun asFragment(): FragmentNavigator {
-        return FragmentNavigator.create(navigatorParamsListenable.cast())
+    internal fun asFragment(fragmentNavigatorOption: NavigatorOption.FragmentNavigatorOption? = null): FragmentNavigator {
+        return FragmentNavigator.create(
+            navigatorParamsListenable.cast(),
+            fragmentNavigatorOption ?: navigatorOption
+        )
     }
 
-    internal fun asMethod(): MethodNavigator {
-        return MethodNavigator.create(navigatorParamsListenable.cast())
+    internal fun asMethod(methodNavigatorOption: NavigatorOption.MethodNavigatorOption? = null): MethodNavigator {
+        return MethodNavigator.create(
+            navigatorParamsListenable.cast(),
+            methodNavigatorOption ?: navigatorOption
+        )
     }
 
-    internal fun asService(): ServiceNavigator {
-        return ServiceNavigator.create(navigatorParamsListenable.cast())
+    internal fun asService(serviceNavigatorOption: NavigatorOption.ServiceNavigatorOption? = null): ServiceNavigator {
+        return ServiceNavigator.create(
+            navigatorParamsListenable.cast(),
+            serviceNavigatorOption ?: navigatorOption
+        )
     }
 
     override fun navigate(): ResultListenable<NavigatorResult> {
         return navigatorParamsListenable.map {
-            it.mapToNavigator(navigatorParamsListenable)
+            it.mapToNavigator(navigatorParamsListenable, navigatorOption)
         }.flatMap {
             it.navigate()
         }
     }
+}
+
+inline fun <reified T : IService> NavigatorResult.SERVICE.getServiceInstance(): T {
+    return getServiceInstance(T::class.java)
 }
 
 
@@ -195,7 +220,12 @@ sealed class NavigatorResult {
             if (hasInvoke) return result
             return service
         }
+
+        fun <T : IService> getServiceInstance(clazz: Class<T>): T {
+            return clazz.cast(service) as T
+        }
     }
+
 
     class INTERCEPTOR(val interceptor: RouterInterceptor) : NavigatorResult() {
         override fun getResult(): RouterInterceptor {

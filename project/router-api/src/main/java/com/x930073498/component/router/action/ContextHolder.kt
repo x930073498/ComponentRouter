@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.PackageManager
 import com.x930073498.component.core.currentActivity
 import com.x930073498.component.router.Router
 import java.lang.ref.WeakReference
@@ -15,6 +16,10 @@ class ContextHolder private constructor(
     private val contextRef = WeakReference(context)
     fun getContext(): Context {
         return contextRef.get() ?: application
+    }
+
+    fun getPackageManager():PackageManager{
+        return application.packageManager
     }
 
     fun getApplication(): Application {

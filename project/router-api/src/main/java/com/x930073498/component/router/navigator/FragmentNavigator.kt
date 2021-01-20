@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference
 
 internal class FragmentNavigatorImpl(
     private val listenable: ResultListenable<FragmentNavigatorParams>,
+    private val fragmentNavigatorOption: NavigatorOption.FragmentNavigatorOption,
 ) : FragmentNavigator {
     private var fragmentRef = WeakReference<Fragment>(null)
     override fun getFragment(): ResultListenable<Fragment> {
@@ -20,9 +21,9 @@ internal class FragmentNavigatorImpl(
                 target.action.run {
                     withContext(Dispatchers.Main.immediate) {
                         factory().create(contextHolder, target.targetClazz, bundle)
+                    }.apply {
+                        fragmentRef = WeakReference(this)
                     }
-                }.apply {
-                    fragmentRef = WeakReference(this)
                 }
             }
         }
@@ -55,8 +56,12 @@ interface FragmentNavigator : Navigator {
     companion object {
         internal fun create(
             listenable: ResultListenable<FragmentNavigatorParams>,
+            navigatorOption: NavigatorOption,
         ): FragmentNavigator {
-            return FragmentNavigatorImpl(listenable)
+            val fragmentNavigatorOption =
+                navigatorOption as? NavigatorOption.FragmentNavigatorOption
+                    ?: NavigatorOption.FragmentNavigatorOption()
+            return FragmentNavigatorImpl(listenable, fragmentNavigatorOption)
         }
     }
 

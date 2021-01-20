@@ -91,6 +91,7 @@ private fun ActivityActionDelegate.asDestination(controller: NavController): Nav
     return navigator.createDestination().apply {
         id = path.hashCode()
         setComponentName(ComponentName(app, target.targetClazz))
+
         addDeepLink(path)
     }
 }

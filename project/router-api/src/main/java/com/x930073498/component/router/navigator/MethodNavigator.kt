@@ -1,9 +1,6 @@
 package com.x930073498.component.router.navigator
 
-import android.os.Bundle
-import com.x930073498.component.core.isMainThread
 import com.x930073498.component.router.action.*
-import com.x930073498.component.router.action.Target
 import com.x930073498.component.router.coroutines.ResultListenable
 import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.MethodInvoker
@@ -14,6 +11,7 @@ import java.lang.ref.WeakReference
 
 internal class MethodNavigatorImpl(
     private val listenable: ResultListenable<MethodNavigatorParams>,
+    private val methodNavigatorOption: NavigatorOption.MethodNavigatorOption,
 
     ) : MethodNavigator {
     private var methodInvokerRef = WeakReference<MethodInvoker>(null)
@@ -67,9 +65,11 @@ interface MethodNavigator : Navigator {
     companion object {
         internal fun create(
             listenable: ResultListenable<MethodNavigatorParams>,
-
-            ): MethodNavigator {
-            return MethodNavigatorImpl(listenable)
+            navigatorOption: NavigatorOption,
+        ): MethodNavigator {
+            val methodNavigatorOption = navigatorOption as? NavigatorOption.MethodNavigatorOption
+                ?: NavigatorOption.MethodNavigatorOption()
+            return MethodNavigatorImpl(listenable, methodNavigatorOption)
         }
     }
 

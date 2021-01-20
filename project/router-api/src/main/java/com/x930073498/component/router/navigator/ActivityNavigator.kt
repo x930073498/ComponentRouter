@@ -3,75 +3,122 @@ package com.x930073498.component.router.navigator
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
-import android.os.Bundle
+import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.result.ActivityResult
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.*
 import com.x930073498.component.router.action.Target
-import com.x930073498.component.router.coroutines.AwaitResult
-import com.x930073498.component.router.coroutines.ResultListenable
-import com.x930073498.component.router.coroutines.cast
-import com.x930073498.component.router.coroutines.map
+import com.x930073498.component.router.coroutines.*
+import com.x930073498.component.router.util.ParameterSupport
 import com.x930073498.component.router.util.launchAndWaitActivityResult
 import com.x930073498.component.router.util.listenActivityCreated
 import kotlinx.coroutines.*
-import java.lang.RuntimeException
 import java.lang.ref.WeakReference
 import java.util.*
 
-internal open class ActivityNavigatorImpl internal constructor(
+internal open class ActivityNavigatorImpl constructor(
     private val listenable: ResultListenable<ActivityNavigatorParams>,
+    private val activityNavigatorOption: NavigatorOption.ActivityNavigatorOption,
 ) : ActivityNavigator {
     private val activityMessenger = UUID.randomUUID().toString()
-    private var hasNavigated = false
-    private var isInNavigation = false
 
 
     private var activityRef = WeakReference<Activity>(null)
 
-    private val launchIntentLazy by lazy {
-        listenable.map<ActivityNavigatorParams, Intent?> {
-            it.run {
-                val context = contextHolder.getContext()
-                Intent(context, target.targetClazz).apply {
-                    if (context is Application) {
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    open fun createIntent(): ResultListenable<Intent?> {
+        return listenable.map {
+            val target = it.target
+            when (target) {
+
+                is Target.ActivityTarget ->{
+                    it.run {
+                        val context = contextHolder.getContext()
+                        Intent(context, target.targetClazz).apply {
+                            if (context is Application) {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            bundle.putString(activityMessenger, activityMessenger)
+                            putExtras(bundle)
+                        }
                     }
-                    bundle.putString(activityMessenger, activityMessenger)
-                    putExtras(bundle)
+                }
+                else -> {
+                    with(it) {
+                        val uri = ParameterSupport.getUriAsString(bundle)
+                        val context = contextHolder.getContext()
+                        var intent = Intent.parseUri(uri,0)
+                        var info = context.packageManager.resolveActivity(
+                            intent,
+                            PackageManager.MATCH_DEFAULT_ONLY
+                        )
+                        if (info != null) {
+                            if (info.activityInfo.packageName != context.packageName) {
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            return@with intent
+                        }
+                        intent = Intent(Intent.ACTION_VIEW)
+                        intent.data = Uri.parse(uri)
+                        intent.putExtras(bundle)
+                        return@with runCatching {
+                            info = context.packageManager.resolveActivity(
+                                intent,
+                                PackageManager.MATCH_DEFAULT_ONLY
+                            )
+                            with(info) {
+                                if (this == null) {
+                                    LogUtil.log(
+                                        "没找到对应路径{'${
+                                           uri
+                                        }'}的组件,请检查路径以及拦截器的设置"
+                                    )
+                                    null
+                                } else {
+                                    if (activityInfo.packageName != context.packageName) {
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    intent
+                                }
+                            }
+                        }.getOrNull()
+                    }
                 }
             }
+
+
         }
     }
 
+    private val launchIntentLazy by lazy {
+        createIntent()
+    }
+
     private val createRequestActivityListenable by lazy {
-        launchIntentLazy.map {
+        launchIntentLazy.createUpon<Activity?> {
             if (it == null) {
-                return@map null
+                setResult(null)
+                return@createUpon
             }
-            coroutineScope {
-                val job = async {
-                    val activity = listenerActivityCreated()
-                    activityRef = WeakReference(activity)
-                    activity
-                }
-                listenable.await().contextHolder.getContext().startActivity(it)
-                job.await()
+            val params = listenable.await()
+            if (it.resolveActivity(params.contextHolder.getPackageManager()) == null) {
+                setResult(null)
+                return@createUpon
             }
+            listenerActivityCreated(this)
+            params.contextHolder.getContext().startActivity(it)
+        }.listen {
+            activityRef = WeakReference(it)
         }
     }
 
     private val requestActivityLazy: ResultListenable<Activity?>
         get() {
-            if (hasNavigated) return listenable.map { activityRef.get() }
-            isInNavigation = true
             return createRequestActivityListenable
         }
 
-    private suspend fun listenerActivityCreated(): Activity? {
-        val result = listenActivityCreated(activityMessenger, activityMessenger).await()
-        hasNavigated = true
-        isInNavigation = false
-        return result
+    private fun listenerActivityCreated(listenable: ResultSetter<Activity?>) {
+        listenActivityCreated(activityMessenger, activityMessenger, listenable)
     }
 
 
@@ -79,17 +126,30 @@ internal open class ActivityNavigatorImpl internal constructor(
         return launchIntentLazy
     }
 
-    override fun navigateForActivityResult(): ResultListenable<ActivityResult> {
-        return launchIntentLazy.map {
-            coroutineScope {
-                async {
-                    val activity = listenerActivityCreated()
-                    activityRef = WeakReference(activity)
-                }.start()
-                isInNavigation = true
-                val activity = listenable.await().contextHolder.getActivity()
-                launchAndWaitActivityResult(activity, activityMessenger, it)
+    override fun navigateForActivityResult(activity: Activity): ResultListenable<ActivityResult> {
+        val anchorActivityRef = WeakReference(activity)
+        launchIntentLazy.createUpon<Activity?> {
+            if (it == null) {
+                setResult(null)
+                return@createUpon
             }
+            val params = listenable.await()
+            if (it.resolveActivity(params.contextHolder.getPackageManager()) == null) {
+                setResult(null)
+                return@createUpon
+            }
+            listenerActivityCreated(this)
+        }.listen {
+            activityRef = WeakReference(it)
+        }
+        return launchIntentLazy.createUpon {
+            val anchorActivity = anchorActivityRef.get()
+            if (anchorActivity == null) {
+                setResult(
+                    ActivityResult(Activity.RESULT_CANCELED, null)
+                )
+            } else
+                launchAndWaitActivityResult(anchorActivity, activityMessenger, it, this)
         }
     }
 
@@ -115,14 +175,18 @@ interface ActivityNavigator : Navigator {
     companion object {
         internal fun create(
             listenable: ResultListenable<ActivityNavigatorParams>,
+            navigatorOption: NavigatorOption,
         ): ActivityNavigator {
-            return ActivityNavigatorImpl(listenable)
+            val activityNavigatorOption =
+                navigatorOption as? NavigatorOption.ActivityNavigatorOption
+                    ?: NavigatorOption.ActivityNavigatorOption()
+            return ActivityNavigatorImpl(listenable, activityNavigatorOption)
         }
     }
 
     fun getLaunchIntent(): ResultListenable<Intent?>
 
-    fun navigateForActivityResult(): ResultListenable<ActivityResult>
+    fun navigateForActivityResult(activity: Activity): ResultListenable<ActivityResult>
 
 
     fun requestActivity(): ResultListenable<Activity?>

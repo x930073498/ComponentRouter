@@ -9,7 +9,9 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultCallback
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
+import androidx.annotation.MainThread
 import com.x930073498.component.core.isMainThread
+import com.x930073498.component.router.coroutines.ResultSetter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.selects.select
@@ -31,30 +33,27 @@ private fun getRequestCode(): Int {
 
 class OnActivityResultFragment : Fragment() {
 
-    var isCreated = false
+    private var isCreated = false
+    private var createAction: (OnActivityResultFragment) -> Unit = {}
 
-    private val channel = Channel<Boolean>()
-    suspend fun waitCreated(): OnActivityResultFragment {
-        if (isCreated) return this
-        while (!isCreated) {
-            select<Boolean> {
-                channel.onReceive {
-                    it
-                }
-            }
-        }
-        return this
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         isCreated = true
-        channel.offer(true)
+        createAction(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         isCreated = false
+    }
+
+
+    fun onCreated(action: (OnActivityResultFragment) -> Unit) {
+        if (isCreated) action(this)
+        else {
+            this.createAction = action
+        }
     }
 
     private var callback: (Int, ActivityResult) -> Unit = { _, _ -> }
@@ -65,25 +64,26 @@ class OnActivityResultFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         callback.invoke(requestCode, ActivityResult(resultCode, data))
     }
-
-
 }
 
 
-internal suspend fun launchAndWaitActivityResult(
+@MainThread
+internal fun launchAndWaitActivityResult(
     activity: Activity,
     key: String,
-    launchIntent: Intent?
-): ActivityResult {
-    return if (activity is ActivityResultRegistryOwner) {
+    launchIntent: Intent?,
+    setter: ResultSetter<ActivityResult>
+) {
+    if (activity is ActivityResultRegistryOwner) {
         launchAndWaitActivityResultByActivityResultRegistryOwner(
             activity,
             key,
-            launchIntent
+            launchIntent,
+            setter
         )
     } else {
         val requestCode = getRequestCode()
-        launchAndWaitActivityResultByFragment(activity, requestCode, key, launchIntent)
+        launchAndWaitActivityResultByFragment(activity, requestCode, key, launchIntent,setter)
     }
 }
 
@@ -101,35 +101,26 @@ private fun createResultContract(): ActivityResultContract<Intent, ActivityResul
     }
 }
 
-private fun createResultCallback(continuation: Continuation<ActivityResult>): ActivityResultCallback<ActivityResult> {
-    return ActivityResultCallback<ActivityResult> { result -> continuation.resume(result) }
+private fun createResultCallback(setter: ResultSetter<ActivityResult>): ActivityResultCallback<ActivityResult> {
+    return ActivityResultCallback<ActivityResult> { result -> setter.setResult(result) }
 }
 
 
-private suspend fun launchAndWaitActivityResultByActivityResultRegistryOwner(
+@MainThread
+private fun launchAndWaitActivityResultByActivityResultRegistryOwner(
     activityResultRegistryOwner: ActivityResultRegistryOwner,
     key: String,
-    launchIntent: Intent?
-): ActivityResult {
-    if (launchIntent==null){
-        return ActivityResult(Activity.RESULT_CANCELED,null)
+    launchIntent: Intent?,
+    setter: ResultSetter<ActivityResult>
+) {
+    if (launchIntent == null) {
+        setter.setResult(ActivityResult(Activity.RESULT_CANCELED, null))
+        return
     }
-    val block = suspend {
-        suspendCancellableCoroutine<ActivityResult> {
-            val contract = createResultContract()
-            val callback = createResultCallback(it)
-            activityResultRegistryOwner.activityResultRegistry.register(key, contract, callback)
-                .launch(launchIntent)
-        }
-    }
-    return if (isMainThread) {
-        block()
-    } else {
-        withContext(Dispatchers.Main.immediate) {
-            block()
-        }
-    }
-
+    val contract = createResultContract()
+    val callback = createResultCallback(setter)
+    activityResultRegistryOwner.activityResultRegistry.register(key, contract, callback)
+        .launch(launchIntent)
 }
 
 private fun createOrFindFragment(activity: Activity, tag: String): OnActivityResultFragment {
@@ -141,33 +132,26 @@ private fun createOrFindFragment(activity: Activity, tag: String): OnActivityRes
     return fragment
 }
 
-private suspend fun launchAndWaitActivityResultByFragment(
+private fun launchAndWaitActivityResultByFragment(
     activity: Activity,
     mRequestCode: Int,
     key: String,
-    launchIntent: Intent?
-): ActivityResult {
-    if (launchIntent==null){
-        return ActivityResult(Activity.RESULT_CANCELED,null)
-    }
-    val block = suspend {
-        val fragment = createOrFindFragment(activity, key)
-        fragment.waitCreated()
-        suspendCancellableCoroutine<ActivityResult> {
-            fragment.setResultCallback { requestCode, result ->
-                if (requestCode == mRequestCode) {
-                    it.resume(result)
-                }
-            }
-            fragment.startActivityForResult(launchIntent, mRequestCode)
-        }
-    }
-    return if (isMainThread) {
-        block()
-    } else {
-        withContext(Dispatchers.Main.immediate) {
-            block()
-        }
+    launchIntent: Intent?,
+    setter: ResultSetter<ActivityResult>
+) {
+    if (launchIntent == null) {
+        setter.setResult(ActivityResult(Activity.RESULT_CANCELED, null))
+        return
     }
 
+    val fragment = createOrFindFragment(activity, key)
+    fragment.setResultCallback { requestCode, result ->
+        if (requestCode == mRequestCode) {
+            setter.setResult(result)
+            activity.fragmentManager.beginTransaction().remove(fragment).commit()
+        }
+    }
+    fragment.onCreated {
+        it.startActivityForResult(launchIntent, mRequestCode)
+    }
 }
