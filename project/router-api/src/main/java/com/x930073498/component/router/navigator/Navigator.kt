@@ -13,6 +13,7 @@ import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.IService
 import com.x930073498.component.router.impl.RouterInterceptor
 import com.x930073498.component.router.response.RouterResponse
+import com.x930073498.component.router.thread.IThread
 
 
 interface Navigator {
@@ -24,7 +25,7 @@ sealed class NavigatorOption {
     class ServiceNavigatorOption(val autoInvoke: Boolean? = null, val singleton: Boolean? = null) :
         NavigatorOption()
 
-    class MethodNavigatorOption : NavigatorOption()
+    class MethodNavigatorOption(val thread: IThread? = null) : NavigatorOption()
     class ActivityNavigatorOption : NavigatorOption()
     class FragmentNavigatorOption : NavigatorOption()
 }
@@ -81,7 +82,6 @@ internal class FragmentNavigatorParams(
     NavigatorParams(target, contextHolder, bundle)
 
 
-
 internal class InterceptorNavigatorParams(
     override val target: Target.InterceptorTarget,
     contextHolder: ContextHolder,
@@ -119,7 +119,11 @@ class DispatcherNavigator internal constructor(
                     it.contextHolder,
                     it.bundle
                 )
-                is Target.SystemTarget -> ActivityNavigatorParams(target, it.contextHolder, it.bundle)
+                is Target.SystemTarget -> ActivityNavigatorParams(
+                    target,
+                    it.contextHolder,
+                    it.bundle
+                )
             }
             setResult(result)
         }
