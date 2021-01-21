@@ -3,6 +3,7 @@ package com.x930073498.component.router.navigator
 import android.app.Activity
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import com.x930073498.component.annotations.LaunchMode
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.Target
@@ -26,7 +27,7 @@ sealed class NavigatorOption {
         NavigatorOption()
 
     class MethodNavigatorOption(val thread: IThread? = null) : NavigatorOption()
-    class ActivityNavigatorOption : NavigatorOption()
+    class ActivityNavigatorOption(val launchMode: LaunchMode?=null) : NavigatorOption()
     class FragmentNavigatorOption : NavigatorOption()
 }
 

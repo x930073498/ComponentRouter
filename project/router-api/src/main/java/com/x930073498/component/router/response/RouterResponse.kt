@@ -3,15 +3,11 @@ package com.x930073498.component.router.response
 import android.net.Uri
 import android.os.Bundle
 import com.x930073498.component.router.action.*
-import com.x930073498.component.router.action.Target
-import com.x930073498.component.router.coroutines.AwaitResult
 import com.x930073498.component.router.coroutines.ResultListenable
-import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.*
 import com.x930073498.component.router.interceptor.Response
 import com.x930073498.component.router.navigator.*
 import com.x930073498.component.router.util.ParameterSupport
-import java.lang.RuntimeException
 
 interface RouterResponse : Response {
     val uri: Uri

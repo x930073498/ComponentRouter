@@ -2,10 +2,13 @@ package com.x930073498.component.router.navigator.impl
 
 import android.app.Activity
 import android.app.Application
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.result.ActivityResult
+import com.x930073498.component.annotations.LaunchMode
+import com.x930073498.component.annotations.LaunchMode.*
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.Target
 import com.x930073498.component.router.coroutines.ResultListenable
@@ -31,27 +34,57 @@ internal open class ActivityNavigatorImpl constructor(
 
     private var activityRef = WeakReference<Activity>(null)
 
+
+    private var launchMode = activityNavigatorOption.launchMode ?: Standard
+
     open fun createIntent(): ResultListenable<Intent?> {
         return listenable.map {
-            val target = it.target
-            when (target) {
-                is Target.ActivityTarget ->{
+
+            when (val target = it.target) {
+                is Target.ActivityTarget -> {
                     it.run {
+                        bundle.putString(activityMessenger, activityMessenger)
                         val context = contextHolder.getContext()
-                        Intent(context, target.targetClazz).apply {
-                            if (context is Application) {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        val action = target.action
+                        launchMode = activityNavigatorOption.launchMode ?: action.launchMode()
+                        val intent = Intent(context, target.targetClazz)
+                        val componentName = intent.resolveActivity(contextHolder.getPackageManager())
+                        if (componentName == null) {
+                            null
+                        } else {
+                            intent.apply {
+                                if (context is Application) {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                } else {
+                                    when (launchMode) {
+                                        Standard -> {
+                                            //doNothing
+                                            LogUtil.log("enter this line Standard")
+                                        }
+                                        SingleTop -> {
+                                            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                        }
+                                        SingleTask -> {
+                                            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                        }
+                                        NewTask -> {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                    }
+                                }
+
+                                putExtras(bundle)
                             }
-                            bundle.putString(activityMessenger, activityMessenger)
-                            putExtras(bundle)
                         }
                     }
                 }
                 else -> {
                     with(it) {
+                        bundle.putString(activityMessenger, activityMessenger)
                         val uri = ParameterSupport.getUriAsString(bundle)
                         val context = contextHolder.getContext()
-                        var intent = Intent.parseUri(uri,0)
+                        var intent = Intent.parseUri(uri, 0)
                         var info = context.packageManager.resolveActivity(
                             intent,
                             PackageManager.MATCH_DEFAULT_ONLY
@@ -74,7 +107,7 @@ internal open class ActivityNavigatorImpl constructor(
                                 if (this == null) {
                                     LogUtil.log(
                                         "没找到对应路径{'${
-                                           uri
+                                            uri
                                         }'}的组件,请检查路径以及拦截器的设置"
                                     )
                                     null
@@ -105,11 +138,8 @@ internal open class ActivityNavigatorImpl constructor(
                 return@createUpon
             }
             val params = listenable.await()
-            if (it.resolveActivity(params.contextHolder.getPackageManager()) == null) {
-                setResult(null)
-                return@createUpon
-            }
-            listenerActivityCreated(this)
+            val componentName = it.resolveActivity(params.contextHolder.getPackageManager())
+            componentName.listenerActivityCreated(launchMode, this)
             params.contextHolder.getContext().startActivity(it)
         }.listen {
             activityRef = WeakReference(it)
@@ -121,8 +151,17 @@ internal open class ActivityNavigatorImpl constructor(
             return createRequestActivityListenable
         }
 
-    private fun listenerActivityCreated(listenable: ResultSetter<Activity?>) {
-        listenActivityCreated(activityMessenger, activityMessenger, listenable)
+    private fun ComponentName.listenerActivityCreated(
+        launchMode: LaunchMode,
+        listenable: ResultSetter<Activity?>
+    ) {
+        listenActivityCreated(
+            activityMessenger,
+            activityMessenger,
+            this.className,
+            launchMode,
+            listenable
+        )
     }
 
 
@@ -138,11 +177,12 @@ internal open class ActivityNavigatorImpl constructor(
                 return@createUpon
             }
             val params = listenable.await()
-            if (it.resolveActivity(params.contextHolder.getPackageManager()) == null) {
+            val componentName = it.resolveActivity(params.contextHolder.getPackageManager())
+            if (componentName == null) {
                 setResult(null)
                 return@createUpon
             }
-            listenerActivityCreated(this)
+            componentName.listenerActivityCreated(launchMode, this)
         }.listen {
             activityRef = WeakReference(it)
         }

@@ -125,10 +125,10 @@ fun Fragment.loadRootFromRouter(
     coroutineContext: CoroutineContext = scope.coroutineContext,
     action: IRouterHandler<*>.() -> Unit = {}
 ): ResultListenable<Any> {
-    return createAwaitResult(scope, coroutineContext) {
+    return resultOf(scope, coroutineContext) {
         withContext(Dispatchers.Main) {
             val view = requireView().findViewById<View>(containerId)
-                ?: return@withContext createAwaitResult<Any>(scope, coroutineContext, Unit)
+                ?: return@withContext resultOf<Any>(scope, coroutineContext, Unit)
             val controller = NavHostController(requireContext())
             controller.setLifecycleOwner(this@loadRootFromRouter)
             controller.setViewModelStore(viewModelStore)
@@ -164,9 +164,9 @@ fun FragmentActivity.loadRootFromRouter(
     coroutineContext: CoroutineContext = scope.coroutineContext,
     action: IRouterHandler<*>.() -> Unit = {}
 ): ResultListenable<Any> {
-    return createAwaitResult(scope, coroutineContext) {
+    return resultOf(scope, coroutineContext) {
         withContext(Dispatchers.Main) {
-            val view = findViewById<View>(containerId) ?: return@withContext createAwaitResult(
+            val view = findViewById<View>(containerId) ?: return@withContext resultOf(
                 scope,
                 coroutineContext,
                 Unit
@@ -209,7 +209,7 @@ fun Fragment.startWithRouter(
     val controller = runCatching {
         Navigation.findNavController(requireView())
     }.getOrNull() ?: run {
-        return createAwaitResult(scope, coroutineContext, LogUtil.log("请先调用loadRootFromRouter"))
+        return resultOf(scope, coroutineContext, LogUtil.log("请先调用loadRootFromRouter"))
     }
     val router = Router.from(path)
     val nav = NavRouter(router)

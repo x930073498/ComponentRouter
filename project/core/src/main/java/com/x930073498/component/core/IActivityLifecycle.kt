@@ -30,6 +30,7 @@ interface IActivityLifecycle {
     fun onActivityResumed(activity: Activity) {
     }
 
+
     fun onActivityPostResumed(activity: Activity) {
     }
 
@@ -95,6 +96,7 @@ internal class ActivityLifecycle(private val lifecycle: IActivityLifecycle) :
     }
 
     companion object {
+        private const val newIntentKeyAndValue = "36498ab0-fa6d-40a6-b7d9-00da1d9a21e0"
         private val map = mutableMapOf<IActivityLifecycle, ActivityLifecycle>()
 
         fun get(lifecycle: IActivityLifecycle): ActivityLifecycle {
@@ -132,6 +134,7 @@ internal class ActivityLifecycle(private val lifecycle: IActivityLifecycle) :
 
     override fun onActivityResumed(activity: Activity) {
         lifecycle.onActivityResumed(activity)
+
     }
 
     override fun onActivityPostResumed(activity: Activity) {

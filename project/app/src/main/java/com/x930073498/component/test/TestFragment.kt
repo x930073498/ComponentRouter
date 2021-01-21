@@ -34,7 +34,7 @@ open class TestFragment : TestParentFragment(), IFragmentation {
                 }
             }
         }
-        view.setOnClickListener {
+        view.findViewById<View>(R.id.tv).setOnClickListener {
 //            Router.from("yangpijun://yunzhanxinxi.com/taoke/module/main/life/fragment/promote?platform=elm").forwardSync(requireContext())
 //            Router.from("http://www.baidu.com").forwardSync(
 //                requireContext(),

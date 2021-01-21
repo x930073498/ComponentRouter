@@ -14,7 +14,7 @@ import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.core.isMainThread
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.coroutines.bindLifecycle
-import com.x930073498.component.router.coroutines.end
+import com.x930073498.component.router.coroutines.forceEnd
 import com.x930073498.component.router.coroutines.flatMap
 import com.x930073498.component.router.navigator.NavigatorOption
 import com.x930073498.component.router.navigator.getServiceInstance
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
                         Router.from("/activity/second")
                             .asActivity()
                             .navigateForActivityResult(this)
-                    }.end {
+                    }.forceEnd {
                         LogUtil.log("enter this line result=${it.data?.getStringExtra("result")}")
                     }
                     .bindLifecycle(this)

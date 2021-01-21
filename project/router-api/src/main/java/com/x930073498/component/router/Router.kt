@@ -210,7 +210,7 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
         coroutineContext: CoroutineContext = scope.coroutineContext,
         context: Context? = null
     ): ResultListenable<RouterResponse> {
-        return createAwaitResult(scope, coroutineContext) {
+        return resultOf(scope, coroutineContext) {
             routerRequest(mHandler.uriBuilder.build(), mHandler.mBundle, context)
                 .onInterceptors {
                     val request = request()

@@ -6,16 +6,13 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.x930073498.component.annotations.ActivityAnnotation
-import com.x930073498.component.R
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.databinding.ActivitySecondBinding
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.coroutines.bindLifecycle
 import com.x930073498.component.router.coroutines.end
-import kotlinx.coroutines.GlobalScope
+import com.x930073498.component.router.coroutines.forceEnd
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 @ActivityAnnotation(path = "/activity/second", interceptors = ["/test/interceptors/test1"])
 class SecondActivity : AppCompatActivity() {
@@ -28,8 +25,11 @@ class SecondActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.tvSecond.setOnClickListener {
             Router.from("/activity/navigation")
-                .navigate(lifecycleScope)
-                .end {
+//                .asActivity(lifecycleScope,navigatorOption = NavigatorOption.ActivityNavigatorOption(launchMode = LaunchMode.SingleTop))
+                .asActivity(lifecycleScope)
+                .requestActivity()
+                .forceEnd {
+                    LogUtil.log(it)
                     setResult(RESULT_OK, Intent().putExtra("result", "result"))
                     toast("返回结果")
                     finish()
@@ -53,12 +53,13 @@ class SecondActivity : AppCompatActivity() {
             appendQueryParameter("info", "{msg:\"$msg\",duration:$duration}")
         }
             .navigate()
-            .bindLifecycle(this)
+//            .bindLifecycle(this)
             .listen {
                 while (true) {
                     LogUtil.log("enter this line 989777777777")
                     delay(1000)
                 }
             }
+            .forceEnd()
     }
 }

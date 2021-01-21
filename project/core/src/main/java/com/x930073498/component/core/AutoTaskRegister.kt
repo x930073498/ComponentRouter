@@ -95,7 +95,7 @@ internal object AutoTaskRegister {
             LogUtil.setLogger { tag, msg ->
                 Log.i(
                     tag,
-                    if (msg is String) msg else getSerializer()?.serialize(msg) ?: msg.toString()
+                    if (msg is String) msg else runCatching{ getSerializer()?.serialize(msg) }.getOrNull() ?: msg.toString()
                 )
             }
         }   //初始化配置

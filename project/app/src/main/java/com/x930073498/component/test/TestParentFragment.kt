@@ -11,9 +11,8 @@ import com.x930073498.component.R
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.*
 import com.x930073498.component.router.action.ContextHolder
+import com.x930073498.component.router.coroutines.forceEnd
 import com.x930073498.component.router.impl.FragmentActionDelegate
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 
 @FragmentAnnotation(path = "/test/parent")
@@ -25,20 +24,21 @@ open class TestParentFragment : Fragment(R.layout.fragment_test) {
         super.onViewCreated(view, savedInstanceState)
         requireView().findViewById<TextView>(R.id.tv)?.text = name
         requireView().setOnClickListener {
-//            Router.from("http://www.baidu.com").syncNavigation<Any>()
-            GlobalScope.launch {
-//                Router.from("/a/test/test4?a=method&b=14&c=test").navigate<String>(requireContext())?.also {
-//                    println(it)
-//                }
-
-//                Router.from("/test/service?testA=8484848&b=4&c=5").navigate<TestService>()
-            }
+            Router.from("/activity/navigation")
+//                .asActivity(lifecycleScope,navigatorOption = NavigatorOption.ActivityNavigatorOption(launchMode = LaunchMode.SingleTop))
+                .asActivity()
+                .requestActivity()
+                .invokeOnCancel {
+                    LogUtil.log("enter this line onCompleted")
+                }.forceEnd {
+                    LogUtil.log(it)
+                }
         }
     }
 
     @FactoryAnnotation
     class Factory : FragmentActionDelegate.Factory {
-        override   fun create(
+        override fun create(
             contextHolder: ContextHolder,
             clazz: Class<*>,
             bundle: Bundle,

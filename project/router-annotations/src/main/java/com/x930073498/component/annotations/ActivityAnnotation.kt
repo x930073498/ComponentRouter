@@ -12,7 +12,7 @@ annotation class ActivityAnnotation(
 )
 
 enum class LaunchMode {
-    Standard, SingleTop, SingleTask, SingleInstance
+    Standard, SingleTop, SingleTask, NewTask
 }
 
 

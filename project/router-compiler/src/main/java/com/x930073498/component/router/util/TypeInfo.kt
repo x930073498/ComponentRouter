@@ -56,6 +56,7 @@ sealed class TypeInfo constructor(
         override fun getAutoRegisterValue(): Boolean {
             return true
         }
+
         override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         }
 
@@ -165,12 +166,15 @@ sealed class TypeInfo constructor(
     }
 
     abstract fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder)
-    open fun generateAutoRegisterPropertyCode(typeSpec: TypeSpec.Builder){
-        typeSpec.addProperty(PropertySpec.builder("autoRegister",Boolean::class,KModifier.OVERRIDE)
-            .initializer("%L",getAutoRegisterValue())
-            .build())
+    open fun generateAutoRegisterPropertyCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder("autoRegister", Boolean::class, KModifier.OVERRIDE)
+                .initializer("%L", getAutoRegisterValue())
+                .build()
+        )
     }
-    abstract fun getAutoRegisterValue():Boolean
+
+    abstract fun getAutoRegisterValue(): Boolean
     open fun generateTargetCode(typeSpec: TypeSpec.Builder) {
 
 
@@ -212,7 +216,7 @@ sealed class TypeInfo constructor(
             .addSuperinterface(factoryTypeName)
             .addFunction(
                 FunSpec.builder("create")
-                    .addModifiers( KModifier.OVERRIDE)
+                    .addModifiers(KModifier.OVERRIDE)
                     .addParameter("contextHolder", CONTEXT_HOLDER_NAME)
                     .addParameter("clazz", CLASS_STAR_NAME)
                     .addParameter("bundle", BUNDLE_NAME)
@@ -339,6 +343,7 @@ class InterceptorInfo(
     override fun getAutoRegisterValue(): Boolean {
         return annotation.autoRegister
     }
+
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
             "return %T(%T::class.java,this)",
@@ -354,7 +359,7 @@ class InterceptorInfo(
     override fun generateOtherCode(typeSpec: TypeSpec.Builder) {
         typeSpec.addProperty(
             PropertySpec.builder("scope", InterceptorScope::class, KModifier.OVERRIDE)
-                .initializer("%T.%L",InterceptorScope::class,annotation.scope.name )
+                .initializer("%T.%L", InterceptorScope::class, annotation.scope.name)
                 .build()
         )
     }
@@ -365,7 +370,7 @@ class InterceptorInfo(
             .addSuperinterface(factoryTypeName)
             .addFunction(
                 FunSpec.builder("create")
-                    .addModifiers( KModifier.OVERRIDE)
+                    .addModifiers(KModifier.OVERRIDE)
                     .addParameter("contextHolder", CONTEXT_HOLDER_NAME)
                     .addParameter("clazz", CLASS_STAR_NAME)
                     .apply {
@@ -375,7 +380,7 @@ class InterceptorInfo(
             )
             .build()
         val factory = FunSpec.builder("factory")
-            .addModifiers( KModifier.OVERRIDE)
+            .addModifiers(KModifier.OVERRIDE)
             .addStatement("return %L", factoryObject)
         typeSpec.addFunction(factory.build())
     }
@@ -384,7 +389,7 @@ class InterceptorInfo(
 
 class ServiceInfo(
     processor: BaseProcessor,
-    private val annotation:ServiceAnnotation,
+    private val annotation: ServiceAnnotation,
     path: String,
     group: String,
     classPrefixName: String,
@@ -449,6 +454,7 @@ class ServiceInfo(
     override fun getAutoRegisterValue(): Boolean {
         return annotation.autoRegister
     }
+
     override fun generateFactoryReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement("return %T()", type)
     }
@@ -499,6 +505,26 @@ class ActivityInfo(
                     type
                 )
                 .build()
+        )
+    }
+
+    override fun generateOtherCode(typeSpec: TypeSpec.Builder) {
+        super.generateOtherCode(typeSpec)
+        typeSpec.addFunction(
+            FunSpec.builder("launchMode")
+                .addModifiers(KModifier.OVERRIDE)
+                .addStatement(
+                    "return %T.%L",
+                    LaunchMode::class,
+                    annotation.launchMode
+                )
+//                .addStatement(
+//                    "return %T.%L",
+//                    LaunchMode::class,
+//                    annotation.launchMode.name
+//                )
+                .build()
+
         )
     }
 
@@ -586,7 +612,7 @@ class FragmentInfo(
 
 class MethodInvokerInfo(
     processor: BaseProcessor,
-    private val annotation:MethodAnnotation,
+    private val annotation: MethodAnnotation,
     path: String,
     group: String,
     classPrefixName: String,
@@ -621,6 +647,7 @@ class MethodInvokerInfo(
     override fun generateFactoryCode(typeSpec: TypeSpec.Builder) {
         super.generateFactoryCode(typeSpec)
     }
+
     override fun generateTargetPropertyCode(typeSpec: TypeSpec.Builder) {
         typeSpec.addProperty(
             PropertySpec.builder("target", MethodConstants.METHOD_TARGET_NAME, KModifier.OVERRIDE)
@@ -664,7 +691,7 @@ class MethodInvokerInfo(
     }
 
     override fun generateStringCode(typeSpec: TypeSpec.Builder) {
-        val currentElement=element?:return
+        val currentElement = element ?: return
         val target = FunSpec.builder("toString")
             .addModifiers(KModifier.OVERRIDE)
             .addStatement(
