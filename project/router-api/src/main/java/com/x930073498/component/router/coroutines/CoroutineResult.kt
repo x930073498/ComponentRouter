@@ -3,10 +3,9 @@ package com.x930073498.component.router.coroutines
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.x930073498.component.router.response.RouterResponse
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.selects.select
 import java.lang.ref.WeakReference
 import java.util.concurrent.CopyOnWriteArrayList
@@ -119,8 +118,7 @@ fun <T> ResultListenable<T>.end(action: suspend (T) -> Unit = {}): DisposableHan
 
 
 fun <T, R> ResultListenable<T>.flatMap(
-
-    transform: suspend (T) -> ResultListenable<R>
+    transform: (T) -> ResultListenable<R>
 ): ResultListenable<R> {
     return createUpon {
         setResult(transform(it).await())
@@ -155,6 +153,7 @@ interface ResultSetter<T> : DisposableHandle, ActionHandle<T> {
 
 
 interface DisposableHandle {
+    fun isDisposed(): Boolean
     fun dispose()
     fun hasResult(): Boolean
     fun invokeOnCancel(action: (Throwable?) -> Unit): DisposableHandle
@@ -205,7 +204,7 @@ open class CoroutineResult<T : Any?> protected constructor(
     private val listenJobs = CopyOnWriteArrayList(arrayListOf<Job>())
 
     init {
-        channelJob = getListenJob()
+            channelJob = getListenJob()
     }
 
 
@@ -222,46 +221,7 @@ open class CoroutineResult<T : Any?> protected constructor(
             }
             for (action in actionChannel) {
                 runCatching {
-                    when (action) {
-                        is AwaitAction.Listen -> {
-                            if (hasResult) {
-                                val job = async { action.listener(result as T) }
-                                listenJobs.add(job)
-                                job.invokeOnCompletion {
-                                    listenJobs.remove(job)
-                                }
-                            } else listeners.add(action)
-                        }
-                        is AwaitAction.SetResult -> {
-                            if (!hasResult) {
-                                val data = action.result
-                                hasResult = true
-                                result = data
-                                channel.send(data)
-                                listeners.forEach {
-                                    val job = async {
-                                        it.listener(data)
-                                    }
-                                    listenJobs.add(job)
-                                    job.invokeOnCompletion {
-                                        listenJobs.remove(job)
-                                    }
-
-                                }
-                                listeners.clear()
-                            }
-                            hasResult = true
-                        }
-                        is AwaitAction.EndForce -> {
-                            cancelInternal()
-                        }
-                        is AwaitAction.EndUntilAllTaskCompleted -> {
-                            listenJobs.forEach {
-                                it.join()
-                            }
-                            cancelInternal()
-                        }
-                    }
+                    handAction(action)
                 }.onFailure {
                     it.printStackTrace()
                 }
@@ -278,6 +238,51 @@ open class CoroutineResult<T : Any?> protected constructor(
         callback: suspend (T) -> Unit
     ): ResultListenable<T> {
         return sendAction(AwaitAction.Listen(callback))
+    }
+
+    protected suspend fun handAction(action: AwaitAction<T>) {
+        coroutineScope {
+            when (action) {
+                is AwaitAction.Listen -> {
+                    if (hasResult) {
+                        val job = async { action.listener(result as T) }
+                        listenJobs.add(job)
+                        job.invokeOnCompletion {
+                            listenJobs.remove(job)
+                        }
+                    } else listeners.add(action)
+                }
+                is AwaitAction.SetResult -> {
+                    if (!hasResult) {
+                        val data = action.result
+                        hasResult = true
+                        result = data
+                        channel.send(data)
+                        listeners.forEach {
+                            val job = async {
+                                it.listener(data)
+                            }
+                            listenJobs.add(job)
+                            job.invokeOnCompletion {
+                                listenJobs.remove(job)
+                            }
+
+                        }
+                        listeners.clear()
+                    }
+                    hasResult = true
+                }
+                is AwaitAction.EndForce -> {
+                    cancelInternal()
+                }
+                is AwaitAction.EndUntilAllTaskCompleted -> {
+                    listenJobs.forEach {
+                        it.join()
+                    }
+                    cancelInternal()
+                }
+            }
+        }
     }
 
     override suspend fun await(): T {
@@ -310,10 +315,14 @@ open class CoroutineResult<T : Any?> protected constructor(
     }
 
     override fun invokeOnCancel(action: (Throwable?) -> Unit): CoroutineResult<T> {
+        if (isCanceled) return this
         channelJob.invokeOnCompletion(action)
         return this
     }
 
+    override fun isDisposed(): Boolean {
+        return isCanceled
+    }
 
     override fun sendAction(action: AwaitAction<T>): CoroutineResult<T> {
         if (isCanceled) return this
@@ -324,6 +333,7 @@ open class CoroutineResult<T : Any?> protected constructor(
     override fun <R> createUpon(
         setter: suspend ResultSetter<R>.(T) -> Unit
     ): ResultListenable<R> {
+
         val result =
             create<R>(parent, currentCoroutineContext, parentHandle = this, parent = parent)
         listen {

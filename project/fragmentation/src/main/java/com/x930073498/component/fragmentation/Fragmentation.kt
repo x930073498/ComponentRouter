@@ -214,7 +214,7 @@ fun Fragment.startWithRouter(
     val router = Router.from(path)
     val nav = NavRouter(router)
     action(nav)
-    return router.request(scope, coroutineContext, requireContext())
+    return router.request(scope, coroutineContext, context = requireContext())
         .map {
             val destination = it.asDestination(controller) ?: run {
                 LogUtil.log("path:$path 没有对应的Router，请检查路由定义是否正确或者检查路由是否已经被卸载")
@@ -266,7 +266,7 @@ private fun NavController.loadRootFromRouter(
 ): ResultListenable<Any> {
     return Router.from(path)
         .apply { action() }
-        .request(scope, coroutineContext, context)
+        .request(scope, coroutineContext,context= context)
         .map {
             val destination = it.asDestination(this) ?: return@map
             val params = it.asNavigateParams()

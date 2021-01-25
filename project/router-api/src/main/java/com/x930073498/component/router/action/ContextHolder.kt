@@ -13,6 +13,7 @@ class ContextHolder private constructor(
     private val application: Application = Router.app,
     private val context: Context = currentActivity,
 ) {
+
     private val contextRef = WeakReference(context)
     fun getContext(): Context {
         return contextRef.get() ?: application
@@ -41,6 +42,24 @@ class ContextHolder private constructor(
         } else {
             null
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ContextHolder
+
+        if (application != other.application) return false
+        if (context != other.context) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = application.hashCode()
+        result = 31 * result + context.hashCode()
+        return result
     }
 
     companion object {

@@ -9,6 +9,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
+import androidx.core.util.lruCache
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.x930073498.component.auto.IAuto
@@ -29,6 +30,7 @@ import com.x930073498.component.router.request.routerRequest
 import com.x930073498.component.router.response.*
 import com.x930073498.component.router.util.ParameterSupport
 import kotlinx.coroutines.CoroutineScope
+import java.util.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.properties.Delegates
 
@@ -145,9 +147,10 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     fun navigate(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
+        debounce: Long = 600L,
         context: Context? = null,
     ): ResultListenable<NavigatorResult> {
-        return requestInternal(scope, coroutineContext, context)
+        return requestInternal(scope, coroutineContext, debounce, context)
             .asNavigator()
             .navigate()
     }
@@ -156,18 +159,20 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     fun asNavigator(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
+        debounce: Long = 600L,
         context: Context? = null
     ): Navigator {
-        return requestInternal(scope, coroutineContext, context).asNavigator()
+        return requestInternal(scope, coroutineContext, debounce, context).asNavigator()
     }
 
     fun asActivity(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
         navigatorOption: NavigatorOption.ActivityNavigatorOption = NavigatorOption.ActivityNavigatorOption(),
+        debounce: Long = 600L,
         context: Context? = null
     ): ActivityNavigator {
-        return requestInternal(scope, coroutineContext, context).asNavigator()
+        return requestInternal(scope, coroutineContext, debounce, context).asNavigator()
             .asActivity(navigatorOption)
     }
 
@@ -175,9 +180,10 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
         navigatorOption: NavigatorOption.FragmentNavigatorOption = NavigatorOption.FragmentNavigatorOption(),
+        debounce: Long = 600L,
         context: Context? = null
     ): FragmentNavigator {
-        return requestInternal(scope, coroutineContext, context)
+        return requestInternal(scope, coroutineContext, debounce, context)
             .asNavigator()
             .asFragment(navigatorOption)
     }
@@ -186,9 +192,10 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
         navigatorOption: NavigatorOption.MethodNavigatorOption = NavigatorOption.MethodNavigatorOption(),
+        debounce: Long = 600L,
         context: Context? = null
     ): MethodNavigator {
-        return requestInternal(scope, coroutineContext, context)
+        return requestInternal(scope, coroutineContext, debounce, context)
             .asNavigator()
             .asMethod(navigatorOption)
     }
@@ -197,9 +204,10 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
         navigatorOption: NavigatorOption.ServiceNavigatorOption = NavigatorOption.ServiceNavigatorOption(),
+        debounce: Long = 600L,
         context: Context? = null
     ): ServiceNavigator {
-        return requestInternal(scope, coroutineContext, context)
+        return requestInternal(scope, coroutineContext, debounce, context)
             .asNavigator()
             .asService(navigatorOption)
     }
@@ -208,33 +216,78 @@ class Router internal constructor(private val mHandler: InternalRouterHandler) :
     private fun requestInternal(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
+        debounce: Long = 600L,
         context: Context? = null
     ): ResultListenable<RouterResponse> {
         return resultOf(scope, coroutineContext) {
-            routerRequest(mHandler.uriBuilder.build(), mHandler.mBundle, context)
-                .onInterceptors {
-                    val request = request()
-                    routerResponse(request.uri, request.bundle, request.contextHolder)
-                }.beforeIntercept {
-                    request().syncUriToBundle()
-                }.add(ActionDelegateRouterInterceptor())
-                .apply {
-                    if (!mHandler.greenChannel) add(GlobalInterceptor)
-                }
-                .start()
+            RequestParams(mHandler.uriBuilder.build(), mHandler.mBundle)
+        }.createUpon {
+            val time = getParamsTime(it)
+            LogUtil.log("uri=${it.uri},time=$time")
+            setParamsTime(it)
+            if (System.currentTimeMillis() - time > debounce) {
+                setResult(routerRequest(it.uri, it.bundle, context)
+                    .onInterceptors {
+                        val request = request()
+                        routerResponse(request.uri, request.bundle, request.contextHolder)
+                    }.beforeIntercept {
+                        request().syncUriToBundle()
+                    }.add(ActionDelegateRouterInterceptor())
+                    .apply {
+                        if (!mHandler.greenChannel) add(GlobalInterceptor)
+                    }
+                    .start())
+            } else {
+                dispose()
+            }
         }
+
+
     }
 
     fun request(
         scope: CoroutineScope = AwaitResultCoroutineScope,
         coroutineContext: CoroutineContext = scope.coroutineContext,
+        debounce: Long = 600L,
         context: Context? = null
     ): ResultListenable<RouterResponse> {
-        return requestInternal(scope, coroutineContext, context)
+        return requestInternal(scope, coroutineContext, debounce, context)
     }
 
 
     companion object Init : InitI, ModuleHandle by ActionCenter.moduleHandler {
+
+        private class RequestParams(val uri: Uri, val bundle: Bundle) {
+            override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (javaClass != other?.javaClass) return false
+
+                other as RequestParams
+
+                if (uri != other.uri) return false
+
+                return bundle.keySet().all {
+                    bundle[it] == other.bundle[it]
+                }
+            }
+
+            override fun hashCode(): Int {
+                var result = uri.hashCode()
+                result = 31 * result + Objects.hash(*bundle.keySet().map { it to bundle[it] }
+                    .toTypedArray())
+                return result
+            }
+        }
+
+        private val requestParams = lruCache<RequestParams, Long>(50)
+
+        private fun getParamsTime(params: RequestParams): Long {
+            return requestParams[params] ?: 0
+        }
+
+        private fun setParamsTime(params: RequestParams) {
+            requestParams.put(params, System.currentTimeMillis())
+        }
 
         fun ofHandle(): ModuleHandle {
             return ActionCenter.moduleHandler

@@ -14,8 +14,8 @@ import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.core.isMainThread
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.coroutines.bindLifecycle
-import com.x930073498.component.router.coroutines.forceEnd
 import com.x930073498.component.router.coroutines.flatMap
+import com.x930073498.component.router.coroutines.forceEnd
 import com.x930073498.component.router.navigator.NavigatorOption
 import com.x930073498.component.router.navigator.getServiceInstance
 import com.x930073498.component.test.TestService

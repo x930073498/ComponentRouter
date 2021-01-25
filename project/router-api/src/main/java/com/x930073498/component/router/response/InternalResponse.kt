@@ -34,6 +34,24 @@ internal class InternalResponse internal constructor(
     override val isSuccessful: Boolean
         get() = mSuccess
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as InternalResponse
+
+        if (mUri != other.mUri) return false
+        if (mBundle != other.mBundle) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = mUri.hashCode()
+        result = 31 * result + mBundle.hashCode()
+        return result
+    }
+
 
 }
 
