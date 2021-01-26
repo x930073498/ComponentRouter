@@ -60,7 +60,7 @@ class MainActivity : AppCompatActivity() {
                     }.flatMap {
                         Router.from("/activity/second")
                             .asActivity()
-                            .navigateForActivityResult(this)
+                            .navigateForActivityResult(this@MainActivity)
                     }.forceEnd {
                         LogUtil.log("enter this line result=${it.data?.getStringExtra("result")}")
                     }

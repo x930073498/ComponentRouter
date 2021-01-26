@@ -2,6 +2,20 @@ plugins {
     id 'com.android.library'
     id 'kotlin-android'
 }
+//apply plugin: "com.x930073498.component.auto.plugin"
+//def repositoryUrl = new File(new File(rootProject.rootDir.parent, "project"), "repository").absolutePath
+//auto {
+//    options { options ->
+//        options.mavenUrl = repositoryUrl
+//        options.versionPattern = "0.0.15"
+//        options.serializer = "G"
+//        options.enableRouter = true
+//        options.enableDispatcher = true
+//        options.enable = true
+//    }
+//}
+
+
 
 android {
     compileSdkVersion 29

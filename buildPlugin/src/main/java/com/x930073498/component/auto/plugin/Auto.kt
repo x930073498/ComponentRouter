@@ -18,22 +18,66 @@ enum class SerializerType {
     NONE //没有序列化
 }
 
-open class Auto {
-    var enableDependency = true
-    var enableRouter = true
-    var enableDispatcher = true
-    var enable = true
-    var enableFragmentation = true
-    private var serializer: String = SerializerType.NONE.name
-    var mavenUrl = "https://dl.bintray.com/x930073498/component"
-    var version = "+"
+data class AutoOptions(
+    var enableDependency: Boolean = true,
+    var enableRouter: Boolean = true,
+    var enableDispatcher: Boolean = true,
+    var enable: Boolean = true,
+    var enableFragmentation: Boolean = true,
+    var serializer: String = SerializerType.NONE.name,
+    var mavenUrl: String = "https://dl.bintray.com/x930073498/component",
+    var versionPattern: String = "+"
+)
+
+open class Auto constructor(val project: Project) {
+    private val options = AutoOptions()
+    private val enableDependency: Boolean
+        get() {
+            return options.enableDependency
+        }
+
+    private val enableRouter: Boolean
+        get() {
+            return options.enableRouter
+        }
+    private val enableDispatcher: Boolean
+        get() {
+            return options.enableDispatcher
+        }
+
+    private val enable: Boolean
+        get() {
+            return options.enable
+        }
+    private val enableFragmentation: Boolean
+        get() {
+            return options.enableFragmentation
+        }
+    private val serializer: String
+        get() {
+            return options.serializer
+        }
+    private val mavenUrl: String
+        get() {
+            return options.mavenUrl
+        }
+    private val versionPattern: String
+        get() {
+            return options.versionPattern
+        }
     private val serializerType: SerializerType
         get() {
             return runCatching { SerializerType.valueOf(serializer.toUpperCase(Locale.getDefault())) }.getOrNull()
                 ?: SerializerType.NONE
         }
 
-    companion object {
+
+    fun options(auto: AutoOptions. () -> Unit) {
+        auto(options)
+        apply()
+    }
+
+    private companion object {
         private const val GROUP = "com.x930073498.component"
         const val ARTIFACT_AUTO = "auto"
         const val ARTIFACT_CORE = "core"
@@ -58,11 +102,12 @@ open class Auto {
 
         const val IMPLEMENTATION = "api"
         const val KAPT = "kapt"
+//        const val KAPT = "annotationProcessor"
 
     }
 
     private fun getDependency(artifact: String): String {
-        return "$GROUP:$artifact:$version".apply {
+        return "$GROUP:$artifact:$versionPattern".apply {
             println("dependency=$this")
         }
     }
@@ -159,7 +204,7 @@ open class Auto {
             if (!enableRouter) {
                 addRouterDependency()
             }
-            result.add(Dependency(IMPLEMENTATION,getDependency(ARTIFACT_FRAGMENTATION)))
+            result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_FRAGMENTATION)))
             result.add(Dependency(IMPLEMENTATION, KOTLIN_NAVIGATION_FRAGMENT_KTX_DEPENDENCY))
         }
         if (plugin is AppPlugin || plugin is LibraryPlugin) {
@@ -178,20 +223,25 @@ open class Auto {
     }
 
 
-    fun isValid() = enable
-    internal fun apply(project: Project) {
-        if (!isValid() || !enableDependency) {
+    private fun isValid() = enable
+    private fun apply() {
+        if (!isValid()) {
             return
         }
         project.predicate {
             doOn(AppPlugin::class, LibraryPlugin::class, JavaLibraryPlugin::class) {
-                repositories {
-                    maven(url = mavenUrl)
+                if (this is AppPlugin) {
+                    android.registerTransform(ASMTransform(this@predicate))
                 }
-                val list = getDependency(this)
-                dependencies {
-                    list.forEach {
-                        it.dependency(this)
+                if (enableDependency) {
+                    repositories {
+                        maven(url = mavenUrl)
+                    }
+                    val list = getDependency(this)
+                    dependencies {
+                        list.forEach {
+                            it.dependency(this)
+                        }
                     }
                 }
 
@@ -201,6 +251,8 @@ open class Auto {
     }
 
     override fun toString(): String {
-        return "Auto(enableRouter=$enableRouter,enableDispatcher=$enableDispatcher,enable=$enable)"
+        return "Auto(enableDependency=$enableDependency, enableRouter=$enableRouter, enableDispatcher=$enableDispatcher, enable=$enable, enableFragmentation=$enableFragmentation, serializer='$serializer', mavenUrl='$mavenUrl', version='$versionPattern')"
     }
+
+
 }

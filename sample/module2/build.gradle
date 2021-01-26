@@ -2,7 +2,18 @@ plugins {
     id 'java-library'
     id 'kotlin'
 }
-
+//def repositoryUrl = new File(new File(rootProject.rootDir.parent,"project"),"repository").absolutePath
+//apply plugin:"com.x930073498.component.auto.plugin"
+//auto{
+//    options { options ->
+//        options.mavenUrl = repositoryUrl
+//        options.versionPattern = "0.0.15"
+//        options.serializer = "G"
+//        options.enableRouter = true
+//        options.enableDispatcher = true
+//        options.enable = true
+//    }
+//}
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
     targetCompatibility = JavaVersion.VERSION_1_7

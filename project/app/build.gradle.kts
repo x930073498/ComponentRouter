@@ -18,7 +18,7 @@ android {
     }
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {
-        signingConfig = signingConfigs.create("release"){
+        signingConfig = signingConfigs.create("release") {
             storeFile(rootProject.file("../key-store.jks").apply {
                 println(this)
             })
@@ -26,7 +26,7 @@ android {
             storePassword("123456")
             keyPassword("123456")
         }
-        multiDexEnabled=true
+        multiDexEnabled = true
         applicationId("com.x930073498.component")
         minSdkVersion(Versions.minSdk)
         targetSdkVersion(Versions.targetSdk)

@@ -10,6 +10,7 @@ import kotlinx.coroutines.selects.select
 import java.lang.ref.WeakReference
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.CoroutineContext
+import kotlin.experimental.ExperimentalTypeInference
 
 sealed class AwaitAction<T> {
     /**
@@ -118,10 +119,10 @@ fun <T> ResultListenable<T>.end(action: suspend (T) -> Unit = {}): DisposableHan
 
 
 fun <T, R> ResultListenable<T>.flatMap(
-    transform: (T) -> ResultListenable<R>
+    transform: suspend ResultListenableBuilder<T>.(T) -> ResultListenable<R>
 ): ResultListenable<R> {
-    return createUpon {
-        setResult(transform(it).await())
+    return map {
+        transform(this, it).await()
     }
 }
 
@@ -133,19 +134,21 @@ fun <T, R> ResultListenable<T>.cast(): ResultListenable<R> {
     }
 }
 
-interface ResultListenable<T> : DisposableHandle, ActionHandle<T> {
+interface ResultListenable<T> : DisposableHandle, ActionHandle<T>, ResultListenableBuilder<T> {
     suspend fun await(): T
-    fun <R> createUpon(
-        setter: suspend ResultSetter<R>.(T) -> Unit
-    ): ResultListenable<R>
-
     override fun sendAction(action: AwaitAction<T>): ResultListenable<T>
     override fun invokeOnCancel(action: (Throwable?) -> Unit): ResultListenable<T>
     fun listen(callback: suspend (T) -> Unit): ResultListenable<T>
 
 }
 
-interface ResultSetter<T> : DisposableHandle, ActionHandle<T> {
+interface ResultListenableBuilder<T> {
+    fun <R> createUpon(
+        setter: suspend ResultSetter<R>.(T) -> Unit
+    ): ResultListenable<R>
+}
+
+interface ResultSetter<T> : DisposableHandle, ActionHandle<T>, ResultListenableBuilder<T> {
     fun setResult(result: T): ResultListenable<T>
     override fun sendAction(action: AwaitAction<T>): ResultSetter<T>
     override fun invokeOnCancel(action: (Throwable?) -> Unit): ResultSetter<T>
@@ -204,7 +207,7 @@ open class CoroutineResult<T : Any?> protected constructor(
     private val listenJobs = CopyOnWriteArrayList(arrayListOf<Job>())
 
     init {
-            channelJob = getListenJob()
+        channelJob = getListenJob()
     }
 
 

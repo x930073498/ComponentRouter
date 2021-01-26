@@ -1,11 +1,11 @@
 import com.x930073498.PublishLibraries.auto
 import com.x930073498.plugin.BinaryInfo
+import org.jetbrains.kotlin.gradle.internal.operation
 import java.util.Properties
-import com.x930073498.component.auto.plugin.Auto
+
 buildscript {
     val properties = mapOf<String, String>().toProperties()
     val file = file("local.properties")
-    println("enter this line local.properties isExit=${file.exists()}")
     if (file.exists()) {
         properties.load(file.inputStream())
         extra.apply {
@@ -31,19 +31,17 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-android-extensions:1.4.21")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.11.1")
-        classpath("com.x930073498.component:auto-plugin:0.0.13")
+        classpath("com.x930073498.component:auto-plugin:0.0.15")
     }
 
 }
 
 
 plugins.apply("com.x930073498.component.auto.plugin")
-
-configure<Auto> {
-//    val repository = rootDir.absolutePath + File.separator + "repository"
-    this.enableDependency=false
-//    this.mavenUrl=repository
-
+configure<com.x930073498.component.auto.plugin.Auto> {
+    options {
+     enableDependency = false
+    }
 }
 plugins {
     id("com.x930073498.build")

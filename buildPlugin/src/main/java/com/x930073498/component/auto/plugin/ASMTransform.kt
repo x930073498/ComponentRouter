@@ -16,6 +16,7 @@ class ASMTransform constructor(
 ) : Transform() {
 
 
+
     override fun getName(): String {
         return "auto-injector"
     }
@@ -34,6 +35,7 @@ class ASMTransform constructor(
 
     override fun transform(transformInvocation: TransformInvocation?) {
         super.transform(transformInvocation)
+        println("enter this line transform")
         if (transformInvocation == null) return
         val time = System.currentTimeMillis()
         val clearCache = !transformInvocation.isIncremental
