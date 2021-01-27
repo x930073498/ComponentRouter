@@ -7,16 +7,16 @@ import android.widget.Toast
 import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.R
-import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.annotations.ActivityAnnotation
 import com.x930073498.component.fragmentation.IFragmentation
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.action.PathState
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.x930073498.component.router.navigate
 
 
 @FragmentAnnotation(path = "/test/a", autoRegister = true)
+//@ActivityAnnotation(path = "/test/a", autoRegister = true)
 open class TestFragment : TestParentFragment(), IFragmentation {
     @ValueAutowiredAnnotation
     var title = ""
@@ -74,10 +74,12 @@ open class TestFragment : TestParentFragment(), IFragmentation {
 }
 
 fun toast(msg: String, duration: Int = Toast.LENGTH_SHORT) {
-    Router.from("/method/toast")
-        .serializer {
+    Router.from("/method/toast") {
+        serializer {
             put("info", mapOf("msg" to msg, "duration" to "$duration"))
         }
+
+    }
         .navigate()
 }
 

@@ -2,6 +2,7 @@ package com.x930073498.component.router.impl
 
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.action.ActionCenter
+import com.x930073498.component.router.scopeNavigate
 import com.x930073498.component.router.interceptor.Chain
 import com.x930073498.component.router.interceptor.Interceptor
 import com.x930073498.component.router.request.RouterRequest
@@ -30,16 +31,15 @@ class ActionDelegateRouterInterceptor : RouterInterceptor {
             chain.process(request)
         } else {
             interceptors.reversed().forEach { url ->
-                  val interceptor =
-                      Router.from(url)
-                          .asNavigator()
-                          .navigate()
-                          .await()
-                          .getResult()
-                  if (interceptor != null) {
-                      if (interceptor is RouterInterceptor)
-                          chain.addNext(interceptor)
-                  }
+                val interceptor =
+                    Router.from(url)
+                        .scopeNavigate()
+                        .await()
+                        .getResult()
+                if (interceptor != null) {
+                    if (interceptor is RouterInterceptor)
+                        chain.addNext(interceptor)
+                }
             }
             chain.process(request)
         }

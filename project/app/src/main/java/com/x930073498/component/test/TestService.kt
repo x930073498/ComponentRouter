@@ -10,13 +10,13 @@ interface TestService : IService {
 }
 
 @ServiceAnnotation(
-    path = "/test/service",
+    path = "/test/service/parent",
     singleton = true,
     autoInvoke = true,
 )
-class TestServiceImpl : TestService {
+open class TestParentServiceImpl : TestService {
     init {
-        LogUtil.log("enter this line init TestServiceImpl")
+        LogUtil.log("enter this line init TestParentServiceImpl")
     }
 
     @ValueAutowiredAnnotation("testA")
@@ -28,5 +28,15 @@ class TestServiceImpl : TestService {
 
     override fun test() {
         LogUtil.log("enter this line TestService")
+    }
+}
+@ServiceAnnotation(
+    path = "/test/service",
+    singleton = true,
+    autoInvoke = true,
+)
+class TestServiceImpl:TestParentServiceImpl(){
+    init {
+        LogUtil.log("enter this line init TestServiceImpl")
     }
 }

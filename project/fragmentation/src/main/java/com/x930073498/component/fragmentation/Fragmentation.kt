@@ -13,10 +13,11 @@ import androidx.navigation.*
 import androidx.navigation.fragment.FragmentNavigator
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.core.app
-import com.x930073498.component.router.IRouterHandler
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.action.ContextHolder
+import com.x930073498.component.router.core.IRouterHandler
 import com.x930073498.component.router.coroutines.*
+import com.x930073498.component.router.request
 import com.x930073498.component.router.impl.ActionDelegate
 import com.x930073498.component.router.impl.ActivityActionDelegate
 import com.x930073498.component.router.impl.FragmentActionDelegate
@@ -123,7 +124,7 @@ fun Fragment.loadRootFromRouter(
     path: String,
     scope: CoroutineScope = AwaitResultCoroutineScope,
     coroutineContext: CoroutineContext = scope.coroutineContext,
-    action: IRouterHandler<*>.() -> Unit = {}
+    action: IRouterHandler.() -> Unit = {}
 ): ResultListenable<Any> {
     return resultOf(scope, coroutineContext) {
         withContext(Dispatchers.Main) {
@@ -162,7 +163,7 @@ fun FragmentActivity.loadRootFromRouter(
     path: String,
     scope: CoroutineScope = AwaitResultCoroutineScope,
     coroutineContext: CoroutineContext = scope.coroutineContext,
-    action: IRouterHandler<*>.() -> Unit = {}
+    action: IRouterHandler.() -> Unit = {}
 ): ResultListenable<Any> {
     return resultOf(scope, coroutineContext) {
         withContext(Dispatchers.Main) {
@@ -212,7 +213,7 @@ fun Fragment.startWithRouter(
         return resultOf(scope, coroutineContext, LogUtil.log("请先调用loadRootFromRouter"))
     }
     val router = Router.from(path)
-    val nav = NavRouter(router)
+    val nav = NavRouter(router as IRouterHandler)
     action(nav)
     return router.request(scope, coroutineContext, context = requireContext())
         .map {
@@ -262,11 +263,11 @@ private fun NavController.loadRootFromRouter(
     scope: CoroutineScope = AwaitResultCoroutineScope,
     coroutineContext: CoroutineContext = scope.coroutineContext,
     context: Context,
-    action: IRouterHandler<*>.() -> Unit = {}
+    action: IRouterHandler.() -> Unit = {}
 ): ResultListenable<Any> {
     return Router.from(path)
-        .apply { action() }
-        .request(scope, coroutineContext,context= context)
+        .apply { action(this as IRouterHandler) }
+        .request(scope, coroutineContext, context = context)
         .map {
             val destination = it.asDestination(this) ?: return@map
             val params = it.asNavigateParams()
@@ -318,10 +319,10 @@ class NavRouterOptionsBuilder internal constructor(private val builder: NavOptio
     }
 }
 
-class NavRouter internal constructor(private val router: IRouterHandler<*>) {
+class NavRouter internal constructor(private val router: IRouterHandler) {
     private var navAction: NavRouterOptionsBuilder.() -> Unit = {}
 
-    fun withRouter(action: IRouterHandler<*>.() -> Unit = {}) {
+    fun withRouter(action: IRouterHandler.() -> Unit = {}) {
         action(router)
     }
 

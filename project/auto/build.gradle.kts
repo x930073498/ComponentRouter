@@ -20,6 +20,9 @@
 //    }
 //}
 import com.x930073498.*
+group=com.x930073498.plugin.Publish.GROUP
+version=com.x930073498.plugin.Publish.VERSION
+description="自动任务基础库"
 plugins{
     kotlin("jvm")
 }

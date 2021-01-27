@@ -2,7 +2,6 @@
 
 package com.x930073498
 
-import com.x930073498.plugin.Publish
 
 object Versions {
     const val compileSdk = 29
@@ -16,17 +15,6 @@ object Versions {
 }
 
 
-object PublishLibraries {
-    val auto = Publish.PublishInfo.AUTO.toDependency()
-    val core = Publish.PublishInfo.CORE.toDependency()
-    val auto_plugin = Publish.PublishInfo.AUTO_PLUGIN.toDependency()
-    val auto_starter_dispatcher = Publish.PublishInfo.AUTO_STARTER_DISPATCHER.toDependency()
-    val router_annotations = Publish.PublishInfo.ROUTER_ANNOTATIONS.toDependency()
-    val router_api = Publish.PublishInfo.ROUTER_API.toDependency()
-    val router_compiler = Publish.PublishInfo.ROUTER_COMPILER.toDependency()
-    val starter_dispatcher = Publish.PublishInfo.STARTER_DISPATCHER.toDependency()
-
-}
 
 object Libraries {
     const val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"

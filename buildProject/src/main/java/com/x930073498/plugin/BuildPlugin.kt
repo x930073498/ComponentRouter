@@ -58,8 +58,6 @@ class BuildPlugin : Plugin<Project> {
     private fun Project.getProperty(key: String): String {
         return rootProject.extra.run {
             runCatching {
-                println("hasProperty=${hasProperty(key)}")
-                println("has=${has(key)}")
                 this[key].toString()
             }.getOrElse { "" }
         }
@@ -75,7 +73,7 @@ class BuildPlugin : Plugin<Project> {
                 }
             }
             doOn(AppPlugin::class, LibraryPlugin::class) {
-                this@with.android.apply {
+                android.apply {
                     compileSdkVersion(Versions.compileSdk)
                     lintOptions {
                         isAbortOnError = true
@@ -89,41 +87,34 @@ class BuildPlugin : Plugin<Project> {
                 }
             }
             if (BinaryInfo.valid()) {
-                publishInfo?.let {
-                    tasks.withType<Javadoc> {
-                        options.encoding = "UTF-8"
-                    }
+                tasks.withType<Javadoc> {
+                    options.encoding = "UTF-8"
+                }
 
-                    plugins.apply("com.github.panpf.bintray-publish")
+                afterEvaluate {
+                    publishInfo?.let {
+                        plugins.apply("com.github.panpf.bintray-publish")
+                        configure<PublishExtension> {
+                            userOrg = BinaryInfo.userOrg
+                            groupId = it.group
+                            repoName = BinaryInfo.repoName
+                            artifactId = it.artifact
+                            publishVersion = it.version
+                            bintrayUser = BinaryInfo.bintrayUser
+                            desc = it.desc
+                            bintrayKey = BinaryInfo.bintrayKey
+                            setLicences("Apache-2.0")
+                            dryRun = false
+                            autoPublish = false
+                            website = "https://github.com/x930073498/component"
+                        }
 
-                    configure<PublishExtension> {
-                        userOrg = BinaryInfo.userOrg
-                        groupId = it.group
-                        repoName = BinaryInfo.repoName
-                        artifactId = it.artifact
-                        publishVersion = it.version
-                        bintrayUser = BinaryInfo.bintrayUser
-                        desc = it.desc
-                        bintrayKey = BinaryInfo.bintrayKey
-                        setLicences("Apache-2.0")
-                        dryRun = false
-                        website = "https://github.com/x930073498/component"
-                        println("project=${name},groupId=$groupId")
-                    }
-
-                    afterEvaluate {
-//                        if (plugins.hasPlugin(JavaPlugin::class)){
                         plugins.apply("maven-publish")
                         configure<PublishingExtension> {
                             this.repositories {
                                 maven(uri("../repository"))
                             }
                         }
-//                        }else{
-//                            val path = "${rootProject.rootDir}${File.separator}upload.gradle"
-//                            this.apply(path)
-//                        }
-
 
                     }
                 }

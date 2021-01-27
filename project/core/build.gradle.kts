@@ -1,4 +1,7 @@
 import com.x930073498.*
+group=com.x930073498.plugin.Publish.GROUP
+version=com.x930073498.plugin.Publish.VERSION
+description="自动任务核心库"
 plugins {
     id("com.android.library")
     kotlin("android")

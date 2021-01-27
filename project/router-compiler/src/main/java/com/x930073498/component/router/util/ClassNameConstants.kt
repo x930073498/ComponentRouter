@@ -17,10 +17,11 @@ val CONTEXT_HOLDER_NAME = ClassName(
 )
 val CONTEXT_NAME = ClassName.bestGuess(ComponentConstants.ANDROID_CONTEXT)
 
-val I_THREAD_NAME=ClassName(
+val I_THREAD_NAME = ClassName(
     ComponentConstants.ROUTER_THREAD_PACKAGE_NAME,
     ComponentConstants.ROUTER_THREAD_NAME
 )
+
 object FragmentConstants {
     val FRAGMENT_ACTION_DELEGATE_NAME =
         ClassName(
@@ -40,7 +41,8 @@ object FragmentConstants {
         ComponentConstants.FRAGMENT_TARGET_NAME
     )
 }
-object ActivityConstants{
+
+object ActivityConstants {
     val ACTIVITY_ACTION_DELEGATE_NAME =
         ClassName(
             ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
@@ -53,7 +55,8 @@ object ActivityConstants{
         ComponentConstants.ACTIVITY_TARGET_NAME
     )
 }
-object ServiceConstants{
+
+object ServiceConstants {
     val SERVICE_ACTION_DELEGATE_FACTORY_NAME =
         ClassName(
             ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
@@ -75,7 +78,8 @@ object ServiceConstants{
         ComponentConstants.SERVICE_TARGET_NAME
     )
 }
-object InterceptorConstants{
+
+object InterceptorConstants {
     val INTERCEPTOR_ACTION_DELEGATE_FACTORY_NAME =
         ClassName(
             ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
@@ -87,13 +91,19 @@ object InterceptorConstants{
             ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
             ComponentConstants.INTERCEPTOR_ACTION_DELEGATE
         )
+
+    val INTERCEPTOR_NAME = ClassName(
+        ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
+        ComponentConstants.INTERCEPTOR_NAME
+    )
     val INTERCEPTOR_TARGET_NAME = ClassName(
         ComponentConstants.ROUTER_ACTION_PACKAGE_NAME,
         ComponentConstants.TARGET_NAME,
         ComponentConstants.INTERCEPTOR_TARGET_NAME
     )
 }
-object MethodConstants{
+
+object MethodConstants {
     val METHOD_ACTION_DELEGATE_FACTORY_NAME =
         ClassName(
             ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
@@ -105,7 +115,7 @@ object MethodConstants{
             ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
             ComponentConstants.METHOD_ACTION_DELEGATE
         )
-    val METHOD_INVOKER_NAME=ClassName(
+    val METHOD_INVOKER_NAME = ClassName(
         ComponentConstants.ROUTER_INTERFACE_PACKAGE_NAME,
         ComponentConstants.METHOD_INVOKER_NAME
     )

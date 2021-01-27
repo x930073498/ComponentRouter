@@ -1,8 +1,3 @@
-import com.x930073498.PublishLibraries.auto
-import com.x930073498.plugin.BinaryInfo
-import org.jetbrains.kotlin.gradle.internal.operation
-import java.util.Properties
-
 buildscript {
     val properties = mapOf<String, String>().toProperties()
     val file = file("local.properties")

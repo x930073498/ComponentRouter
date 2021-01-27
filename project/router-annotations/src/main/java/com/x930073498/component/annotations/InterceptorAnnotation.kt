@@ -5,6 +5,7 @@ package com.x930073498.component.annotations
 annotation class InterceptorAnnotation(
     val path: String,
     val group: String = "",
+    val desc: String = "",
     val autoRegister:Boolean=true,
     val scope: InterceptorScope = InterceptorScope.NORMAL
 )

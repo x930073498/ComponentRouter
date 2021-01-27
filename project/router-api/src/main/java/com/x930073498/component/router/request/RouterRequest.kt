@@ -3,8 +3,8 @@ package com.x930073498.component.router.request
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
-import com.x930073498.component.router.ISerializerBundle
 import com.x930073498.component.router.action.ContextHolder
+import com.x930073498.component.router.core.ISerializerBundle
 import com.x930073498.component.router.interceptor.Request
 
 interface RouterRequest : Request {

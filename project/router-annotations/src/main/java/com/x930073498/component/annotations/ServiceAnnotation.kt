@@ -6,6 +6,7 @@ package com.x930073498.component.annotations
 annotation class ServiceAnnotation(
     val group: String = "",
     val path: String,
+    val desc: String = "",
     val autoRegister:Boolean=true,
     val singleton: Boolean = true,
     val autoInvoke: Boolean = true,

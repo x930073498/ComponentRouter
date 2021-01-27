@@ -10,6 +10,7 @@ import kotlinx.coroutines.selects.select
 import java.lang.ref.WeakReference
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.experimental.ExperimentalTypeInference
 
 sealed class AwaitAction<T> {
@@ -66,9 +67,39 @@ fun <T> resultOf(
     return CoroutineResult.create(
         scope ?: AwaitResultCoroutineScope,
         coroutineContext,
-        null,
-        null,
-        init
+        init = init
+    )
+}
+
+suspend fun <T> scopeResultOf(
+    context: CoroutineContext? = null,
+    init: suspend () -> T
+): ResultListenable<T> {
+    return CoroutineResult.create(
+        CoroutineScope(coroutineContext),
+        context ?: coroutineContext,
+        init = init
+    )
+}
+
+suspend fun <T> scopeResultOf(
+    context: CoroutineContext? = null,
+    result: T
+): ResultListenable<T> {
+    return CoroutineResult.create(
+        CoroutineScope(coroutineContext),
+        context ?: coroutineContext,
+    ) {
+        result
+    }
+}
+
+suspend fun <T> scopeResultOf(
+    context: CoroutineContext? = null
+): CoroutineResult<T> {
+    return CoroutineResult.create(
+        CoroutineScope(coroutineContext),
+        context ?: coroutineContext,
     )
 }
 
@@ -103,16 +134,14 @@ fun <T, R> ResultListenable<T>.map(
 
 fun <T> ResultListenable<T>.forceEnd(action: suspend (T) -> Unit = {}): DisposableHandle {
     return createUpon<Unit> {
-        setResult(action(it))
-    }.listen {
+        action(it)
         sendAction(AwaitAction.EndForce())
     }
 }
 
 fun <T> ResultListenable<T>.end(action: suspend (T) -> Unit = {}): DisposableHandle {
     return createUpon<Unit> {
-        setResult(action(it))
-    }.listen {
+        action(it)
         sendAction(AwaitAction.EndUntilAllTaskCompleted())
     }
 }
@@ -134,37 +163,39 @@ fun <T, R> ResultListenable<T>.cast(): ResultListenable<R> {
     }
 }
 
-interface ResultListenable<T> : DisposableHandle, ActionHandle<T>, ResultListenableBuilder<T> {
+interface ResultListenable<T> : DisposableHandle,
+    ActionHandle<T>,
+    ResultListenableBuilder<T> {
     suspend fun await(): T
+    fun hasResult(): Boolean
     override fun sendAction(action: AwaitAction<T>): ResultListenable<T>
-    override fun invokeOnCancel(action: (Throwable?) -> Unit): ResultListenable<T>
+    override fun invokeOnDispose(action: (Throwable?) -> Unit): ResultListenable<T>
     fun listen(callback: suspend (T) -> Unit): ResultListenable<T>
-
 }
 
-interface ResultListenableBuilder<T> {
+interface ResultListenableBuilder<T> : DisposableHandle {
     fun <R> createUpon(
         setter: suspend ResultSetter<R>.(T) -> Unit
     ): ResultListenable<R>
+    override fun invokeOnDispose(action: (Throwable?) -> Unit): ResultListenableBuilder<T>
 }
 
 interface ResultSetter<T> : DisposableHandle, ActionHandle<T>, ResultListenableBuilder<T> {
     fun setResult(result: T): ResultListenable<T>
     override fun sendAction(action: AwaitAction<T>): ResultSetter<T>
-    override fun invokeOnCancel(action: (Throwable?) -> Unit): ResultSetter<T>
+    override fun invokeOnDispose(action: (Throwable?) -> Unit): ResultSetter<T>
 }
 
 
 interface DisposableHandle {
     fun isDisposed(): Boolean
     fun dispose()
-    fun hasResult(): Boolean
-    fun invokeOnCancel(action: (Throwable?) -> Unit): DisposableHandle
+    fun invokeOnDispose(action: (Throwable?) -> Unit): DisposableHandle
 }
 
-interface ActionHandle<T> {
+interface ActionHandle<T> : DisposableHandle {
     fun sendAction(action: AwaitAction<T>): ActionHandle<T>
-    fun dispose()
+    override fun invokeOnDispose(action: (Throwable?) -> Unit): ActionHandle<T>
 }
 
 
@@ -317,7 +348,7 @@ open class CoroutineResult<T : Any?> protected constructor(
         return hasResult
     }
 
-    override fun invokeOnCancel(action: (Throwable?) -> Unit): CoroutineResult<T> {
+    override fun invokeOnDispose(action: (Throwable?) -> Unit): CoroutineResult<T> {
         if (isCanceled) return this
         channelJob.invokeOnCompletion(action)
         return this

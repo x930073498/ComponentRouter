@@ -10,9 +10,8 @@ import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.fragmentation.popSelf
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.navigate
 import com.x930073498.module1.databinding.FragmentModuleTestBinding
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
 
@@ -46,14 +45,16 @@ class TestFragment : Fragment(R.layout.fragment_module_test) {
 
 @MethodAnnotation(path = "/module1/method/test")
 suspend fun doTest(context: Context) {
-    Router.from("/method/toast?info=${URLEncoder.encode("{msg:\"测试\"}")}").serializer {
+    Router.from("/method/toast?info=${URLEncoder.encode("{msg:\"测试\"}")}") {
+        serializer {
 //        put("msg","测试")
 
-    }.uri {
+        }.uri {
 //        appendQueryParameter("info", getSerializer().serialize(ToastInfo("msg",0).also {
 //            LogUtil.log(it)
 //        }))
 //        appendQueryParameter("info", "{msg:\"测试\",duration:0}")
+        }
     }
         .navigate(context = context)
 }

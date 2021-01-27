@@ -1,9 +1,12 @@
 import com.x930073498.*
-
+group=com.x930073498.plugin.Publish.GROUP
+version=com.x930073498.plugin.Publish.VERSION
+description="用于starter自动注入任务"
 plugins {
     id("com.android.library")
     kotlin("android")
 }
+
 android {
     compileSdkVersion(Versions.compileSdk)
     defaultConfig {

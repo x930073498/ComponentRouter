@@ -2,461 +2,78 @@
 
 package com.x930073498.component.router
 
-import android.app.Activity
 import android.app.Application
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
-import androidx.core.os.bundleOf
-import androidx.core.util.lruCache
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import com.x930073498.component.auto.IAuto
 import com.x930073498.component.auto.LogUtil
-import com.x930073498.component.auto.getConfiguration
-import com.x930073498.component.auto.getSerializer
-import com.x930073498.component.core.IActivityLifecycle
-import com.x930073498.component.core.IApplicationLifecycle
-import com.x930073498.component.core.IFragmentLifecycle
-import com.x930073498.component.router.action.*
-import com.x930073498.component.router.coroutines.*
-import com.x930073498.component.router.impl.*
-import com.x930073498.component.router.interceptor.Chain
-import com.x930073498.component.router.interceptor.onInterceptors
-import com.x930073498.component.router.navigator.*
-import com.x930073498.component.router.request.RouterRequest
-import com.x930073498.component.router.request.routerRequest
-import com.x930073498.component.router.response.*
-import com.x930073498.component.router.util.ParameterSupport
-import kotlinx.coroutines.CoroutineScope
-import java.util.*
-import kotlin.coroutines.CoroutineContext
+import com.x930073498.component.router.action.ActionCenter
+import com.x930073498.component.router.action.ModuleHandle
+import com.x930073498.component.router.core.IRequestRouter
+import com.x930073498.component.router.core.IRouterHandler
+import com.x930073498.component.router.core.InitI
+import com.x930073498.component.router.core.RouterImpl
+import com.x930073498.component.router.impl.InterceptorActionDelegate
+import com.x930073498.component.router.impl.RouterInterceptor
 import kotlin.properties.Delegates
 
+internal val globalInterceptors = arrayListOf<Any>()
 
-class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFragmentLifecycle {
-    override fun onApplicationCreated(app: Application) {
-        Router.init(app).apply {
-            checkRouteUnique(getConfiguration().shouldRouterUnique())
-        }
+object Router : InitI, ModuleHandle by ActionCenter.moduleHandler {
+
+    fun ofHandle(): ModuleHandle {
+        return ActionCenter.moduleHandler
     }
 
-    private val activityInjectList = arrayListOf<Activity>()
-    private val fragmentInjectedList = arrayListOf<Fragment>()
 
-    override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
-        Router.inject(activity)
-        activityInjectList.add(activity)
+    fun addGlobalInterceptor(vararg interceptor: RouterInterceptor) {
+        globalInterceptors.addAll(interceptor.asList())
     }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        super.onActivityCreated(activity, savedInstanceState)
-        if (!activityInjectList.contains(activity)) {
-            Router.inject(activity)
-        } else {
-            activityInjectList.remove(activity)
-        }
+    internal fun addGlobalInterceptor(vararg interceptor: InterceptorActionDelegate) {
+        globalInterceptors.addAll(interceptor.asList())
     }
 
-    override fun onFragmentPreCreated(
-        fm: FragmentManager,
-        f: Fragment,
-        savedInstanceState: Bundle?
-    ) {
-        super.onFragmentPreCreated(fm, f, savedInstanceState)
-        Router.inject(f)
-        fragmentInjectedList.add(f)
+    fun addGlobalInterceptor(vararg path: String) {
+        globalInterceptors.addAll(path.asList())
     }
 
-    override fun onFragmentCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
-        super.onFragmentCreated(fm, f, savedInstanceState)
-        if (!fragmentInjectedList.contains(f)) {
-            Router.inject(f)
-        } else {
-            fragmentInjectedList.remove(f)
-        }
+    internal var app by Delegates.notNull<Application>()
+    internal var hasInit = false
+
+    @Synchronized
+    override fun init(app: Application): InitI {
+        if (hasInit) return this
+        this.app = app
+        hasInit = true
+        return this
     }
 
-}
-
-interface ISerializerBundle {
-    fun put(key: String, value: Any?)
-
-    fun put(bundle: Bundle) {
-        bundle.keySet().forEach {
-            put(it, bundle.get(it))
-        }
+    @Synchronized
+    override fun checkRouteUnique(checkKeyUnique: Boolean): InitI {
+        ActionCenter.checkKeyUnique = checkKeyUnique
+        LogUtil.log("路由${if (checkKeyUnique) "会" else "不会"}检验唯一性")
+        return this
     }
 
-    fun clear()
 
-    companion object {
-        internal fun createFormBundle(bundle: Bundle): ISerializerBundle {
-            return object : ISerializerBundle {
-                override fun put(key: String, value: Any?) {
-                    bundle.putString(
-                        ParameterSupport.getSerializerKey(key),
-                        when (value) {
-                            null -> null
-                            is String -> value
-                            else -> getSerializer().serialize(value)
-                        }
-                    )
-                }
+    fun from(uri: Uri, action: IRouterHandler.() -> Unit = {}): IRequestRouter {
+        return RouterImpl(uri).apply(action)
+    }
 
-                override fun clear() {
-                    bundle.clear()
-                }
+    fun from(url: String, action: IRouterHandler.() -> Unit = {}): IRequestRouter {
+        return from(Uri.parse(url), action)
+    }
 
-            }
-        }
+    fun from(intent: Intent, action: IRouterHandler.() -> Unit = {}): IRequestRouter {
+        return from(intent.toUri(0), action)
+    }
+
+    fun create(action: IRouterHandler.() -> Unit = {}): IRequestRouter {
+        return from(Uri.EMPTY, action)
     }
 }
 
 
-interface IRouterHandler<T> where T : IRouterHandler<T> {
-    fun greenChannel(): T
-    fun scheme(scheme: String): T
-    fun query(query: String): T
-    fun path(path: String): T
-    fun authority(authority: String): T
-    fun appendQuery(key: String, value: String): T
-    fun uri(action: Uri.Builder.() -> Unit): T
-    fun serializer(action: ISerializerBundle.() -> Unit): T
-    fun bundle(action: Bundle.() -> Unit): T
-    fun put(key: String, value: Any?): T
-}
-
-
-class Router internal constructor(private val mHandler: InternalRouterHandler) :
-    IRouterHandler<Router> by mHandler {
-
-    constructor(uri: Uri = Uri.EMPTY, activity: Activity? = null) : this(
-        InternalRouterHandler(
-            uri,
-            activity
-        )
-    )
-
-    init {
-        mHandler.router = this
-    }
-
-
-    fun navigate(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        debounce: Long = 600L,
-        context: Context? = null,
-    ): ResultListenable<NavigatorResult> {
-        return requestInternal(scope, coroutineContext, debounce, context)
-            .asNavigator()
-            .navigate()
-    }
-
-
-    fun asNavigator(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        debounce: Long = 600L,
-        context: Context? = null
-    ): Navigator {
-        return requestInternal(scope, coroutineContext, debounce, context).asNavigator()
-    }
-
-    fun asActivity(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        navigatorOption: NavigatorOption.ActivityNavigatorOption = NavigatorOption.ActivityNavigatorOption(),
-        debounce: Long = 600L,
-        context: Context? = null
-    ): ActivityNavigator {
-        return requestInternal(scope, coroutineContext, debounce, context).asNavigator()
-            .asActivity(navigatorOption)
-    }
-
-    fun asFragment(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        navigatorOption: NavigatorOption.FragmentNavigatorOption = NavigatorOption.FragmentNavigatorOption(),
-        debounce: Long = 600L,
-        context: Context? = null
-    ): FragmentNavigator {
-        return requestInternal(scope, coroutineContext, debounce, context)
-            .asNavigator()
-            .asFragment(navigatorOption)
-    }
-
-    fun asMethod(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        navigatorOption: NavigatorOption.MethodNavigatorOption = NavigatorOption.MethodNavigatorOption(),
-        debounce: Long = 600L,
-        context: Context? = null
-    ): MethodNavigator {
-        return requestInternal(scope, coroutineContext, debounce, context)
-            .asNavigator()
-            .asMethod(navigatorOption)
-    }
-
-    fun asService(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        navigatorOption: NavigatorOption.ServiceNavigatorOption = NavigatorOption.ServiceNavigatorOption(),
-        debounce: Long = 600L,
-        context: Context? = null
-    ): ServiceNavigator {
-        return requestInternal(scope, coroutineContext, debounce, context)
-            .asNavigator()
-            .asService(navigatorOption)
-    }
-
-
-    private fun requestInternal(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        debounce: Long = 600L,
-        context: Context? = null
-    ): ResultListenable<RouterResponse> {
-        return resultOf(scope, coroutineContext) {
-            RequestParams(mHandler.uriBuilder.build(), mHandler.mBundle)
-        }.createUpon {
-            val time = getParamsTime(it)
-            LogUtil.log("uri=${it.uri},time=$time")
-            setParamsTime(it)
-            if (System.currentTimeMillis() - time > debounce) {
-                setResult(routerRequest(it.uri, it.bundle, context)
-                    .onInterceptors {
-                        val request = request()
-                        routerResponse(request.uri, request.bundle, request.contextHolder)
-                    }.beforeIntercept {
-                        request().syncUriToBundle()
-                    }.add(ActionDelegateRouterInterceptor())
-                    .apply {
-                        if (!mHandler.greenChannel) add(GlobalInterceptor)
-                    }
-                    .start())
-            } else {
-                dispose()
-            }
-        }
-
-
-    }
-
-    fun request(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
-        coroutineContext: CoroutineContext = scope.coroutineContext,
-        debounce: Long = 600L,
-        context: Context? = null
-    ): ResultListenable<RouterResponse> {
-        return requestInternal(scope, coroutineContext, debounce, context)
-    }
-
-
-    companion object Init : InitI, ModuleHandle by ActionCenter.moduleHandler {
-
-        private class RequestParams(val uri: Uri, val bundle: Bundle) {
-            override fun equals(other: Any?): Boolean {
-                if (this === other) return true
-                if (javaClass != other?.javaClass) return false
-
-                other as RequestParams
-
-                if (uri != other.uri) return false
-
-                return bundle.keySet().all {
-                    bundle[it] == other.bundle[it]
-                }
-            }
-
-            override fun hashCode(): Int {
-                var result = uri.hashCode()
-                result = 31 * result + Objects.hash(*bundle.keySet().map { it to bundle[it] }
-                    .toTypedArray())
-                return result
-            }
-        }
-
-        private val requestParams = lruCache<RequestParams, Long>(50)
-
-        private fun getParamsTime(params: RequestParams): Long {
-            return requestParams[params] ?: 0
-        }
-
-        private fun setParamsTime(params: RequestParams) {
-            requestParams.put(params, System.currentTimeMillis())
-        }
-
-        fun ofHandle(): ModuleHandle {
-            return ActionCenter.moduleHandler
-        }
-
-
-        private val globalInterceptors = arrayListOf<Any>()
-
-
-        fun addGlobalInterceptor(vararg interceptor: RouterInterceptor) {
-            globalInterceptors.addAll(interceptor.asList())
-        }
-
-        internal fun addGlobalInterceptor(vararg interceptor: InterceptorActionDelegate) {
-            globalInterceptors.addAll(interceptor.asList())
-        }
-
-        fun addGlobalInterceptor(vararg path: String) {
-            globalInterceptors.addAll(path.asList())
-        }
-
-
-        internal object GlobalInterceptor : RouterInterceptor {
-            override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
-                val request = chain.request()
-                globalInterceptors.reversed().mapNotNull {
-                    when (it) {
-                        is String -> from(it).asNavigator().navigate().await()
-                            .getResult() as? RouterInterceptor
-                        is RouterInterceptor -> it
-                        is InterceptorActionDelegate -> it.factory()
-                            .create(request.contextHolder, it.target.targetClazz)
-                        else -> null
-                    }
-                }.forEach { chain.addNext(it) }
-                return chain.process(request)
-            }
-
-        }
-
-        internal fun <T> inject(activity: T) where T : Activity {
-            val intent = activity.intent ?: return
-            val key = ParameterSupport.getCenterKey(intent) ?: return
-            val center = ActionCenter.getAction(key)
-            val bundle = intent.extras ?: return
-            (center as? ActivityActionDelegate)?.apply {
-                inject(bundle, activity)
-            }
-        }
-
-        internal fun <T> inject(fragment: T) where T : Fragment {
-            val bundle = fragment.arguments ?: return
-            val key = ParameterSupport.getCenterKey(bundle) ?: return
-            val center = ActionCenter.getAction(key)
-            (center as? FragmentActionDelegate)?.apply {
-                inject(bundle, fragment)
-            }
-        }
-
-
-        internal var app by Delegates.notNull<Application>()
-        internal var hasInit = false
-
-        @Synchronized
-        override fun init(app: Application): InitI {
-            if (hasInit) return this
-            this.app = app
-            hasInit = true
-            return this
-        }
-
-
-        @Synchronized
-        override fun checkRouteUnique(checkKeyUnique: Boolean): InitI {
-            ActionCenter.checkKeyUnique = checkKeyUnique
-            LogUtil.log("路由${if (checkKeyUnique) "会" else "不会"}检验唯一性")
-            return this
-        }
-
-        fun from(uri: Uri): Router {
-            return Router(uri)
-        }
-
-
-        fun from(url: String): Router {
-            return from(Uri.parse(url))
-        }
-
-        fun from(intent: Intent): Router {
-            return from(intent.toUri(0))
-        }
-
-
-        fun create(): Router {
-            return from(Uri.EMPTY)
-        }
-
-    }
-}
-
-internal class InternalRouterHandler(uri: Uri = Uri.EMPTY, activity: Activity? = null) :
-    IRouterHandler<Router> {
-    var router: Router by Delegates.notNull()
-    internal var uriBuilder = uri.buildUpon()
-    internal val mBundle = bundleOf()
-
-    internal var greenChannel = false
-    private val iBundle = ISerializerBundle.createFormBundle(mBundle)
-
-    override fun greenChannel(): Router {
-        this.greenChannel = true
-        return router
-    }
-
-    override fun scheme(scheme: String): Router {
-        uriBuilder.scheme(scheme)
-        return router
-    }
-
-    override fun query(query: String): Router {
-        uriBuilder.query(query)
-        return router
-    }
-
-    override fun path(path: String): Router {
-        uriBuilder.path(path)
-        return router
-    }
-
-    override fun authority(authority: String): Router {
-        uriBuilder.authority(authority)
-        return router
-    }
-
-    override fun appendQuery(key: String, value: String): Router {
-        uriBuilder.appendQueryParameter(key, value)
-        return router
-    }
-
-
-    override fun uri(action: Uri.Builder.() -> Unit): Router {
-        action(uriBuilder)
-        return router
-    }
-
-    override fun serializer(action: ISerializerBundle.() -> Unit): Router {
-        action(iBundle)
-        return router
-    }
-
-    override fun bundle(action: Bundle.() -> Unit): Router {
-        action(mBundle)
-        return router
-    }
-
-    override fun put(key: String, value: Any?): Router {
-        iBundle.put(key, value)
-        return router
-    }
-
-
-}
-
-
-interface InitI {
-    fun init(app: Application): InitI
-
-    fun checkRouteUnique(checkKeyUnique: Boolean): InitI
-}
 
 
 

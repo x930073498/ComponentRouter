@@ -3,13 +3,17 @@ package com.x930073498.component.router.util
 import com.squareup.kotlinpoet.*
 import com.x930073498.component.annotations.*
 import com.x930073498.component.router.compiler.BaseProcessor
+import com.x930073498.component.router.util.ServiceConstants.SERVICE_NAME
 import org.jetbrains.annotations.Nullable
 import java.util.*
 import javax.lang.model.element.*
 import javax.lang.model.type.ArrayType
 import javax.lang.model.type.DeclaredType
 import javax.lang.model.type.TypeMirror
+import javax.tools.Diagnostic
 import kotlin.coroutines.Continuation
+
+class RouterCompilerException(msg: String) : Exception(msg)
 
 private var _emptyInfo: TypeInfo? = null
 
@@ -44,9 +48,14 @@ internal fun BaseProcessor.getInterceptorInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation =
         element.getAnnotation(InterceptorAnnotation::class.java) ?: return emptyTypeInfo
-
-    val group: String=annotation.realGroup()
-    val path: String=annotation.realPath()
+    val interceptorType =
+        elements.getTypeElement(InterceptorConstants.INTERCEPTOR_NAME.canonicalName).asType()
+    if (!types.isSubtype(element.asType(), interceptorType)) {
+        messager.printMessage(Diagnostic.Kind.ERROR, "$element is Not RouterInterceptor")
+        throw RouterCompilerException("$element is Not RouterInterceptor")
+    }
+    val group: String = annotation.realGroup()
+    val path: String = annotation.realPath()
 
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}InterceptorActionDelegate"
@@ -104,11 +113,14 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
             element.asType(),
             fragmentTypeMirror
         )
-    ) return emptyTypeInfo
+    ) {
+        messager.printMessage(Diagnostic.Kind.ERROR, "$element is Not Fragment")
+        throw RouterCompilerException("$element is Not Fragment")
+    }
     val interceptors = annotation.interceptors
 
-    val group: String=annotation.realGroup()
-    val path: String=annotation.realPath()
+    val group: String = annotation.realGroup()
+    val path: String = annotation.realPath()
 
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}FragmentActionDelegate"
@@ -133,7 +145,8 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
         superClassName = AUTO_ACTION_NAME,
         interceptors = interceptors,
         parentPath = parentAnnotation?.path ?: "",
-        supperInterfaces = arrayListOf(FragmentConstants.FRAGMENT_ACTION_DELEGATE_NAME,
+        supperInterfaces = arrayListOf(
+            FragmentConstants.FRAGMENT_ACTION_DELEGATE_NAME,
             I_AUTO_NAME
         )
     ).apply {
@@ -154,14 +167,24 @@ internal fun BaseProcessor.getFragmentInfo(element: Element): TypeInfo {
 internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation = element.getAnnotation(ServiceAnnotation::class.java) ?: return emptyTypeInfo
-    val group: String=annotation.realGroup()
-    val path: String=annotation.realPath()
+    val serviceTypeMirror = elements.getTypeElement(SERVICE_NAME.canonicalName).asType()
+    if (!types.isSubtype(
+            element.asType(),
+            serviceTypeMirror
+        )
+    ) {
+        messager.printMessage(Diagnostic.Kind.ERROR, "$element is Not IService")
+        throw RouterCompilerException("$element is Not IService")
+    }
+    val group: String = annotation.realGroup()
+    val path: String = annotation.realPath()
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}ServiceActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
     val type = element.asType()
     val typeName = type.asTypeName()
-    val parentAnnotation = findParentAnnotation(type, fragmentTypeMirror, ServiceAnnotation::class.java, path)
+    val parentAnnotation =
+        findParentAnnotation(type, serviceTypeMirror, ServiceAnnotation::class.java, path)
     return ServiceInfo(
         this,
         annotation,
@@ -175,11 +198,12 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
         isAutoInvoke = annotation.autoInvoke,
         isSingleTone = annotation.singleton,
         factoryTypeName = ServiceConstants.SERVICE_ACTION_DELEGATE_FACTORY_NAME,
-        injectTargetTypeName = ServiceConstants.SERVICE_NAME,
+        injectTargetTypeName = SERVICE_NAME,
         interceptors = annotation.interceptors,
         superClassName = AUTO_ACTION_NAME,
         parentPath = parentAnnotation?.path ?: "",
-        supperInterfaces = arrayListOf(ServiceConstants.SERVICE_ACTION_DELEGATE_NAME,
+        supperInterfaces = arrayListOf(
+            ServiceConstants.SERVICE_ACTION_DELEGATE_NAME,
             I_AUTO_NAME
         )
     ).apply {
@@ -200,8 +224,16 @@ internal fun BaseProcessor.getServiceInfo(element: Element): TypeInfo {
 internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
     if (element.kind != ElementKind.CLASS) return emptyTypeInfo
     val annotation = element.getAnnotation(ActivityAnnotation::class.java) ?: return emptyTypeInfo
-    val group: String=annotation.realGroup()
-    val path: String=annotation.realPath()
+    if (!types.isSubtype(
+            element.asType(),
+            activityTypeMirror
+        )
+    ) {
+        messager.printMessage(Diagnostic.Kind.ERROR, "$element is Not Activity")
+        throw RouterCompilerException("$element is Not Activity")
+    }
+    val group: String = annotation.realGroup()
+    val path: String = annotation.realPath()
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}ActivityActionDelegate"
     val packageName = elements.getPackageOf(element).qualifiedName.toString()
@@ -223,7 +255,8 @@ internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
         superClassName = AUTO_ACTION_NAME,
         interceptors = annotation.interceptors,
         parentPath = parentAnnotation?.path ?: "",
-        supperInterfaces = arrayListOf(ActivityConstants.ACTIVITY_ACTION_DELEGATE_NAME,
+        supperInterfaces = arrayListOf(
+            ActivityConstants.ACTIVITY_ACTION_DELEGATE_NAME,
             I_AUTO_NAME
         )
     ).apply {
@@ -242,12 +275,15 @@ internal fun BaseProcessor.getActivityInfo(element: Element): TypeInfo {
 }
 
 internal fun BaseProcessor.getMethodInfo(element: Element): MethodInfo {
-    if (element.kind != ElementKind.METHOD) return MethodInfo(emptyTypeInfo)
-    element as ExecutableElement
     val annotation =
         element.getAnnotation(MethodAnnotation::class.java) ?: return MethodInfo(emptyTypeInfo)
-    val group: String=annotation.realGroup()
-    val path: String=annotation.realPath()
+    if (element.kind != ElementKind.METHOD) {
+        messager.printMessage(Diagnostic.Kind.ERROR, "$element is Not a method")
+        throw RouterCompilerException("$element is Not a method")
+    }
+    element as ExecutableElement
+    val group: String = annotation.realGroup()
+    val path: String = annotation.realPath()
 
     val classPrefixName = "_${pathCapitalize(path)}"
     val className = "${classPrefixName}MethodActionDelegate"
@@ -267,7 +303,8 @@ internal fun BaseProcessor.getMethodInfo(element: Element): MethodInfo {
         superClassName = AUTO_ACTION_NAME,
         interceptors = annotation.interceptors,
         parentPath = "",
-        supperInterfaces = arrayListOf(MethodConstants.METHOD_ACTION_DELEGATE_NAME,
+        supperInterfaces = arrayListOf(
+            MethodConstants.METHOD_ACTION_DELEGATE_NAME,
             I_AUTO_NAME
         )
     )
@@ -305,7 +342,6 @@ internal fun pathCapitalize(path: String): String {
 }
 
 
-
 fun BaseProcessor.getParameterMethodName(variableElement: VariableElement): String {
     val variableTypeMirror = variableElement.asType()
     return getParameterMethodName(variableElement, variableTypeMirror)
@@ -334,7 +370,7 @@ private fun BaseProcessor.getParameterMethodName(
     isSubParcelableType: Boolean,
     isSubSerializableType: Boolean
 ): String {
-    return  "get"
+    return "get"
 //    getMethodName(
 //        parameterClassName,
 //        variableTypeMirror,
@@ -348,7 +384,7 @@ private fun BaseProcessor.getMethodName(
     variableTypeMirror: TypeMirror?,
     isSubParcelableType: Boolean,
     isSubSerializableType: Boolean
-):String {
+): String {
     val noNullParameterClassName = parameterClassName.copy(false)
     return if (noNullParameterClassName == mTypeNameString) { // 如果是一个 String
         "getString"

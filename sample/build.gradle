@@ -1,11 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = "1.4.21"
-    def repositoryUrl = new File(new File(rootDir.parent, "project"), "repository").absolutePath
+//    def repositoryUrl = new File(new File(rootDir.parent, "project"), "repository").absolutePath
     repositories {
-        maven {
-            url repositoryUrl
-        }
+//        maven {
+//            url repositoryUrl
+//        }
         google()
         jcenter()
 
@@ -13,19 +13,19 @@ buildscript {
     dependencies {
         classpath "com.android.tools.build:gradle:4.1.1"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath("com.x930073498.component:auto-plugin:0.0.15")
+        classpath("com.x930073498.component:auto-plugin:0.0.16")
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 println(rootDir.parent)
 
-def repositoryUrl = new File(new File(rootProject.rootDir.parent, "project"), "repository").absolutePath
+//def repositoryUrl = new File(new File(rootProject.rootDir.parent, "project"), "repository").absolutePath
 apply plugin: "com.x930073498.component.auto.plugin"
 auto {
     options { option ->
-        option.mavenUrl = repositoryUrl
-        option.versionPattern = "0.0.15"
+//        option.mavenUrl = repositoryUrl
+        option.versionPattern = "0.0.16"
         option.serializer = "G"
         option.enableRouter = true
         option.enableDispatcher = true

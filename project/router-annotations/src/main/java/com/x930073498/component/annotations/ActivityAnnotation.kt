@@ -6,6 +6,7 @@ package com.x930073498.component.annotations
 annotation class ActivityAnnotation(
     val group: String = "",
     val path: String,
+    val desc: String = "",
     val launchMode: LaunchMode = LaunchMode.Standard,
     val autoRegister: Boolean = true,
     val interceptors: Array<String> = [],

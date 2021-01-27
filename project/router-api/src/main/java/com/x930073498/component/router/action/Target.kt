@@ -1,5 +1,6 @@
 package com.x930073498.component.router.action
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
@@ -8,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Looper
 import androidx.annotation.CallSuper
+import androidx.fragment.app.Fragment
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.impl.*
@@ -21,28 +23,40 @@ import java.lang.ref.WeakReference
 
 @Suppress("UNCHECKED_CAST")
 sealed class Target(
-    val targetClazz: Class<*>
+    open val targetClazz: Class<*>
 ) {
 
     class ServiceTarget(
-        targetClazz: Class<*>,
+        override val targetClazz: Class<out IService>,
         internal val isSingleTon: Boolean,
         val action: ServiceActionDelegate
     ) :
         Target(targetClazz)
 
 
-    class MethodTarget(targetClazz: Class<*>, val action: MethodActionDelegate) :
+    class MethodTarget(
+        override val targetClazz: Class<out MethodInvoker>,
+        val action: MethodActionDelegate
+    ) :
         Target(targetClazz)
 
 
-    class ActivityTarget(targetClazz: Class<*>, val action: ActivityActionDelegate) :
+    class ActivityTarget(
+        override val targetClazz: Class<out Activity>,
+        val action: ActivityActionDelegate
+    ) :
         Target(targetClazz)
 
-    class FragmentTarget(targetClazz: Class<*>, val action: FragmentActionDelegate) :
+    class FragmentTarget(
+        override val targetClazz: Class<out Fragment>,
+        val action: FragmentActionDelegate
+    ) :
         Target(targetClazz)
 
-    class InterceptorTarget(targetClazz: Class<*>, val action: InterceptorActionDelegate) :
+    class InterceptorTarget(
+        override val targetClazz: Class<out RouterInterceptor>,
+        val action: InterceptorActionDelegate
+    ) :
         Target(targetClazz)
 
     internal class SystemTarget :

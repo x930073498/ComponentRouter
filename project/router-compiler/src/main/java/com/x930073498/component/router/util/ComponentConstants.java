@@ -33,6 +33,7 @@ public class ComponentConstants {
     public static final String METHOD_ACTION_DELEGATE = "MethodActionDelegate";
     public static final String FACTORY_NAME = "Factory";
     public static final String SERVICE_NAME = "IService";
+    public static final String INTERCEPTOR_NAME="RouterInterceptor";
     public static final String METHOD_INVOKER_NAME = "MethodInvoker";
     public static final String AUTO_ACTION_NAME = "AutoAction";
     public static final String TARGET_NAME = "Target";

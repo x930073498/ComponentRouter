@@ -1239,7 +1239,6 @@ object ParameterSupport {
         if (bundle == null) return defaultValue
         val serializerKey = getSerializerKey(key)
         var serializer: ISerializer? = null
-        LogUtil.log("key =$key, serializerKey=$serializerKey")
         if (bundle.containsKey(serializerKey)) {
             serializer = getSerializer()
             val result = bundle.getString(serializerKey) ?: return defaultValue
