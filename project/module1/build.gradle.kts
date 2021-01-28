@@ -1,6 +1,5 @@
 import com.x930073498.Versions
 import com.x930073498.Libraries
-import com.x930073498.PublishLibraries
 
 plugins {
     id("com.android.library")

@@ -1,7 +1,5 @@
 import com.x930073498.Libraries
-group=com.x930073498.plugin.Publish.GROUP
-version=com.x930073498.plugin.Publish.VERSION
-description="路由注解processor"
+
 plugins {
     kotlin("jvm")
     kotlin("kapt")

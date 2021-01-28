@@ -49,6 +49,8 @@ class MainActivity : AppCompatActivity() {
 
 
         findViewById<View>(Window.ID_ANDROID_CONTENT).setOnClickListener { view ->
+
+
             Router.from("/test/service?testA=enter this line 123")
                 .asService(
                     scope = lifecycleScope,

@@ -1,7 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-group=com.x930073498.plugin.Publish.GROUP
-version=com.x930073498.plugin.Publish.VERSION
-description="自动任务注入框架插件"
+
 repositories {
     google()
     maven(url = "https://plugins.gradle.org/m2/")

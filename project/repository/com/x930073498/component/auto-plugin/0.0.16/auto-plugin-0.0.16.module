@@ -1,0 +1,102 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.x930073498.component",
+    "module": "auto-plugin",
+    "version": "0.0.16",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.7",
+      "buildId": "uuuuitxfyra4dfauaivcspyaqy"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api",
+        "org.jetbrains.kotlin.localToProject": "public",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "files": [
+        {
+          "name": "auto-plugin-0.0.16.jar",
+          "url": "auto-plugin-0.0.16.jar",
+          "size": 139367,
+          "sha512": "bdc3f11e0dad8db978f6d34914a6a039c5cdc8b945eb6a5cf196b7ae5ee314c7fbc4a57bd163180a82f19343d973bc038c521a085f27766a20be1e753c28f681",
+          "sha256": "5e24440c7d96eaa72d8126a60b18431caa5468479eaf140685acab731187dfa0",
+          "sha1": "c1fd812d99500fb86acaaf7a66055e862492722b",
+          "md5": "e4c16d2337a6b30be1e92ea35e16bec9"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime",
+        "org.jetbrains.kotlin.localToProject": "public",
+        "org.jetbrains.kotlin.platform.type": "jvm"
+      },
+      "dependencies": [
+        {
+          "group": "com.android.tools.build",
+          "module": "gradle",
+          "version": {
+            "requires": "3.6.3"
+          }
+        },
+        {
+          "group": "org.jacoco",
+          "module": "org.jacoco.core",
+          "version": {
+            "requires": "0.8.5"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "1.4.21"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-gradle-plugin",
+          "version": {
+            "requires": "1.4.21"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib-jdk8",
+          "version": {
+            "requires": "1.4.21"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "auto-plugin-0.0.16.jar",
+          "url": "auto-plugin-0.0.16.jar",
+          "size": 139367,
+          "sha512": "bdc3f11e0dad8db978f6d34914a6a039c5cdc8b945eb6a5cf196b7ae5ee314c7fbc4a57bd163180a82f19343d973bc038c521a085f27766a20be1e753c28f681",
+          "sha256": "5e24440c7d96eaa72d8126a60b18431caa5468479eaf140685acab731187dfa0",
+          "sha1": "c1fd812d99500fb86acaaf7a66055e862492722b",
+          "md5": "e4c16d2337a6b30be1e92ea35e16bec9"
+        }
+      ]
+    }
+  ]
+}

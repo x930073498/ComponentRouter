@@ -60,6 +60,7 @@ public class AppStartTaskDispatcher {
 
     public AppStartTaskDispatcher setContext(Context context) {
         this.context = context;
+        System.out.println();
         isInMainProgress = ProcessUtils.isMainProcess(this.context);
         return this;
     }
@@ -77,6 +78,7 @@ public class AppStartTaskDispatcher {
     }
 
     public OnTaskStartCallback callback;
+
     public AppStartTaskDispatcher start() {
 
         if (context == null) {
@@ -90,8 +92,8 @@ public class AppStartTaskDispatcher {
             AppStartTaskLogUtils.showLog("当前进程非主进程");
             return this;
         }
-        if (callback!=null){
-            callback.beforeStart(this,startTaskList);
+        if (callback != null) {
+            callback.beforeStart(this, startTaskList);
         }
         //拓扑排序，拿到排好序之后的任务队列
         sortTaskList = AppStartTaskSortUtil.getSortResult(startTaskList, taskHashMap, taskChildHashMap);

@@ -12,6 +12,7 @@ import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.navigate
 import com.x930073498.module1.databinding.FragmentModuleTestBinding
+import kotlinx.coroutines.GlobalScope
 import java.net.URLEncoder
 
 
