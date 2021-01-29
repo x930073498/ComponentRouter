@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         val a = getSerializer().deserialize<W>(sString)
         println("a=${a?.uuu()}")
         loadRootFromRouter(Window.ID_ANDROID_CONTENT, "/module1/fragment/test?name=测试") {
-            put("name", "AA")
+            bundle("name", "AA")
         }.bindLifecycle(this)
     }
 }

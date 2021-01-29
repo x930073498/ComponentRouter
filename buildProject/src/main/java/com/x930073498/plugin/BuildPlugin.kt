@@ -110,18 +110,6 @@ class BuildPlugin : Plugin<Project> {
             BinaryInfo.repoName = getProperty("repoName")
             BinaryInfo.userOrg = getProperty("userOrg")
             println("BinaryInfo=${BinaryInfo}")
-            gradle.taskGraph.whenReady {
-                this.afterTask {
-                    if (this is BintrayUploadTask) {
-                        println(this.string())
-                    }
-                }
-                this.beforeTask {
-                    if (this is BintrayUploadTask) {
-
-                    }
-                }
-            }
             gradle.addProjectEvaluationListener(object : ProjectEvaluationListener {
                 override fun beforeEvaluate(project: Project) {
                     if (project.isRootProject()) return
@@ -130,7 +118,7 @@ class BuildPlugin : Plugin<Project> {
                 }
 
                 override fun afterEvaluate(project: Project, state: ProjectState) {
-                    if (project.isRootProject()) return
+//                    if (project.isRootProject()) return
 //                    applyBinaryPlugin(project)
                 }
 
@@ -224,7 +212,6 @@ class BuildPlugin : Plugin<Project> {
             tasks.withType<Javadoc> {
                 options.encoding = "UTF-8"
             }
-
             plugins.withType<AppPlugin> {
                 setBaseOptions()
             }

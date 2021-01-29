@@ -8,7 +8,7 @@ val Project.android: BaseExtension
     get() = project.extensions.getByName("android") as BaseExtension
 object Publish {
     const val GROUP = "com.x930073498.component"
-    const val VERSION = "0.0.20"
+    const val VERSION = "0.0.21"
 
     enum class PublishInfo(
         val group: String,
@@ -91,12 +91,6 @@ object Publish {
     fun getPublishInfo(project: Project): PublishInfo? {
         return PublishInfo.values().firstOrNull { it.artifact == project.name }?.apply {
             println("PublishInfo=$this")
-//            project.extra.let {
-//                it["group"] = group
-//                it["artifact"] = artifact
-//                it["version"] = version
-//                it["desc"] = desc
-//            }
         }
     }
 

@@ -7,5 +7,5 @@ plugins {
 }
 
 dependencies {
-    compileOnly(Libraries.kotlin)
+    implementation(Libraries.kotlin)
 }

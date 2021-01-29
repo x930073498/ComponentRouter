@@ -6,7 +6,7 @@ plugins {
 }
 
 dependencies {
-    compileOnly(Libraries.kotlin)
+    implementation(Libraries.kotlin)
     implementation(Libraries.androidx_fragment_ktx)
     implementation(project(":auto"))
     implementation(project(":core"))

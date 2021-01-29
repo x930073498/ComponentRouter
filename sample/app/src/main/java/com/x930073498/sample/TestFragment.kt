@@ -13,6 +13,7 @@ import com.x930073498.component.auto.getSerializer
 import com.x930073498.component.fragmentation.popSelf
 import com.x930073498.component.fragmentation.startWithRouter
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.asMethod
 import com.x930073498.component.router.coroutines.bindLifecycle
 import com.x930073498.component.router.util.ParameterSupport
 import com.x930073498.sample.databinding.AppFragmentTestBinding

@@ -8,7 +8,7 @@ plugins {
 dependencies {
     implementation(Libraries.kotlin)
     kapt(Libraries.google_auto_service)
-    compileOnly(Libraries.google_auto_service)
+    implementation(Libraries.google_auto_service)
     implementation(Libraries.kotlin_poet)
     implementation(Libraries.kotlin_reflect)
     implementation(Libraries.androidx_annotation)

@@ -16,38 +16,15 @@ import org.gradle.kotlin.dsl.findPlugin
 import kotlin.reflect.KClass
 
 class AutoPlugin : Plugin<Project> {
-    private fun Project.registerTransform() {
-        val result = ASMTransform(this)
-        android.registerTransform(result)
-
-    }
 
     override fun apply(project: Project) {
-        project.extensions.add("auto", Auto(project))
+        val auto = project.extensions.findByType<Auto>()
+        if (auto == null)
+            project.extensions.add("auto", Auto(project))
+
     }
 
 }
 
-fun Project.predicate(action: Project.() -> Unit) {
-    action(this)
-    subprojects {
-        action(this)
-    }
-}
 
-fun Project.doOn(
-    vararg pluginClass: KClass<out Plugin<*>>,
-    action: Plugin<*>.() -> Unit
-) {
-    val plugin = pluginClass.mapNotNull { plugins.findPlugin(it) }.firstOrNull()
-    if (plugin != null) {
-        action(plugin)
-        return
-    }
-    plugins.whenPluginAdded {
-        if (pluginClass.any { it.isInstance(this) }) {
-            action(this)
-            return@whenPluginAdded
-        }
-    }
-}
+

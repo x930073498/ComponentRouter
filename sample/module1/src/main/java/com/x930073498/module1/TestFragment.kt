@@ -38,7 +38,7 @@ class TestFragment : Fragment() {
         binding.btn.setOnClickListener {
             startWithRouter("x930073498://x930073498.com/app/fragment/test") {
                 withRouter {
-                    put("name", "NAME")
+                    bundle("name", "NAME")
                 }
             }.bindLifecycle(this)
 

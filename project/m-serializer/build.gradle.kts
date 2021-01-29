@@ -5,7 +5,7 @@ plugins{
 }
 
 dependencies{
-    compileOnly(Libraries.kotlin)
+    implementation(Libraries.kotlin)
     implementation(Libraries.moshi)
     implementation(project(":auto"))
 }

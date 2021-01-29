@@ -26,18 +26,22 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-android-extensions:1.4.21")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.21")
         classpath("com.vanniktech:gradle-maven-publish-plugin:0.11.1")
-        classpath("com.x930073498.component:auto-plugin:0.0.16")
+        classpath("com.x930073498.component:auto-plugin:0.0.21")
     }
 
 }
 
 
-plugins.apply("com.x930073498.component.auto.plugin")
-configure<com.x930073498.component.auto.plugin.Auto> {
-    options {
-     enableDependency = false
-    }
-}
+//plugins.apply("com.x930073498.component.auto.plugin")
+//configure<com.x930073498.component.auto.plugin.Auto> {
+//    options {
+//        enableDependency = false
+//        child("") {
+//
+//        }
+//    }
+//
+//}
 plugins {
     id("com.x930073498.build")
 //    id("com.x930073498.component.auto.plugin")

@@ -4,7 +4,7 @@ rootProject.buildFileName = "build.gradle.kts"
 includeBuild("../buildProject"){
 
 }
-//includeBuild "../buildPlugin"
+includeBuild "../buildPlugin"
 include ':module1'
 include ':auto-plugin'
 include ':core'
