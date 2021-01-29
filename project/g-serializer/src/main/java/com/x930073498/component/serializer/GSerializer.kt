@@ -16,7 +16,9 @@ class GSerializer : ISerializer, IModuleRegister, IAuto {
     }
 
     override fun register() {
-        setSerializer(this)
+        ConfigurationHolder.byDefault {
+            setSerializer(this@GSerializer)
+        }
     }
 
 }

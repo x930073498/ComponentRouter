@@ -84,6 +84,7 @@ internal object AutoTaskRegister {
     internal lateinit var app: Application
     private var hasInit = false
 
+    private val configList = arrayListOf<IConfiguration>()
 
     @JvmStatic
     internal fun init(context: Context) {
@@ -91,14 +92,8 @@ internal object AutoTaskRegister {
         val time = System.currentTimeMillis()
         app = getApplication(context)
         load()
-        applyConfiguration {
-            LogUtil.setLogger { tag, msg ->
-                Log.i(
-                    tag,
-                    if (msg is String) msg else runCatching{ getSerializer()?.serialize(msg) }.getOrNull() ?: msg.toString()
-                )
-            }
-        }   //初始化配置
+        ConfigurationHolder.apply()
+        //初始化配置
         ModuleHandler.doRegister()//初始化模块
         AutoActivityLifecycle.doRegister()//注册自身activity生命周期监听
         ApplicationLifecycleHandler.onApplicationCreated()//通知application create
@@ -128,7 +123,7 @@ internal object AutoTaskRegister {
     @JvmStatic
     private fun register(task: IAuto) {
         if (task is IConfiguration) {
-            task.register()
+           ConfigurationHolder.register(task)
         }
         if (task is IApplicationLifecycle) {
             task.doRegister()

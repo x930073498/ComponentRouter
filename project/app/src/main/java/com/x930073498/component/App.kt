@@ -3,6 +3,7 @@ package com.x930073498.component
 import androidx.multidex.MultiDexApplication
 import com.x930073498.component.auto.*
 import com.x930073498.component.auto.annotations.AutoClass
+import com.x930073498.component.router.byRouter
 import com.x930073498.component.test.Data
 
 class App : MultiDexApplication() {
@@ -15,22 +16,30 @@ class App : MultiDexApplication() {
 
 }
 
-class AutoConfig : IConfiguration(), IAuto {
-    override fun ConfigurationHandler.config() {
-        if (BuildConfig.DEBUG) {
-            checkRouteUnique()
-            debug()
+class AutoConfig : IConfiguration, IAuto {
+    override fun option(holder: ConfigurationHolder) {
+        holder.byDefault {
+            if (BuildConfig.DEBUG) {
+                setDebug(true)
+            }
+        }
+        holder.byRouter {
+            activityPropertyAutoInject(true)
+            fragmentPropertyAutoInject(true)
         }
     }
 
+
 }
+
 @AutoClass("annotation")
-class A  {
+class A {
     init {
     }
 }
+
 //@AutoClass("annotation")
-class B  {
+class B {
     init {
         println("enter this line 9898")
     }

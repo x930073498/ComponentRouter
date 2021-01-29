@@ -8,4 +8,5 @@ plugins {
 
 dependencies {
     implementation(Libraries.kotlin)
+    implementation(Libraries.androidx_annotation)
 }

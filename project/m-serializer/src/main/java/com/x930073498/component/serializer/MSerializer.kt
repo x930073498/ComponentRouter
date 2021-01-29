@@ -12,12 +12,13 @@ class MSerializer : ISerializer, IModuleRegister, IAuto {
     }
 
     override fun <T : Any> deserialize(source: String, type: Type): T? {
-
         return moshi.adapter<T>(type).fromJson(source)
     }
 
     override fun register() {
-        setSerializer(this)
+        ConfigurationHolder.byDefault {
+            setSerializer(this@MSerializer)
+        }
     }
 
 }

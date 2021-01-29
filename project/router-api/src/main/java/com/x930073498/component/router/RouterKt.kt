@@ -1,7 +1,10 @@
 package com.x930073498.component.router
 
 import android.content.Context
+import com.x930073498.component.auto.ConfigurationHolder
+import com.x930073498.component.auto.getAction
 import com.x930073498.component.router.core.IRequestRouter
+import com.x930073498.component.router.core.InitI
 import com.x930073498.component.router.coroutines.AwaitResultCoroutineScope
 import com.x930073498.component.router.coroutines.ResultListenable
 import com.x930073498.component.router.navigator.*
@@ -9,6 +12,11 @@ import com.x930073498.component.router.response.RouterResponse
 import com.x930073498.component.router.response.asNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext
+
+fun ConfigurationHolder.byRouter(action: InitI.() -> Unit) {
+    push(Router)
+    getAction<InitI>()?.apply(action)
+}
 
 fun IRequestRouter.request(
     scope: CoroutineScope = AwaitResultCoroutineScope,
@@ -90,6 +98,7 @@ fun IRequestRouter.asService(
         .asNavigator()
         .asService(navigatorOption)
 }
+
 suspend fun IRequestRouter.scopeNavigate(
     coroutineContext: CoroutineContext? = null,
     debounce: Long = 600L,

@@ -1,11 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.kotlin_version = "1.4.21"
-    def repositoryUrl = new File(new File(rootDir.parent, "project"), "repository").absolutePath
+//    def repositoryUrl = new File(new File(rootDir.parent, "project"), "repository").absolutePath
     repositories {
-        maven {
-            url repositoryUrl
-        }
+//        maven {
+//            url repositoryUrl
+//        }
         google()
         jcenter()
 
@@ -24,7 +24,7 @@ def repositoryUrl = new File(new File(rootProject.rootDir.parent, "project"), "r
 apply plugin: "com.x930073498.component.auto.plugin"
 auto {
     options {
-        mavenUrl = repositoryUrl
+        mavenUrl = "https://dl.bintray.com/x930073498/component"
         versionPattern = "0.0.21"
         serializer = "G"
         enableRouter = true

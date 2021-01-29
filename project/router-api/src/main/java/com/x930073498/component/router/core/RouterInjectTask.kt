@@ -6,35 +6,38 @@ import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.x930073498.component.auto.IAuto
-import com.x930073498.component.auto.getConfiguration
 import com.x930073498.component.core.IActivityLifecycle
 import com.x930073498.component.core.IApplicationLifecycle
 import com.x930073498.component.core.IFragmentLifecycle
 import com.x930073498.component.router.Router
-import com.x930073498.component.router.action.ActionCenter
-import com.x930073498.component.router.impl.ActivityActionDelegate
-import com.x930073498.component.router.impl.FragmentActionDelegate
-import com.x930073498.component.router.util.ParameterSupport
+import com.x930073498.component.router.activityPropertyAutoInject
+import com.x930073498.component.router.fragmentPropertyAutoInject
 
 class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFragmentLifecycle {
     override fun onApplicationCreated(app: Application) {
-        Router.init(app).apply {
-            checkRouteUnique(getConfiguration().shouldRouterUnique())
-        }
+        Router.init(app)
     }
 
     private val activityInjectList = arrayListOf<Activity>()
     private val fragmentInjectedList = arrayListOf<Fragment>()
 
     override fun onActivityPreCreated(activity: Activity, savedInstanceState: Bundle?) {
-        inject(activity)
+        autoInjectActivityProperty(activity)
         activityInjectList.add(activity)
+    }
+
+    private fun autoInjectActivityProperty(activity: Activity) {
+        if (activityPropertyAutoInject) Router.injectByIntent(activity)
+    }
+
+    private fun autoInjectFragmentProperty(fragment: Fragment) {
+        if (fragmentPropertyAutoInject) Router.injectByArguments(fragment)
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         super.onActivityCreated(activity, savedInstanceState)
         if (!activityInjectList.contains(activity)) {
-            inject(activity)
+            autoInjectActivityProperty(activity)
         } else {
             activityInjectList.remove(activity)
         }
@@ -46,14 +49,14 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFrag
         savedInstanceState: Bundle?
     ) {
         super.onFragmentPreCreated(fm, f, savedInstanceState)
-        inject(f)
+        autoInjectFragmentProperty(f)
         fragmentInjectedList.add(f)
     }
 
     override fun onFragmentCreated(fm: FragmentManager, f: Fragment, savedInstanceState: Bundle?) {
         super.onFragmentCreated(fm, f, savedInstanceState)
         if (!fragmentInjectedList.contains(f)) {
-            inject(f)
+            autoInjectFragmentProperty(f)
         } else {
             fragmentInjectedList.remove(f)
         }
@@ -61,21 +64,6 @@ class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFrag
 
 }
 
-internal fun <T> inject(activity: T) where T : Activity {
-    val intent = activity.intent ?: return
-    val key = ParameterSupport.getCenterKey(intent) ?: return
-    val center = ActionCenter.getAction(key)
-    val bundle = intent.extras ?: return
-    (center as? ActivityActionDelegate)?.apply {
-        inject(bundle, activity)
-    }
-}
 
-internal fun <T> inject(fragment: T) where T : Fragment {
-    val bundle = fragment.arguments ?: return
-    val key = ParameterSupport.getCenterKey(bundle) ?: return
-    val center = ActionCenter.getAction(key)
-    (center as? FragmentActionDelegate)?.apply {
-        inject(bundle, fragment)
-    }
-}
+
+

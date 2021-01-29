@@ -12,6 +12,7 @@ import com.x930073498.component.databinding.ActivitySecondBinding
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.coroutines.*
 import com.x930073498.component.router.asActivity
+import com.x930073498.component.router.core.hasPropertyAutoInjectByRouter
 import com.x930073498.component.router.navigate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -54,6 +55,7 @@ class SecondActivity : AppCompatActivity() {
                 .bindLifecycle(this)
 
         }
+
 //        GlobalScope.launch {
 //            Router.from("test3?a=4&b=3").navigate<TestService>()?.test()
 //            LogUtil.log( Router.from("test4?a=4&b=3").bundle {

@@ -1,9 +1,6 @@
 package com.x930073498.component.serializer
 
-import com.x930073498.component.auto.IAuto
-import com.x930073498.component.auto.IModuleRegister
-import com.x930073498.component.auto.ISerializer
-import com.x930073498.component.auto.setSerializer
+import com.x930073498.component.auto.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import java.lang.reflect.Type
@@ -19,7 +16,9 @@ class KSerializer : ISerializer, IModuleRegister, IAuto {
     }
 
     override fun register() {
-        setSerializer(this)
+        ConfigurationHolder.byDefault {
+            setSerializer(this@KSerializer)
+        }
     }
 
 }

@@ -8,7 +8,7 @@ val Project.android: BaseExtension
     get() = project.extensions.getByName("android") as BaseExtension
 object Publish {
     const val GROUP = "com.x930073498.component"
-    const val VERSION = "0.0.21"
+    const val VERSION = "0.0.22"
 
     enum class PublishInfo(
         val group: String,

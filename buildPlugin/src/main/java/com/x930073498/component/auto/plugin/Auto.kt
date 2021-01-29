@@ -109,6 +109,7 @@ open class Auto constructor(val project: Project) {
 
         const val IMPLEMENTATION = "api"
         const val KAPT = "kapt"
+        const val REMOTE_MAVEN_URL="https://dl.bintray.com/x930073498/component"
 //        const val KAPT = "annotationProcessor"
 
     }
@@ -264,7 +265,7 @@ open class Auto constructor(val project: Project) {
         if (options.enableDependency) {
             repositories {
                 if (options.mavenUrl.isEmpty()) {
-                    jcenter()
+                    maven(url=REMOTE_MAVEN_URL)
                 } else
                     maven(url = options.mavenUrl)
             }

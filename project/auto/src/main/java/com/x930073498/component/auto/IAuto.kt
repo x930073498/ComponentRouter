@@ -1,20 +1,19 @@
 package com.x930073498.component.auto
 
-import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import kotlin.reflect.KType
-import kotlin.reflect.javaType
-import kotlin.reflect.typeOf
 
 
-interface IAuto
+interface IAuto{
 
-interface IRegister {
+
+}
+
+interface IRegister:IAuto {
     fun register()
 }
 
 interface IModuleRegister : IRegister
-interface ISerializer {
+interface ISerializer :IAuto{
     fun <T : Any> serialize(data: T): String
 
     fun <T : Any> deserialize(source: String, type: Type): T?
