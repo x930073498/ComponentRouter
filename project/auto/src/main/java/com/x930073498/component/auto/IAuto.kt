@@ -14,11 +14,11 @@ interface IRegister:IAuto {
 
 interface IModuleRegister : IRegister
 interface ISerializer :IAuto{
-    fun <T : Any> serialize(data: T): String
+    fun <T> serialize(data: T): String
 
-    fun <T : Any> deserialize(source: String, type: Type): T?
+    fun <T> deserialize(source: String, type: Type): T?
 }
 
-inline fun <reified T : Any> ISerializer.deserialize(source: String): T? {
+inline fun <reified T> ISerializer.deserialize(source: String): T? {
     return deserialize(source, T::class.java)
 }

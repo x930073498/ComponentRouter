@@ -5,6 +5,8 @@ package com.x930073498.component.router.util
 import android.content.Intent
 import android.net.Uri
 import android.os.*
+import android.util.Size
+import android.util.SizeF
 import android.util.SparseArray
 import androidx.arch.core.util.Function
 import com.x930073498.component.auto.ISerializer
@@ -1235,82 +1237,102 @@ object ParameterSupport {
         return getParcelable(bundle, key, null)
     }
 
-    fun <T : Any> get(bundle: Bundle?, key: String, type: Type, defaultValue: T?): T? {
+
+    fun <T> get(bundle: Bundle?, key: String, type: Type): T? {
+        return get(bundle, key, type, null)
+    }
+
+    fun <T> get(bundle: Bundle?, key: String, type: Type, defaultValue: T): T {
         if (bundle == null) return defaultValue
         val serializerKey = getSerializerKey(key)
         var serializer: ISerializer? = null
         if (bundle.containsKey(serializerKey)) {
+            LogUtil.log("enter this line serializer")
             serializer = getSerializer()
-            val result = bundle.getString(serializerKey) ?: return defaultValue
+            val result = bundle.getString(key) ?: return defaultValue
             if (type.isAssignableTo<String>()) {
                 (result as? T)?.let {
                     return it
                 }
             }
-            LogUtil.log("key =$key, result=$result")
             return runCatching { serializer.deserialize<T>(result, type) }
                 .onFailure { it.printStackTrace() }
                 .getOrNull() ?: defaultValue
         }
         val query = getQueryString(bundle, key)
-        if (query != null) {
+        if (!query.isNullOrEmpty()) {
+            LogUtil.log("enter this line query")
             if (type.isAssignableTo<String>()) {
                 (query as? T)?.let {
                     return it
                 }
             }
-            return (serializer ?: getSerializer()).deserialize(query, type)
+            return (serializer ?: getSerializer()).deserialize(query, type) ?: defaultValue
         }
-        return when {
-            //基础数据类型
-            type.isBoolean() -> bundle.getBoolean(key)
-            type.isShort() -> bundle.getShort(key)
-            type.isInt() -> getInt(bundle, key)
-            type.isFloat() -> getFloat(bundle, key)
-            type.isDouble() -> getDouble(bundle, key)
-            type.isByte() -> getByte(bundle, key)
-            type.isChar() -> getChar(bundle, key)
-            type.isLong() -> getLong(bundle, key)
 
-            //包装数据类型
-            type.isAssignableTo<String>() -> getString(bundle, key)
-            type.isAssignableTo<CharSequence>() -> getCharSequence(bundle, key) as Any?
-            type.isAssignableTo<Parcelable>() -> getParcelable(bundle, key)
-            type.isAssignableTo<Serializable>() -> getSerializable(bundle, key)
+        val block = {
+            when {
+                //基础数据类型
+                type.isBoolean() -> getBoolean(bundle, key)
+                type.isShort() -> getShort(bundle, key)
+                type.isInt() -> getInt(bundle, key)
+                type.isFloat() -> getFloat(bundle, key)
+                type.isDouble() -> getDouble(bundle, key)
+                type.isByte() -> getByte(bundle, key)
+                type.isChar() -> getChar(bundle, key)
+                type.isLong() -> getLong(bundle, key)
 
-            //基础数据类型的数组
-            type.isAssignableTo<ByteArray>() -> getByteArray(bundle, key)
-            type.isAssignableTo<CharArray>() -> getCharArray(bundle, key)
-            type.isAssignableTo<ShortArray>() -> getShortArray(bundle, key)
-            type.isAssignableTo<BooleanArray>() -> getBooleanArray(bundle, key)
-            type.isAssignableTo<DoubleArray>() -> getDoubleArray(bundle, key)
-            type.isAssignableTo<FloatArray>() -> getFloatArray(bundle, key)
-            type.isAssignableTo<IntArray>() -> getIntArray(bundle, key)
-            type.isAssignableTo<LongArray>() -> getLongArray(bundle, key)
+                //包装数据类型
+                type.isAssignableTo<String>() -> getString(bundle, key)
+                type.isAssignableTo<CharSequence>() -> getCharSequence(bundle, key) as Any?
+                type.isAssignableTo<Parcelable>() -> getParcelable(bundle, key)
+                type.isAssignableTo<Serializable>() -> getSerializable(bundle, key)
+                type.isAssignableTo<SizeF>() -> bundle.getSizeF(key)
+                type.isAssignableTo<Size>() -> bundle.getSize(key)
+                //基础数据类型的数组
+                type.isAssignableTo<ByteArray>() -> getByteArray(bundle, key)
+                type.isAssignableTo<CharArray>() -> getCharArray(bundle, key)
+                type.isAssignableTo<ShortArray>() -> getShortArray(bundle, key)
+                type.isAssignableTo<BooleanArray>() -> getBooleanArray(bundle, key)
+                type.isAssignableTo<DoubleArray>() -> getDoubleArray(bundle, key)
+                type.isAssignableTo<FloatArray>() -> getFloatArray(bundle, key)
+                type.isAssignableTo<IntArray>() -> getIntArray(bundle, key)
+                type.isAssignableTo<LongArray>() -> getLongArray(bundle, key)
 
-            //包装数据类型的数组
-            type.isArrayOf<String>() -> getStringArray(bundle, key)
-            type.isArrayOf<CharSequence>() -> getCharSequenceArray(bundle, key)
-            type.isArrayOf<Parcelable>() -> getParcelableArray(bundle, key)
+                //包装数据类型的数组
+                type.isArrayOf<String>() -> getStringArray(bundle, key)
+                type.isArrayOf<CharSequence>() -> getCharSequenceArray(bundle, key)
+                type.isArrayOf<Parcelable>() -> getParcelableArray(bundle, key)
 
-            // arrayList
-            type.isArrayListOf<String>() -> getStringArrayList(bundle, key)
-            type.isArrayListOf<Int>() -> getIntegerArrayList(bundle, key)
-            type.isArrayListOf<CharSequence>() -> getCharSequenceArrayList(bundle, key)
-            type.isArrayListOf<Parcelable>() -> getParcelableArrayList<Parcelable>(bundle, key)
+                // arrayList
+                type.isArrayListOf<String>() -> getStringArrayList(bundle, key)
+                type.isArrayListOf<Int>() -> getIntegerArrayList(bundle, key)
+                type.isArrayListOf<CharSequence>() -> getCharSequenceArrayList(bundle, key)
+                type.isArrayListOf<Parcelable>() -> getParcelableArrayList<Parcelable>(bundle, key)
 
 
-            type.isAssignableTo<SparseArray<Parcelable>>() -> getSparseParcelableArray<Parcelable>(
-                bundle,
-                key
-            )
-
-            else -> null
-        } as? T ?: defaultValue
+                type.isAssignableTo<SparseArray<Parcelable>>() -> getSparseParcelableArray<Parcelable>(
+                    bundle,
+                    key
+                )
+                else -> defaultValue
+            } as? T ?: defaultValue
+        }
+        return runCatching {
+            block()
+        }
+            .onFailure {
+                it.printStackTrace()
+            }
+            .getOrNull() ?: defaultValue
     }
 
-    inline fun <reified T> get(bundle: Bundle?, key: String, defaultValue: T? = null): T? {
+    inline fun <reified T> get(bundle: Bundle?, key: String, defaultValue: T): T {
         return get(bundle, key, getType<T>(), defaultValue)
+    }
+
+    inline fun <reified T> get(bundle: Bundle?, key: String): T? {
+        return get(bundle, key, getType<T>(), null)
     }
 
     fun <T : Parcelable?> getParcelable(
@@ -1367,3 +1389,34 @@ object ParameterSupport {
 
 
 }
+
+fun <T> Bundle.getRouterValue(key: String, type: Type, defaultValue: T): T {
+    return ParameterSupport.get(this, key, type, defaultValue)
+}
+
+fun <T> Bundle.getRouterValue(key: String, type: Type): T? {
+    return ParameterSupport.get(this, key, type)
+}
+
+fun <T> Intent.getRouterValue(key: String, type: Type, defaultValue: T): T {
+    val bundle = extras ?: return defaultValue
+    return ParameterSupport.get(bundle, key, type, defaultValue)
+}
+
+fun <T> Intent.getRouterValue(key: String, type: Type): T? {
+    val bundle = extras ?: return null
+    return ParameterSupport.get(bundle, key, type)
+}
+
+inline fun <reified T> Bundle.getRouterValue(key: String, defaultValue: T): T {
+    return ParameterSupport.get(this, key, defaultValue)
+}
+
+inline fun <reified T> Bundle.getRouterValue(key: String): T? {
+    return ParameterSupport.get<T>(this, key)
+}
+
+inline fun <reified T> Intent.getRouterValue(key: String): T? {
+    return getRouterValue(key, getType<T>(), null)
+}
+

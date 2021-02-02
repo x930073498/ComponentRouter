@@ -21,6 +21,24 @@ interface RouterInterceptor :
 }
 
 
+class PathRouterInterceptor(private val paths: List<String>) : RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+        paths.forEach { url ->
+            val interceptor =
+                Router.from(url)
+                    .scopeNavigate(debounce = -1)
+                    .await()
+                    .getResult()
+            if (interceptor != null) {
+                if (interceptor is RouterInterceptor)
+                    chain.addNext(interceptor)
+            }
+        }
+        return chain.process(chain.request())
+
+    }
+}
+
 class ActionDelegateRouterInterceptor : RouterInterceptor {
     override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
         val request = chain.request()
@@ -33,7 +51,7 @@ class ActionDelegateRouterInterceptor : RouterInterceptor {
             interceptors.reversed().forEach { url ->
                 val interceptor =
                     Router.from(url)
-                        .scopeNavigate()
+                        .scopeNavigate(debounce = -1)
                         .await()
                         .getResult()
                 if (interceptor != null) {

@@ -15,6 +15,7 @@ import com.x930073498.component.annotations.realPath
 import com.x930073498.component.router.Router
 import com.x930073498.component.router.impl.ActionDelegate
 import com.x930073498.component.router.impl.IService
+import com.x930073498.component.router.impl.ServiceActionDelegate
 import com.x930073498.component.router.impl.SystemActionDelegate
 import com.x930073498.component.router.util.authorityAndPath
 import java.util.concurrent.locks.ReentrantLock
@@ -296,6 +297,15 @@ object ActionCenter {
 
     fun <T> getService(clazz: Class<T>): T? where T : IService {
         return getServiceInternal(clazz)
+    }
+
+    fun <T> getService(path: String): T? where T : IService {
+        val action = getAction(path)
+        return if (action is ServiceActionDelegate) {
+            action.factory()
+                .create(ContextHolder.create(), action.target.targetClazz, bundleOf()) as? T
+        } else null
+
     }
 
 

@@ -16,7 +16,7 @@ import com.x930073498.component.core.*
 //IFragmentLifecycle,绑定的是fragment的生命周期,app内任意的fragment执行生命周期,都会在特定的方法中回调
 class TestActivityLifecycleAutoTask : IAuto, IActivityLifecycle {
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-        LogUtil.log("enter this line 1401410")
+        LogUtil.log("enter this line $activity Created")
     }
 }
 
@@ -43,7 +43,7 @@ class TestInstanceActivityLifecycleAutoTask : IAuto, IInstanceActivityLifecycle<
     }
 
     override fun getTargetClass(): Class<out MainActivity> {
-     return MainActivity::class.java
+        return MainActivity::class.java
     }
 
 

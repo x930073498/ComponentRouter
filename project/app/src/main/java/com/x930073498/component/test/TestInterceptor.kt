@@ -17,6 +17,16 @@ class TestInterceptor : RouterInterceptor {
         return chain.process(chain.request())
     }
 }
+@InterceptorAnnotation(
+    "/test/interceptors/test2",
+    scope = InterceptorScope.NORMAL
+)
+class Test2Interceptor : RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+       LogUtil.log("enter this line waddwdx")
+        return chain.process(chain.request())
+    }
+}
 
 @InterceptorAnnotation(
     path = "/interceptor/scheme-http",

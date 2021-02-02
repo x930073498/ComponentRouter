@@ -7,11 +7,11 @@ import java.lang.reflect.Type
 
 class GSerializer : ISerializer, IModuleRegister, IAuto {
     private val gson = Gson()
-    override fun <T : Any> serialize(data: T): String {
+    override fun <T > serialize(data: T): String {
         return gson.toJson(data)
     }
 
-    override fun <T : Any> deserialize(source: String, type: Type): T? {
+    override fun <T > deserialize(source: String, type: Type): T? {
         return gson.fromJson(source,type)
     }
 

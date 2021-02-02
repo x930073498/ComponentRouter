@@ -124,12 +124,12 @@ fun Fragment.loadRootFromRouter(
     path: String,
     scope: CoroutineScope = AwaitResultCoroutineScope,
     coroutineContext: CoroutineContext = scope.coroutineContext,
-    action: IRouterHandler.() -> Unit = {}
+    action: suspend IRouterHandler.() -> Unit = {}
 ): ResultListenable<Any> {
     return resultOf(scope, coroutineContext) {
         withContext(Dispatchers.Main) {
             val view = requireView().findViewById<View>(containerId)
-                ?: return@withContext resultOf<Any>(scope, coroutineContext, Unit)
+                ?: return@withContext resultOf(scope, coroutineContext, Unit)
             val controller = NavHostController(requireContext())
             controller.setLifecycleOwner(this@loadRootFromRouter)
             controller.setViewModelStore(viewModelStore)
@@ -163,7 +163,7 @@ fun FragmentActivity.loadRootFromRouter(
     path: String,
     scope: CoroutineScope = AwaitResultCoroutineScope,
     coroutineContext: CoroutineContext = scope.coroutineContext,
-    action: IRouterHandler.() -> Unit = {}
+    action:suspend IRouterHandler.() -> Unit = {}
 ): ResultListenable<Any> {
     return resultOf(scope, coroutineContext) {
         withContext(Dispatchers.Main) {
@@ -263,11 +263,10 @@ private fun NavController.loadRootFromRouter(
     scope: CoroutineScope = AwaitResultCoroutineScope,
     coroutineContext: CoroutineContext = scope.coroutineContext,
     context: Context,
-    action: IRouterHandler.() -> Unit = {}
+    action: suspend IRouterHandler.() -> Unit = {}
 ): ResultListenable<Any> {
     return Router.from(path)
-        .apply { action(this as IRouterHandler) }
-        .request(scope, coroutineContext, context = context)
+        .request(scope, coroutineContext, context = context,request = action)
         .map {
             val destination = it.asDestination(this) ?: return@map
             val params = it.asNavigateParams()

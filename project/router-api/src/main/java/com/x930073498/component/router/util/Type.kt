@@ -1,6 +1,5 @@
 package com.x930073498.component.router.util
 
-import com.x930073498.component.auto.LogUtil
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 

@@ -2,8 +2,10 @@ package com.x930073498.component.test
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.SparseArray
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.util.keyIterator
 import androidx.lifecycle.lifecycleScope
 import com.x930073498.component.annotations.*
 import com.x930073498.component.auto.LogUtil
@@ -23,6 +25,8 @@ import kotlinx.coroutines.launch
 //@ServiceAnnotation(path = "/activity/second")
 //@MethodAnnotation(path = "/activity/second")
 class SecondActivity : AppCompatActivity() {
+    @ValueAutowiredAnnotation
+    var array: SparseArray<Data>? = null
     private val binding by lazy {
         ActivitySecondBinding.inflate(layoutInflater)
     }
@@ -30,6 +34,12 @@ class SecondActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        array?.let { sparseArray ->
+            sparseArray.keyIterator().forEach {
+                LogUtil.log("enter this line array key=$it")
+            }
+            LogUtil.log("enter this line array[1]=${sparseArray[1]}")
+        }
         lifecycleScope.launch {
             scopeResultOf {
                 delay(2000)
@@ -37,9 +47,7 @@ class SecondActivity : AppCompatActivity() {
             }
                 .bindLifecycle(requireLifecycleOwner())
                 .map { it.toInt() }
-                .await().apply {
-                    LogUtil.log(this)
-                }
+                .await()
         }
         binding.tvSecond.setOnClickListener {
             Router.from("/activity/navigation")
@@ -68,13 +76,12 @@ class SecondActivity : AppCompatActivity() {
     }
 
     fun toast(msg: String, duration: Int = Toast.LENGTH_SHORT) {
-        Router.from("/method/toast") {
-            uri {
-                appendQueryParameter("info", "{msg:\"$msg\",duration:$duration}")
+        Router.from("/method/toast")
+            .navigate {
+                uri {
+                    appendQueryParameter("info", "{msg:\"$msg\",duration:$duration}")
+                }
             }
-
-        }
-            .navigate()
 //            .bindLifecycle(this)
             .listen {
                 while (true) {

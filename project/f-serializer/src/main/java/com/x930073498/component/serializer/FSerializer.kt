@@ -7,11 +7,11 @@ import java.lang.reflect.Type
 
 
 class FSerializer : ISerializer, IModuleRegister, IAuto {
-    override fun <T : Any> serialize(data: T): String {
+    override fun <T> serialize(data: T): String {
         return JSON.toJSONString(data)
     }
 
-    override fun <T : Any> deserialize(source: String, type: Type): T? {
+    override fun <T> deserialize(source: String, type: Type): T? {
         return JSON.parseObject<T>(source, type, Feature.AllowUnQuotedFieldNames)
     }
 

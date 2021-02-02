@@ -6,7 +6,7 @@ plugins {
     kotlin("android")
     kotlin("kapt")
     kotlin("plugin.serialization") version "1.4.20"
-//    id("kotlin-parcelize")
+    id("kotlin-parcelize")
     id("kotlin-android")
 
 }

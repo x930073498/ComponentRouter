@@ -67,21 +67,18 @@ object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,PropertyInject
     }
 
 
-    fun from(uri: Uri, action: IRouterHandler.() -> Unit = {}): IRequestRouter {
-        return RouterImpl(uri).apply(action)
+    fun from(uri: Uri): IRequestRouter {
+        return RouterImpl(uri)
     }
 
-    fun from(url: String, action: IRouterHandler.() -> Unit = {}): IRequestRouter {
-        return from(Uri.parse(url), action)
+    fun from(url: String): IRequestRouter {
+        return from(Uri.parse(url))
     }
 
-    fun from(intent: Intent, action: IRouterHandler.() -> Unit = {}): IRequestRouter {
-        return from(intent.toUri(0), action)
+    fun from(intent: Intent): IRequestRouter {
+        return from(intent.toUri(0))
     }
 
-    fun create(action: IRouterHandler.() -> Unit = {}): IRequestRouter {
-        return from(Uri.EMPTY, action)
-    }
 }
 
 

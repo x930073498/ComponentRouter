@@ -139,7 +139,7 @@ sealed class TypeInfo constructor(
                 .apply {
                     autoInjectList.forEach {
                         addStatement(
-                            "%L.%N = %T.%L(%N,%S)?:%L.%N",
+                            "%L.%N = %T.%L(%N,%S,%L.%N)",
                             "target",
                             it.elementName,
                             PARAMETER_SUPPORT_NAME,
