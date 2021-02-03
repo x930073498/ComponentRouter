@@ -1,11 +1,13 @@
 package com.x930073498.component.core
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.os.Looper
 import androidx.core.app.ComponentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
+import com.x930073498.component.auto.IAuto
 
 
 val currentActivity: Activity

@@ -1,21 +1,21 @@
 package com.x930073498.component.router
 
 import android.content.Context
+import androidx.fragment.app.Fragment
 import com.x930073498.component.auto.ConfigurationHolder
 import com.x930073498.component.auto.getAction
-import com.x930073498.component.router.core.DirectRequestResult
-import com.x930073498.component.router.core.IRequestRouter
-import com.x930073498.component.router.core.IRouterHandler
-import com.x930073498.component.router.core.InitI
+import com.x930073498.component.router.core.*
 import com.x930073498.component.router.coroutines.AwaitResultCoroutineScope
 import com.x930073498.component.router.coroutines.ResultListenable
+import com.x930073498.component.router.impl.IService
+import com.x930073498.component.router.impl.MethodInvoker
 import com.x930073498.component.router.navigator.*
 import com.x930073498.component.router.response.RouterResponse
 import com.x930073498.component.router.response.asNavigator
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext
 
-var router_default_debounce=600L
+var router_default_debounce = 600L
 
 fun ConfigurationHolder.byRouter(action: InitI.() -> Unit) {
     push(Router)
@@ -31,6 +31,37 @@ fun IRequestRouter.request(
 ): ResultListenable<RouterResponse> {
     return requestInternal(scope, coroutineContext, debounce, context, request)
 }
+
+fun <T> IClassRequestRouter<T>.request(
+    context: Context? = null,
+    request: IRouterHandler.() -> Unit = {}
+): T? {
+    return requestInternalWithClass(context, request)
+}
+
+fun <T> IClassRequestRouter<T>.requestService(
+    context: Context? = null,
+    request: IRouterHandler.() -> Unit = {}
+): T? where T : IService {
+    return requestInternalWithClass(context, request)
+}
+
+
+fun <T> IClassRequestRouter<T>.requestMethod(
+    context: Context? = null,
+    request: IRouterHandler.() -> Unit = {}
+): T? where T : MethodInvoker {
+    return requestInternalWithClass( context, request)
+}
+
+
+fun <T> IClassRequestRouter<T>.requestFragment(
+    context: Context? = null,
+    request: IRouterHandler.() -> Unit = {}
+): T? where T : Fragment {
+    return requestInternalWithClass( context, request)
+}
+
 
 /**
  * 忽略所有的拦截器直接请求

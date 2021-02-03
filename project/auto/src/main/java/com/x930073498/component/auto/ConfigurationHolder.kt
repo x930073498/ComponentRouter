@@ -33,6 +33,8 @@ object ConfigurationHolder {
         actions.add(action)
     }
 
+    val serializer = iSerializer
+
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     fun <T : Action> getAction(clazz: Class<T>): T? {
         val action = actions.firstOrNull { clazz.isInstance(it) } ?: return null

@@ -1,8 +1,10 @@
 package com.x930073498.component.test
 
+import android.os.Bundle
 import com.x930073498.component.annotations.ServiceAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.impl.IService
 
 interface TestService : IService {
@@ -30,12 +32,18 @@ open class TestParentServiceImpl : TestService {
         LogUtil.log("enter this line TestService")
     }
 }
+
 @ServiceAnnotation(
     path = "/test/service",
     singleton = true,
     autoInvoke = true,
 )
-class TestServiceImpl:TestParentServiceImpl(){
+class TestServiceImpl : TestParentServiceImpl() {
+    override fun init(contextHolder: ContextHolder, bundle: Bundle) {
+        super.init(contextHolder, bundle)
+
+    }
+
     init {
         LogUtil.log("enter this line init TestServiceImpl")
     }

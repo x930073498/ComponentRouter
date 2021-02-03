@@ -22,6 +22,7 @@ import com.x930073498.component.router.interceptor.onInterceptors
 import com.x930073498.component.router.request.routerRequest
 import com.x930073498.component.router.response.RouterResponse
 import com.x930073498.component.router.response.routerResponse
+import com.x930073498.component.router.thread.IThread
 import com.x930073498.component.router.util.ParameterSupport
 import kotlinx.coroutines.CoroutineScope
 import java.lang.RuntimeException
@@ -47,7 +48,6 @@ internal class RequestParams(
             bundle[it] == other.bundle[it]
         }
     }
-
 
 
     override fun hashCode(): Int {
@@ -76,7 +76,7 @@ internal class RouterImpl private constructor(
         }
     }
 
-   internal constructor(uri: Uri = Uri.EMPTY) : this(
+    internal constructor(uri: Uri = Uri.EMPTY) : this(
         InternalRouterHandler(uri)
     )
 
@@ -118,13 +118,11 @@ internal class RouterImpl private constructor(
             .toResponse(debounce, context)
 
     }
-
     override fun requestInternalDirect(
         debounce: Long,
         context: Context?,
         request: IRouterHandler.() -> Unit
     ): DirectRequestResult {
-        if (!isMainThread) throw RuntimeException("请在主线程调用")
         request(mHandler)
         val bundle = mHandler.mBundle
         val uri = mHandler.uriBuilder.build()
@@ -135,127 +133,11 @@ internal class RouterImpl private constructor(
         if (System.currentTimeMillis() - time < debounce) {
             return DirectRequestResult.Ignore
         }
-        val action = ActionCenter.getAction(uri)
         val contextHolder = ContextHolder.create(context)
-        when (val target = action.target) {
-            is Target.ServiceTarget -> {
-                val result =
-                    target.action.factory().create(contextHolder, target.targetClazz, bundle)
-                target.action.inject(bundle, result)
-                return DirectRequestResult.ServiceResult(
-                    result,
-                    target.action,
-                    bundle,
-                    contextHolder
-                )
-            }
-            is Target.MethodTarget -> {
-                val result =
-                    target.action.factory().create(contextHolder, target.targetClazz, bundle)
-                target.action.inject(bundle, result)
-                return DirectRequestResult.MethodResult(
-                    result,
-                    target.action,
-                    bundle,
-                    contextHolder
-                )
-            }
-            is Target.ActivityTarget -> {
-                val actualContext = contextHolder.getContext()
-                val intent = Intent(actualContext, target.targetClazz)
-                val componentName = intent.resolveActivity(contextHolder.getPackageManager())
-                if (componentName != null) {
-                    intent.apply {
-                        if (actualContext is Application) {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        } else {
-                            when (target.action.launchMode()) {
-                                LaunchMode.Standard -> {
-                                    //doNothing
-                                    LogUtil.log("enter this line Standard")
-                                }
-                                LaunchMode.SingleTop -> {
-                                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                                }
-                                LaunchMode.SingleTask -> {
-                                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                                }
-                                LaunchMode.NewTask -> {
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-                            }
-                        }
-                        putExtras(bundle)
-                        actualContext.startActivity(intent)
-                        return DirectRequestResult.ActivityResult(bundle, contextHolder)
-                    }
-                }
-                return DirectRequestResult.Empty(bundle, contextHolder)
-            }
-            is Target.FragmentTarget -> {
-                val result =
-                    target.action.factory().create(contextHolder, target.targetClazz, bundle)
-                target.action.inject(bundle, result)
-                return DirectRequestResult.FragmentResult(
-                    result,
-                    target.action,
-                    bundle,
-                    contextHolder
-                )
-            }
-            is Target.InterceptorTarget -> {
-                val result =
-                    target.action.factory().create(contextHolder, target.targetClazz)
-                target.action.inject(bundle, result)
-                return DirectRequestResult.InterceptorResult(
-                    result,
-                    target.action,
-                    bundle,
-                    contextHolder
-                )
-            }
-            is Target.SystemTarget -> {
-                val actualUri = ParameterSupport.getUriAsString(bundle)
-                val actualContext = contextHolder.getContext()
-                var intent = Intent.parseUri(actualUri, 0)
-                var info = actualContext.packageManager.resolveActivity(
-                    intent,
-                    PackageManager.MATCH_DEFAULT_ONLY
-                )
-                if (info != null) {
-                    if (info.activityInfo.packageName != actualContext.packageName) {
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    actualContext.startActivity(intent)
-                    return DirectRequestResult.ActivityResult(bundle, contextHolder)
-                }
-                intent = Intent(Intent.ACTION_VIEW)
-                intent.data = Uri.parse(actualUri)
-                intent.putExtras(bundle)
-                info = actualContext.packageManager.resolveActivity(
-                    intent,
-                    PackageManager.MATCH_DEFAULT_ONLY
-                )
-                with(info) {
-                    if (this == null) {
-                        LogUtil.log(
-                            "没找到对应路径{'${
-                                actualUri
-                            }'}的组件,请检查路径以及拦截器的设置"
-                        )
-                        return DirectRequestResult.Empty(bundle, contextHolder)
-                    } else {
-                        if (activityInfo.packageName != actualContext.packageName) {
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        actualContext.startActivity(intent)
-                        return DirectRequestResult.ActivityResult(bundle, contextHolder)
-                    }
-                }
-            }
-        }
+       return ActionCenter.getResultDirect(uri, bundle, contextHolder)
     }
+
+
 
 
     private fun ResultListenable<RequestParams>.toResponse(

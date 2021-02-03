@@ -2,10 +2,10 @@ package com.x930073498.component.auto
 
 
 fun interface Logger {
-    fun log(tag: String, msg: Any)
+    fun log(tag: String, msg: Any?)
 
     companion object : Logger {
-        override fun log(tag: String, msg: Any) {
+        override fun log(tag: String, msg: Any?) {
             println("$tag {$msg}")
         }
     }

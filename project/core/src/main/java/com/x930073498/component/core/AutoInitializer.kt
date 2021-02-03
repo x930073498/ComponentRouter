@@ -14,7 +14,3 @@ class AutoInitializer: Initializer<Unit> {
         return arrayListOf()
     }
 }
-val IAuto.app: Application
-    get() {
-        return AutoTaskRegister.app
-    }

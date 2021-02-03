@@ -19,7 +19,8 @@ internal val globalInterceptors = arrayListOf<Any>()
 internal var fragmentPropertyAutoInject = true
 internal var activityPropertyAutoInject = true
 
-object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,PropertyInjector by PropertyInjectorImpl() {
+object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,
+    PropertyInjector by PropertyInjectorImpl() {
 
     fun ofHandle(): ModuleHandle {
         return ActionCenter.moduleHandler
@@ -71,8 +72,18 @@ object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,PropertyInject
         return RouterImpl(uri)
     }
 
+
     fun from(url: String): IRequestRouter {
         return from(Uri.parse(url))
+    }
+
+
+    fun <T> create(clazz: Class<T>): IClassRequestRouter<T> {
+        return ClassRequestRouterImpl(clazz)
+    }
+
+    inline fun <reified T> create(): IClassRequestRouter<T> {
+        return create(T::class.java)
     }
 
     fun from(intent: Intent): IRequestRouter {

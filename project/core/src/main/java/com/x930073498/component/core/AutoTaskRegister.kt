@@ -84,7 +84,6 @@ internal object AutoTaskRegister {
     internal lateinit var app: Application
     private var hasInit = false
 
-    private val configList = arrayListOf<IConfiguration>()
 
     @JvmStatic
     internal fun init(context: Context) {
@@ -92,6 +91,7 @@ internal object AutoTaskRegister {
         val time = System.currentTimeMillis()
         app = getApplication(context)
         load()
+
         ConfigurationHolder.apply()
         //初始化配置
         ModuleHandler.doRegister()//初始化模块

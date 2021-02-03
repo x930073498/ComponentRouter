@@ -75,6 +75,7 @@ suspend fun <T> scopeResultOf(
     context: CoroutineContext? = null,
     init: suspend () -> T
 ): ResultListenable<T> {
+
     return CoroutineResult.create(
         CoroutineScope(coroutineContext),
         context ?: coroutineContext,
@@ -132,18 +133,24 @@ fun <T, R> ResultListenable<T>.map(
     }
 }
 
-fun <T> ResultListenable<T>.forceEnd(action: suspend (T) -> Unit = {}): DisposableHandle {
-    return createUpon<Unit> {
+fun <T> ResultListenable<T>.forceEnd(action: suspend (T) -> Unit = {}): ResultStayer<T> {
+    return createUpon {
+        setResult(it)
         action(it)
         sendAction(AwaitAction.EndForce())
     }
 }
 
-fun <T> ResultListenable<T>.end(action: suspend (T) -> Unit = {}): DisposableHandle {
-    return createUpon<Unit> {
+fun <T> ResultListenable<T>.end(action: suspend (T) -> Unit = {}): ResultStayer<T> {
+    return createUpon {
+        setResult(it)
         action(it)
         sendAction(AwaitAction.EndUntilAllTaskCompleted())
     }
+}
+
+suspend fun <T, R> T.result(): R where T : ResultListenable<R> {
+    return forceEnd().await()
 }
 
 
@@ -164,19 +171,24 @@ fun <T, R> ResultListenable<T>.cast(): ResultListenable<R> {
 }
 
 interface ResultListenable<T> : DisposableHandle,
+    ResultStayer<T>,
     ActionHandle<T>,
     ResultListenableBuilder<T> {
-    suspend fun await(): T
     fun hasResult(): Boolean
     override fun sendAction(action: AwaitAction<T>): ResultListenable<T>
     override fun invokeOnDispose(action: (Throwable?) -> Unit): ResultListenable<T>
     fun listen(callback: suspend (T) -> Unit): ResultListenable<T>
 }
 
+interface ResultStayer<T> : DisposableHandle {
+    suspend fun await(): T
+}
+
 interface ResultListenableBuilder<T> : DisposableHandle {
     fun <R> createUpon(
         setter: suspend ResultSetter<R>.(T) -> Unit
     ): ResultListenable<R>
+
     override fun invokeOnDispose(action: (Throwable?) -> Unit): ResultListenableBuilder<T>
 }
 

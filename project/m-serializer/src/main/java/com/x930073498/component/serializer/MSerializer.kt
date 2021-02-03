@@ -7,11 +7,12 @@ import java.lang.reflect.Type
 
 class MSerializer : ISerializer, IModuleRegister, IAuto {
     private val moshi = Moshi.Builder().build()
-    override fun <T : Any> serialize(data: T): String {
+    override fun <T> serialize(data: T): String {
+        if (data == null) return ""
         return moshi.adapter(data.javaClass).toJson(data)
     }
 
-    override fun <T : Any> deserialize(source: String, type: Type): T? {
+    override fun <T> deserialize(source: String, type: Type): T? {
         return moshi.adapter<T>(type).fromJson(source)
     }
 

@@ -15,6 +15,18 @@ import com.x930073498.component.router.response.RouterResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlin.coroutines.CoroutineContext
 
+abstract class IClassRequestRouter<T> internal constructor(val clazz: Class<T>){
+
+    @MainThread
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    internal abstract fun requestInternalWithClass(
+        context: Context? = null,
+        request: IRouterHandler.() -> Unit = {}
+    ): T?
+}
+
+
+
 abstract class IRequestRouter internal constructor() {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal abstract suspend fun requestInternal(
@@ -47,60 +59,3 @@ abstract class IRequestRouter internal constructor() {
 
 }
 
-sealed class DirectRequestResult(
-    open val result: Any?,
-    open val action: ActionDelegate?,
-    val bundle: Bundle,
-    val contextHolder: ContextHolder
-) {
-    class MethodResult internal constructor(
-        override val result: MethodInvoker,
-        override val action: MethodActionDelegate,
-        bundle: Bundle,
-        contextHolder: ContextHolder
-    ) : DirectRequestResult(result, action, bundle, contextHolder)
-
-    class FragmentResult internal constructor(
-        override val result: Fragment,
-        override val action: FragmentActionDelegate,
-        bundle: Bundle,
-        contextHolder: ContextHolder
-    ) : DirectRequestResult(result, action, bundle, contextHolder) {
-        fun <T : Fragment> getFragment(): T {
-            return result as T
-        }
-
-    }
-
-    class ServiceResult internal constructor(
-        override val result: IService,
-        override val action: ServiceActionDelegate,
-        bundle: Bundle,
-        contextHolder: ContextHolder
-    ) : DirectRequestResult(result, action, bundle, contextHolder) {
-        fun <T> getService(): T {
-            return result as T
-        }
-
-    }
-
-    class InterceptorResult internal constructor(
-        override val result: RouterInterceptor,
-        override val action: InterceptorActionDelegate,
-        bundle: Bundle,
-        contextHolder: ContextHolder
-    ) : DirectRequestResult(result, action, bundle, contextHolder)
-
-    class ActivityResult internal constructor(
-        bundle: Bundle,
-        contextHolder: ContextHolder
-    ) : DirectRequestResult(null, null, bundle, contextHolder)
-
-    class Empty internal constructor(
-        bundle: Bundle,
-        contextHolder: ContextHolder
-    ) : DirectRequestResult(null, null, bundle, contextHolder)
-
-    object Ignore : DirectRequestResult(null, null, bundleOf(), ContextHolder.create())
-
-}

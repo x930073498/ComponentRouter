@@ -5,6 +5,7 @@ import com.x930073498.component.router.impl.IService
 import com.x930073498.component.router.navigator.impl.ServiceNavigatorImpl
 
 
+
 interface ServiceNavigator : Navigator {
     fun getService(): ResultListenable<IService>
     fun <T : IService> getInstanceService(clazz: Class<T>): ResultListenable<T>

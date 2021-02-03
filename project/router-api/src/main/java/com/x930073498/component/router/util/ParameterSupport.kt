@@ -1261,7 +1261,6 @@ object ParameterSupport {
         }
         val query = getQueryString(bundle, key)
         if (!query.isNullOrEmpty()) {
-            LogUtil.log("enter this line query")
             if (type.isAssignableTo<String>()) {
                 (query as? T)?.let {
                     return it

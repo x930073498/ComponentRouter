@@ -3,20 +3,26 @@
 package com.x930073498.component.router.action
 
 import android.app.Activity
+import android.app.Application
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Bundle
 import androidx.collection.ArrayMap
 import androidx.collection.arrayMapOf
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import com.x930073498.component.annotations.ActivityAnnotation
-import com.x930073498.component.annotations.FragmentAnnotation
-import com.x930073498.component.annotations.ServiceAnnotation
-import com.x930073498.component.annotations.realPath
+import com.x930073498.component.annotations.*
+import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.core.isMainThread
 import com.x930073498.component.router.Router
+import com.x930073498.component.router.core.DirectRequestResult
 import com.x930073498.component.router.impl.ActionDelegate
 import com.x930073498.component.router.impl.IService
 import com.x930073498.component.router.impl.ServiceActionDelegate
 import com.x930073498.component.router.impl.SystemActionDelegate
+import com.x930073498.component.router.thread.IThread
+import com.x930073498.component.router.util.ParameterSupport
 import com.x930073498.component.router.util.authorityAndPath
 import java.util.concurrent.locks.ReentrantLock
 
@@ -295,21 +301,22 @@ object ActionCenter {
     }
 
 
-    fun <T> getService(clazz: Class<T>): T? where T : IService {
-        return getServiceInternal(clazz)
+    private fun checkThread(thread: IThread) {
+        when (thread) {
+            IThread.UI -> {
+                if (!isMainThread) throw RuntimeException("请在主线程调用")
+            }
+            IThread.WORKER -> {
+                if (isMainThread) throw RuntimeException("请在子线程调用")
+            }
+            IThread.ANY -> {
+
+            }
+        }
     }
 
-    fun <T> getService(path: String): T? where T : IService {
-        val action = getAction(path)
-        return if (action is ServiceActionDelegate) {
-            action.factory()
-                .create(ContextHolder.create(), action.target.targetClazz, bundleOf()) as? T
-        } else null
 
-    }
-
-
-    private fun <T> getServiceInternal(clazz: Class<T>): T? where T : IService {
+    internal fun <T> getTarget(clazz: Class<T>, bundle: Bundle, contextHolder: ContextHolder): T? {
         if (!Router.hasInit) {
             throw RuntimeException("Router 尚未初始化成功")
         }
@@ -318,20 +325,59 @@ object ActionCenter {
             loadedMap.values.forEach { map ->
                 map.values.forEach {
                     with(it.target) {
-                        if (this is Target.ServiceTarget && clazz.isAssignableFrom(targetClazz)) {
+                        if (clazz.isAssignableFrom(targetClazz)) {
                             lock.unlock()
-                            return action.factory().create(
-                                ContextHolder.create(), action.target.targetClazz,
-                                bundleOf()
-                            ) as? T
+                            when (this) {
+                                is Target.ServiceTarget -> {
+                                    checkThread(action.thread)
+                                    return clazz.cast(
+                                        action.factory().create(contextHolder, targetClazz, bundle)
+                                            .apply {
+                                                init(contextHolder, bundle)
+                                                action.inject(bundle, this)
+                                            }
+                                    )
+                                }
+                                is Target.MethodTarget -> {
+                                    checkThread(action.thread)
+                                    return clazz.cast(
+                                        action.factory().create(contextHolder, targetClazz, bundle)
+                                            .apply {
+                                                action.inject(bundle, this)
+                                            }
+                                    )
+                                }
+                                is Target.ActivityTarget -> return null
+                                is Target.FragmentTarget -> {
+                                    checkThread(action.thread)
+                                    return clazz.cast(
+                                        action.factory().create(contextHolder, targetClazz, bundle)
+                                            .apply {
+                                                action.inject(bundle, this)
+                                            })
+                                }
+                                is Target.InterceptorTarget -> {
+                                    checkThread(action.thread)
+                                    return clazz.cast(
+                                        action.factory().create(contextHolder, targetClazz).apply {
+                                            action.inject(bundle, this)
+                                        })
+                                }
+                                is Target.SystemTarget -> return null
+                            }
+
                         }
                     }
                 }
             }
             lock.unlock()
         }
-        return null
 
+        return null
+    }
+
+    private fun <T> getServiceInternal(clazz: Class<T>): T? where T : IService {
+        return getTarget(clazz, bundleOf(), ContextHolder.create())
     }
 
 
@@ -349,5 +395,134 @@ object ActionCenter {
         return group
     }
 
-
+    internal fun getResultDirect(
+        uri: Uri,
+        bundle: Bundle,
+        contextHolder: ContextHolder
+    ): DirectRequestResult {
+        val action = getAction(uri)
+        when (val target = action.target) {
+            is Target.ServiceTarget -> {
+                checkThread(target.action.thread)
+                val result =
+                    target.action.factory().create(contextHolder, target.targetClazz, bundle)
+                target.action.inject(bundle, result)
+                return DirectRequestResult.ServiceResult(
+                    result,
+                    target.action,
+                    bundle,
+                    contextHolder
+                )
+            }
+            is Target.MethodTarget -> {
+                checkThread(target.action.thread)
+                val result =
+                    target.action.factory().create(contextHolder, target.targetClazz, bundle)
+                target.action.inject(bundle, result)
+                return DirectRequestResult.MethodResult(
+                    result,
+                    target.action,
+                    bundle,
+                    contextHolder
+                )
+            }
+            is Target.ActivityTarget -> {
+                checkThread(target.action.thread)
+                val actualContext = contextHolder.getContext()
+                val intent = Intent(actualContext, target.targetClazz)
+                val componentName = intent.resolveActivity(contextHolder.getPackageManager())
+                if (componentName != null) {
+                    intent.apply {
+                        if (actualContext is Application) {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        } else {
+                            when (target.action.launchMode()) {
+                                LaunchMode.Standard -> {
+                                    //doNothing
+                                    LogUtil.log("enter this line Standard")
+                                }
+                                LaunchMode.SingleTop -> {
+                                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                }
+                                LaunchMode.SingleTask -> {
+                                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                                }
+                                LaunchMode.NewTask -> {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            }
+                        }
+                        putExtras(bundle)
+                        actualContext.startActivity(intent)
+                        return DirectRequestResult.ActivityResult(bundle, contextHolder)
+                    }
+                }
+                return DirectRequestResult.Empty(bundle, contextHolder)
+            }
+            is Target.FragmentTarget -> {
+                checkThread(target.action.thread)
+                val result =
+                    target.action.factory().create(contextHolder, target.targetClazz, bundle)
+                target.action.inject(bundle, result)
+                return DirectRequestResult.FragmentResult(
+                    result,
+                    target.action,
+                    bundle,
+                    contextHolder
+                )
+            }
+            is Target.InterceptorTarget -> {
+                checkThread(target.action.thread)
+                val result =
+                    target.action.factory().create(contextHolder, target.targetClazz)
+                target.action.inject(bundle, result)
+                return DirectRequestResult.InterceptorResult(
+                    result,
+                    target.action,
+                    bundle,
+                    contextHolder
+                )
+            }
+            is Target.SystemTarget -> {
+                val actualUri = ParameterSupport.getUriAsString(bundle)
+                val actualContext = contextHolder.getContext()
+                var intent = Intent.parseUri(actualUri, 0)
+                var info = actualContext.packageManager.resolveActivity(
+                    intent,
+                    PackageManager.MATCH_DEFAULT_ONLY
+                )
+                if (info != null) {
+                    if (info.activityInfo.packageName != actualContext.packageName) {
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    actualContext.startActivity(intent)
+                    return DirectRequestResult.ActivityResult(bundle, contextHolder)
+                }
+                intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse(actualUri)
+                intent.putExtras(bundle)
+                info = actualContext.packageManager.resolveActivity(
+                    intent,
+                    PackageManager.MATCH_DEFAULT_ONLY
+                )
+                with(info) {
+                    return if (this == null) {
+                        LogUtil.log(
+                            "没找到对应路径{'${
+                                actualUri
+                            }'}的组件,请检查路径以及拦截器的设置"
+                        )
+                        DirectRequestResult.Empty(bundle, contextHolder)
+                    } else {
+                        if (activityInfo.packageName != actualContext.packageName) {
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        actualContext.startActivity(intent)
+                        DirectRequestResult.ActivityResult(bundle, contextHolder)
+                    }
+                }
+            }
+        }
+    }
 }
