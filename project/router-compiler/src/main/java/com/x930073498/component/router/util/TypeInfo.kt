@@ -593,6 +593,13 @@ class FragmentInfo(
         )
     }
 
+    override fun generateThreadCode(typeSpec: TypeSpec.Builder) {
+        typeSpec.addProperty(
+            PropertySpec.builder("thread", I_THREAD_NAME, KModifier.OVERRIDE)
+                .initializer("%T.%L", I_THREAD_NAME, "UI")
+                .build()
+        )
+    }
     override fun generateTargetReturnCode(funSpec: FunSpec.Builder) {
         funSpec.addStatement(
             "return %T(%T::class.java,this)",

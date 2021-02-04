@@ -11,6 +11,9 @@ interface TestService : IService {
     fun test()
 }
 
+interface TestService1 : TestService
+
+
 @ServiceAnnotation(
     path = "/test/service/parent",
     singleton = true,
@@ -30,6 +33,28 @@ open class TestParentServiceImpl : TestService {
 
     override fun test() {
         LogUtil.log("enter this line TestService")
+    }
+}
+
+@ServiceAnnotation(
+    path = "/test/service/1",
+    singleton = true,
+    autoInvoke = true,
+)
+ class TestParentService1 : TestService1 {
+    init {
+        LogUtil.log("enter this line init TestParentService1")
+    }
+
+    @ValueAutowiredAnnotation("testA")
+    var a: String? = ""
+
+    override suspend fun invoke() {
+        LogUtil.log(a)
+    }
+
+    override fun test() {
+        LogUtil.log("enter this line TestService1")
     }
 }
 

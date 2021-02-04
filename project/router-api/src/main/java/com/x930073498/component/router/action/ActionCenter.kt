@@ -125,47 +125,34 @@ object ActionCenter {
     private val unloadedMap = arrayMapOf<String, ArrayMap<String, ActionDelegate>>()
 
     internal var checkKeyUnique = false
-    private val lock = ReentrantLock()
 
 
     private fun unloadGroup(group: String): Boolean {
-        if (lock.tryLock()) {
-            lock.lock()
-            val removed = loadedMap.remove(group) ?: run {
-                lock.unlock()
-                return unloadedMap.containsKey(group)
-            }
-            var groupMap = unloadedMap[group]
-            if (groupMap == null) {
-                groupMap = arrayMapOf()
-                unloadedMap[group] = groupMap
-            }
-            groupMap.putAll(removed as Map<String, ActionDelegate>)
-            lock.unlock()
-            return true
-        } else {
-            return false
+        val removed = loadedMap.remove(group) ?: run {
+            return unloadedMap.containsKey(group)
         }
+        var groupMap = unloadedMap[group]
+        if (groupMap == null) {
+            groupMap = arrayMapOf()
+            unloadedMap[group] = groupMap
+        }
+        groupMap.putAll(removed as Map<String, ActionDelegate>)
+        return true
+
 
     }
 
     private fun loadGroup(group: String): Boolean {
-        if (lock.tryLock()) {
-            lock.lock()
-            val removed = unloadedMap.remove(group) ?: run {
-                lock.unlock()
-                return loadedMap.containsKey(group)
-            }
-            var groupMap = loadedMap[group]
-            if (groupMap == null) {
-                groupMap = arrayMapOf()
-                loadedMap[group] = groupMap
-            }
-            groupMap.putAll(removed as Map<String, ActionDelegate>)
-            lock.unlock()
-            return true
+        val removed = unloadedMap.remove(group) ?: run {
+            return loadedMap.containsKey(group)
         }
-        return false
+        var groupMap = loadedMap[group]
+        if (groupMap == null) {
+            groupMap = arrayMapOf()
+            loadedMap[group] = groupMap
+        }
+        groupMap.putAll(removed as Map<String, ActionDelegate>)
+        return true
     }
 
     private fun unloadRealPath(realPath: String): Boolean {
@@ -184,27 +171,21 @@ object ActionCenter {
         path: String,
         isRealPath: Boolean = false
     ): Boolean {
-        if (lock.tryLock()) {
-            lock.lock()
-            val realPath = if (isRealPath) path else "/$group$path"
-            val loadedGroup = loadedMap[group] ?: run {
-                lock.unlock()
-                return getPathState(group, path, isRealPath) is PathState.UNLOADED
-            }
-            val removed = loadedGroup.remove(realPath) ?: run {
-                lock.unlock()
-                return getPathState(group, path, isRealPath) is PathState.UNLOADED
-            }
-            var unloadedGroup = unloadedMap[group]
-            if (unloadedGroup == null) {
-                unloadedGroup = arrayMapOf()
-                unloadedMap[group] = unloadedGroup
-            }
-            unloadedGroup[realPath] = removed
-            lock.unlock()
-            return true
+        val realPath = if (isRealPath) path else "/$group$path"
+        val loadedGroup = loadedMap[group] ?: run {
+            return getPathState(group, path, isRealPath) is PathState.UNLOADED
         }
-        return false
+        val removed = loadedGroup.remove(realPath) ?: run {
+            return getPathState(group, path, isRealPath) is PathState.UNLOADED
+        }
+        var unloadedGroup = unloadedMap[group]
+        if (unloadedGroup == null) {
+            unloadedGroup = arrayMapOf()
+            unloadedMap[group] = unloadedGroup
+        }
+        unloadedGroup[realPath] = removed
+        return true
+
 
     }
 
@@ -213,27 +194,21 @@ object ActionCenter {
         path: String,
         isRealPath: Boolean = false
     ): Boolean {
-        if (lock.tryLock()) {
-            lock.lock()
-            val realPath = if (isRealPath) path else "/$group$path"
-            val unloadGroup = unloadedMap[group] ?: run {
-                lock.unlock()
-                return getPathState(group, path, isRealPath) is PathState.LOADED
-            }
-            val removed = unloadGroup.remove(realPath) ?: run {
-                lock.unlock()
-                return getPathState(group, path, isRealPath) is PathState.LOADED
-            }
-            var loadedGroup = loadedMap[group]
-            if (loadedGroup == null) {
-                loadedGroup = arrayMapOf()
-                loadedMap[group] = loadedGroup
-            }
-            loadedGroup[realPath] = removed
-            lock.unlock()
-            return true
+        val realPath = if (isRealPath) path else "/$group$path"
+        val unloadGroup = unloadedMap[group] ?: run {
+            return getPathState(group, path, isRealPath) is PathState.LOADED
         }
-        return false
+        val removed = unloadGroup.remove(realPath) ?: run {
+            return getPathState(group, path, isRealPath) is PathState.LOADED
+        }
+        var loadedGroup = loadedMap[group]
+        if (loadedGroup == null) {
+            loadedGroup = arrayMapOf()
+            loadedMap[group] = loadedGroup
+        }
+        loadedGroup[realPath] = removed
+        return true
+
     }
 
     private fun register(
@@ -302,82 +277,63 @@ object ActionCenter {
 
 
     private fun checkThread(thread: IThread) {
-        when (thread) {
-            IThread.UI -> {
-                if (!isMainThread) throw RuntimeException("请在主线程调用")
-            }
-            IThread.WORKER -> {
-                if (isMainThread) throw RuntimeException("请在子线程调用")
-            }
-            IThread.ANY -> {
-
-            }
+        if (thread == IThread.UI && !isMainThread) {
+            throw RuntimeException("请在主线程调用")
+        } else if (thread == IThread.WORKER && isMainThread) {
+            throw RuntimeException("请在子线程调用")
         }
     }
 
 
     internal fun <T> getTarget(clazz: Class<T>, bundle: Bundle, contextHolder: ContextHolder): T? {
-        if (!Router.hasInit) {
-            throw RuntimeException("Router 尚未初始化成功")
-        }
-        if (lock.tryLock()) {
-            lock.lock()
-            loadedMap.values.forEach { map ->
-                map.values.forEach {
-                    with(it.target) {
-                        if (clazz.isAssignableFrom(targetClazz)) {
-                            lock.unlock()
-                            when (this) {
-                                is Target.ServiceTarget -> {
-                                    checkThread(action.thread)
-                                    return clazz.cast(
-                                        action.factory().create(contextHolder, targetClazz, bundle)
-                                            .apply {
-                                                init(contextHolder, bundle)
-                                                action.inject(bundle, this)
-                                            }
-                                    )
-                                }
-                                is Target.MethodTarget -> {
-                                    checkThread(action.thread)
-                                    return clazz.cast(
-                                        action.factory().create(contextHolder, targetClazz, bundle)
-                                            .apply {
-                                                action.inject(bundle, this)
-                                            }
-                                    )
-                                }
-                                is Target.ActivityTarget -> return null
-                                is Target.FragmentTarget -> {
-                                    checkThread(action.thread)
-                                    return clazz.cast(
-                                        action.factory().create(contextHolder, targetClazz, bundle)
-                                            .apply {
-                                                action.inject(bundle, this)
-                                            })
-                                }
-                                is Target.InterceptorTarget -> {
-                                    checkThread(action.thread)
-                                    return clazz.cast(
-                                        action.factory().create(contextHolder, targetClazz).apply {
+        loadedMap.values.iterator().forEach { map ->
+            map.values.iterator().forEach {
+                with(it.target) {
+                    if (clazz.isAssignableFrom(targetClazz)) {
+                        when (this) {
+                            is Target.ServiceTarget -> {
+                                checkThread(action.thread)
+                                return clazz.cast(
+                                    action.factory().create(contextHolder, targetClazz, bundle)
+                                        .apply {
+                                            init(contextHolder, bundle)
+                                            action.inject(bundle, this)
+                                        }
+                                )
+                            }
+                            is Target.MethodTarget -> {
+                                checkThread(action.thread)
+                                return clazz.cast(
+                                    action.factory().create(contextHolder, targetClazz, bundle)
+                                        .apply {
+                                            action.inject(bundle, this)
+                                        }
+                                )
+                            }
+                            is Target.ActivityTarget -> return null
+                            is Target.FragmentTarget -> {
+                                checkThread(action.thread)
+                                return clazz.cast(
+                                    action.factory().create(contextHolder, targetClazz, bundle)
+                                        .apply {
                                             action.inject(bundle, this)
                                         })
-                                }
-                                is Target.SystemTarget -> return null
                             }
-
+                            is Target.InterceptorTarget -> {
+                                checkThread(action.thread)
+                                return clazz.cast(
+                                    action.factory().create(contextHolder, targetClazz).apply {
+                                        action.inject(bundle, this)
+                                    })
+                            }
+                            is Target.SystemTarget -> return null
                         }
+
                     }
                 }
             }
-            lock.unlock()
         }
-
         return null
-    }
-
-    private fun <T> getServiceInternal(clazz: Class<T>): T? where T : IService {
-        return getTarget(clazz, bundleOf(), ContextHolder.create())
     }
 
 

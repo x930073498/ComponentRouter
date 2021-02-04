@@ -12,8 +12,12 @@ fun interface Logger {
 }
 
 object LogUtil {
+    private var defaultTag="x930073498-component"
     internal var debug = true
     private var logger: Logger = Logger.Companion
+    fun setDefaultLogTag(tag:String){
+        defaultTag=tag
+    }
     fun setLogger(logger: Logger) {
         this.logger = logger
     }
@@ -22,7 +26,7 @@ object LogUtil {
     fun log(msg: Any?) {
         if (debug) {
             if (msg == null) return
-            logger.log("x930073498-component", msg)
+            logger.log(defaultTag, msg)
         }
 
     }

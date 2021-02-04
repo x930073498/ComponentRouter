@@ -18,5 +18,9 @@ internal class DefaultHandleAction : HandleAction {
         LogUtil.setLogger(logger)
     }
 
+    override fun setLogTag(tag: String) {
+        LogUtil.setDefaultLogTag(tag)
+    }
+
 
 }

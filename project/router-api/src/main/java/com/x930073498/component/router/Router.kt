@@ -2,17 +2,14 @@
 
 package com.x930073498.component.router
 
-import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ModuleHandle
 import com.x930073498.component.router.core.*
-import com.x930073498.component.router.core.RouterImpl
 import com.x930073498.component.router.impl.InterceptorActionDelegate
 import com.x930073498.component.router.impl.RouterInterceptor
-import kotlin.properties.Delegates
 
 internal val globalInterceptors = arrayListOf<Any>()
 
@@ -39,14 +36,9 @@ object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,
         globalInterceptors.addAll(path.asList())
     }
 
-    internal var app by Delegates.notNull<Application>()
-    internal var hasInit = false
 
     @Synchronized
-    override fun init(app: Application): InitI {
-        if (hasInit) return this
-        this.app = app
-        hasInit = true
+    override fun init(): InitI {
         return this
     }
 

@@ -13,4 +13,6 @@ interface HandleAction : Action, IAuto {
     fun setSerializer(serializer: ISerializer)
 
     fun setLogger(logger: Logger)
+
+    fun setLogTag(tag:String)
 }

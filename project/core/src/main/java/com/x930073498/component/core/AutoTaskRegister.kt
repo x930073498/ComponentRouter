@@ -90,8 +90,13 @@ internal object AutoTaskRegister {
         if (hasInit) return
         val time = System.currentTimeMillis()
         app = getApplication(context)
+        LogUtil.setLogger { tag, msg ->
+            val msgString = if (msg is String) msg else runCatching {
+                getSerializer().serialize(msg)
+            }.getOrNull() ?: msg.toString()
+            Log.d(tag, msgString)
+        }
         load()
-
         ConfigurationHolder.apply()
         //初始化配置
         ModuleHandler.doRegister()//初始化模块
@@ -123,7 +128,7 @@ internal object AutoTaskRegister {
     @JvmStatic
     private fun register(task: IAuto) {
         if (task is IConfiguration) {
-           ConfigurationHolder.register(task)
+            ConfigurationHolder.register(task)
         }
         if (task is IApplicationLifecycle) {
             task.doRegister()

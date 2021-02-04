@@ -15,7 +15,6 @@ import com.x930073498.component.router.fragmentPropertyAutoInject
 
 class RouterInjectTask : IAuto, IActivityLifecycle, IApplicationLifecycle, IFragmentLifecycle {
     override fun onApplicationCreated(app: Application) {
-        Router.init(app)
     }
 
     private val activityInjectList = arrayListOf<Activity>()

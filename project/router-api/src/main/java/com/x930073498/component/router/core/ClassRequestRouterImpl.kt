@@ -14,7 +14,6 @@ internal class ClassRequestRouterImpl<T>(clazz: Class<T>) : IClassRequestRouter<
         context: Context?,
         request: IRouterHandler.() -> Unit
     ): T? {
-
         request(mHandler)
         val bundle = mHandler.mBundle
         val uri = mHandler.uriBuilder.build()

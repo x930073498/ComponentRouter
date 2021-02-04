@@ -11,19 +11,10 @@ import androidx.lifecycle.lifecycleScope
 import com.just.agentweb.AgentWebConfig
 import com.x930073498.component.annotations.ActivityAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
-import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.Router
-import com.x930073498.component.router.coroutines.result
-import com.x930073498.component.router.navigator.impl.getInstanceService
-import com.x930073498.component.router.request
 import com.x930073498.component.router.requestService
-import com.x930073498.component.router.scopeService
-import com.x930073498.component.test.TestService
-import com.x930073498.component.test.TestServiceImpl
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import com.x930073498.component.test.TestService1
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class Sp<T> : SparseArray<T>()
 
@@ -67,7 +58,7 @@ class MainActivity : AppCompatActivity() {
 //                    LogUtil.log("enter this line 989f7444")
 //                    service.test()
 //                }
-                Router.create<TestServiceImpl>().requestService() {
+                Router.create<TestService1>().requestService() {
                     appendQuery("testA","enter this line 3as")
                 }?.apply {
                     test()
