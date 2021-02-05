@@ -38,10 +38,11 @@ open class TestParentServiceImpl : TestService {
 
 @ServiceAnnotation(
     path = "/test/service/1",
+    interceptors = ["/test/interceptors/test2",   "/test/interceptors/test1"],
     singleton = true,
     autoInvoke = true,
 )
- class TestParentService1 : TestService1 {
+class TestParentService1 : TestService1 {
     init {
         LogUtil.log("enter this line init TestParentService1")
     }

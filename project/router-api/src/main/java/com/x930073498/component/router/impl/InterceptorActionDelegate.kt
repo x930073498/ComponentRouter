@@ -5,13 +5,17 @@ import com.x930073498.component.annotations.InterceptorScope
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.Target
 
-interface InterceptorActionDelegate : ActionDelegate {
+interface InterceptorActionDelegate : ActionDelegate, Comparable<InterceptorActionDelegate> {
     override fun type(): ActionType {
         return ActionType.INTERCEPTOR
     }
 
     override val target: Target.InterceptorTarget
-     fun factory(): Factory
+
+    val priority: Int
+        get() = 0
+
+    fun factory(): Factory
     val scope: InterceptorScope
         get() = InterceptorScope.NORMAL
 
@@ -20,7 +24,13 @@ interface InterceptorActionDelegate : ActionDelegate {
     }
 
 
+    override fun compareTo(other: InterceptorActionDelegate): Int {
+        val priorityResult = priority.compareTo(other.priority)
+        if (priorityResult != 0) return priorityResult
+        return scope.compareTo(other.scope)
+    }
+
     interface Factory {
-         fun create(contextHolder: ContextHolder, clazz: Class<*>): RouterInterceptor
+        fun create(contextHolder: ContextHolder, clazz: Class<*>): RouterInterceptor
     }
 }

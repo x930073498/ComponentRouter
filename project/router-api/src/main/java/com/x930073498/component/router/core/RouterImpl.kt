@@ -1,31 +1,25 @@
 package com.x930073498.component.router.core
 
-import android.app.Application
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.util.lruCache
-import androidx.fragment.app.Fragment
-import com.x930073498.component.annotations.LaunchMode
-import com.x930073498.component.auto.LogUtil
-import com.x930073498.component.core.isMainThread
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
-import com.x930073498.component.router.action.Target
 import com.x930073498.component.router.coroutines.ResultListenable
 import com.x930073498.component.router.coroutines.resultOf
 import com.x930073498.component.router.coroutines.scopeResultOf
-import com.x930073498.component.router.impl.*
+import com.x930073498.component.router.globalInterceptors
+import com.x930073498.component.router.impl.InterceptorActionDelegate
+import com.x930073498.component.router.impl.RouterInterceptor
+import com.x930073498.component.router.interceptor.Chain
 import com.x930073498.component.router.interceptor.onInterceptors
+import com.x930073498.component.router.request.RouterRequest
 import com.x930073498.component.router.request.routerRequest
 import com.x930073498.component.router.response.RouterResponse
 import com.x930073498.component.router.response.routerResponse
-import com.x930073498.component.router.thread.IThread
 import com.x930073498.component.router.util.ParameterSupport
 import kotlinx.coroutines.CoroutineScope
-import java.lang.RuntimeException
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
@@ -34,6 +28,7 @@ internal class RequestParams(
     val uri: Uri,
     val bundle: Bundle,
     val interceptors: List<String>,
+    val replaceInterceptors: List<String>,
     val isGreenChannel: Boolean
 ) {
     override fun equals(other: Any?): Boolean {
@@ -93,6 +88,7 @@ internal class RouterImpl private constructor(
                 mHandler.uriBuilder.build(),
                 mHandler.mBundle,
                 mHandler.interceptors,
+                mHandler.replaceInterceptors,
                 mHandler.greenChannel
             )
         }.toResponse(debounce, context)
@@ -112,12 +108,14 @@ internal class RouterImpl private constructor(
                 mHandler.uriBuilder.build(),
                 mHandler.mBundle,
                 mHandler.interceptors,
+                mHandler.replaceInterceptors,
                 mHandler.greenChannel
             )
         }
             .toResponse(debounce, context)
 
     }
+
     override fun requestInternalDirect(
         debounce: Long,
         context: Context?,
@@ -126,7 +124,7 @@ internal class RouterImpl private constructor(
         request(mHandler)
         val bundle = mHandler.mBundle
         val uri = mHandler.uriBuilder.build()
-        val params = RequestParams(uri, bundle, emptyList(), true)
+        val params = RequestParams(uri, bundle, emptyList(), emptyList(), true)
         val time = getParamsTime(params)
         setParamsTime(params)
         ParameterSupport.syncUriToBundle(uri, bundle)
@@ -134,10 +132,8 @@ internal class RouterImpl private constructor(
             return DirectRequestResult.Ignore
         }
         val contextHolder = ContextHolder.create(context)
-       return ActionCenter.getResultDirect(uri, bundle, contextHolder)
+        return ActionCenter.getResultDirect(uri, bundle, contextHolder)
     }
-
-
 
 
     private fun ResultListenable<RequestParams>.toResponse(
@@ -145,27 +141,31 @@ internal class RouterImpl private constructor(
         context: Context?,
     )
             : ResultListenable<RouterResponse> {
-        return createUpon {
-            val time = getParamsTime(it)
-            setParamsTime(it)
+        val contextHolder = ContextHolder.create(context)
+        return createUpon { setter ->
+            val time = getParamsTime(setter)
+            setParamsTime(setter)
             if (System.currentTimeMillis() - time > debounce) {
                 setResult(
-                    routerRequest(it.uri, it.bundle, context)
+                    routerRequest(setter.uri, setter.bundle)
                         .onInterceptors {
                             val request = request()
                             routerResponse(
                                 request.uri,
                                 request.bundle,
-                                request.contextHolder
+                                contextHolder
                             )
                         }.beforeIntercept {
                             request().syncUriToBundle()
                         }
                         .apply {
-                            if (!it.isGreenChannel) {
-                                add(ActionDelegateRouterInterceptor())
-                                add(PathRouterInterceptor(it.interceptors))
-                                add(GlobalInterceptor)
+                            if (!setter.isGreenChannel) {
+                                add(
+                                    InternalInterceptor(
+                                        setter.interceptors,
+                                        setter.replaceInterceptors
+                                    )
+                                )
                             }
                         }
                         .start())
@@ -174,4 +174,36 @@ internal class RouterImpl private constructor(
             }
         }
     }
+}
+
+internal class InternalInterceptor internal constructor(
+    private val handlerInterceptorList: List<String>,
+    private val replaceInterceptors: List<String>
+) :
+    RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+        val uri = chain.request().uri
+        val action = ActionCenter.getAction(uri)
+        val interceptors = globalInterceptors.sorted().toMutableList()
+        val actionInterceptors =
+            (if (replaceInterceptors.isNotEmpty()) replaceInterceptors else action.interceptors() + handlerInterceptorList).mapNotNull {
+                ActionCenter.getAction(it) as? InterceptorActionDelegate
+            }
+        val min = actionInterceptors.minOrNull()
+        if (min != null) {
+            val index = interceptors.indexOfFirst {
+                it > min
+            }
+            if (index >= 0) {
+                interceptors.addAll(index, actionInterceptors)
+            } else {
+                interceptors.addAll(0, actionInterceptors)
+            }
+        }
+        interceptors.reversed().forEach {
+            chain.addNext(it.factory().create(ContextHolder.create(), it.target.targetClazz))
+        }
+        return chain.process(chain.request())
+    }
+
 }

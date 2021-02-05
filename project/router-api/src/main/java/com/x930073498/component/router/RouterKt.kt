@@ -81,6 +81,11 @@ fun IRequestRouter.requestDirectAsService(
 ): DirectRequestResult.ServiceResult? {
     return requestInternalDirect(debounce, context, request) as? DirectRequestResult.ServiceResult
 }
+internal fun IRequestRouter.requestDirectAsInterceptor(
+    context: Context? = null,
+): DirectRequestResult.InterceptorResult? {
+    return requestInternalDirect(-1, context) as? DirectRequestResult.InterceptorResult
+}
 
 fun IRequestRouter.requestDirectAsFragment(
     debounce: Long = router_default_debounce,
@@ -249,6 +254,14 @@ suspend fun IRequestRouter.scopeMethod(
     return requestInternal(coroutineContext, debounce, context, request)
         .asNavigator()
         .asMethod(navigatorOption)
+}
+internal suspend fun IRequestRouter.scopeInterceptor(
+    coroutineContext: CoroutineContext? = null,
+    context: Context? = null,
+): InterceptorNavigator {
+    return requestInternal(coroutineContext, -1, context)
+        .asNavigator()
+        .asInterceptor()
 }
 
 suspend fun IRequestRouter.scopeRequest(

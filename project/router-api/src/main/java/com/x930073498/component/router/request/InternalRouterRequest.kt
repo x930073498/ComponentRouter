@@ -1,16 +1,14 @@
 package com.x930073498.component.router.request
 
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.os.bundleOf
-import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.util.ParameterSupport
 
-internal class InternalRouterRequest private constructor(context: Context?) : RouterRequest{
-    private val _contextHolder:ContextHolder = ContextHolder.create(context)
+internal class InternalRouterRequest private constructor() : RouterRequest{
 
-    constructor(uri: Uri, bundle: Bundle, context: Context? = null) : this(context) {
+
+    constructor(uri: Uri, bundle: Bundle) : this() {
         setBundle(bundle)
         setUri(uri)
     }
@@ -32,8 +30,7 @@ internal class InternalRouterRequest private constructor(context: Context?) : Ro
         get() = mUri
     override val bundle: Bundle
         get() = mBundle
-    override val contextHolder: ContextHolder
-        get() = _contextHolder
+
 
     override suspend fun buildUpon(): RouterRequest.Builder {
         return InternalRouterRequestBuilder(this)
@@ -57,6 +54,6 @@ internal class InternalRouterRequest private constructor(context: Context?) : Ro
 
 }
 
-fun routerRequest(uri: Uri, bundle: Bundle = bundleOf(),context: Context?=null): RouterRequest {
-    return InternalRouterRequest(uri, bundle,context)
+fun routerRequest(uri: Uri, bundle: Bundle = bundleOf()): RouterRequest {
+    return InternalRouterRequest(uri, bundle)
 }

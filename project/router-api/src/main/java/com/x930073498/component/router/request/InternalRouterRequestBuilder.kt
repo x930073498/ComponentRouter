@@ -9,11 +9,20 @@ internal class InternalRouterRequestBuilder(request: RouterRequest) : RouterRequ
     private var uri = request.uri
     private var bundle = Bundle(request.bundle)
     private val iBundle = createFormBundle(bundle)
+    override suspend fun uri(uri: Uri): RouterRequest.Builder {
+        this.uri = uri
+        return this
+    }
 
     override suspend fun uri(uriBuilder: suspend Uri.Builder.(Uri) -> Unit): RouterRequest.Builder {
         val builder = uri.buildUpon()
         uriBuilder.invoke(builder, uri)
         uri = builder.build()
+        return this
+    }
+
+    override suspend fun bundle(bundle: Bundle): RouterRequest.Builder {
+        this.bundle = bundle
         return this
     }
 

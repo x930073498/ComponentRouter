@@ -151,6 +151,9 @@ class DispatcherNavigator internal constructor(
             methodNavigatorOption ?: navigatorOption
         )
     }
+    internal fun asInterceptor(): InterceptorNavigator {
+        return InterceptorNavigator.create(navigatorParamsListenable.cast())
+    }
 
     internal fun asService(serviceNavigatorOption: NavigatorOption.ServiceNavigatorOption? = null): ServiceNavigator {
         return ServiceNavigator.create(

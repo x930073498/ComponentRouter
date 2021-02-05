@@ -11,7 +11,7 @@ import com.x930073498.component.router.core.*
 import com.x930073498.component.router.impl.InterceptorActionDelegate
 import com.x930073498.component.router.impl.RouterInterceptor
 
-internal val globalInterceptors = arrayListOf<Any>()
+internal val globalInterceptors = arrayListOf<InterceptorActionDelegate>()
 
 internal var fragmentPropertyAutoInject = true
 internal var activityPropertyAutoInject = true
@@ -24,17 +24,12 @@ object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,
     }
 
 
-    fun addGlobalInterceptor(vararg interceptor: RouterInterceptor) {
-        globalInterceptors.addAll(interceptor.asList())
-    }
 
     internal fun addGlobalInterceptor(vararg interceptor: InterceptorActionDelegate) {
         globalInterceptors.addAll(interceptor.asList())
     }
 
-    fun addGlobalInterceptor(vararg path: String) {
-        globalInterceptors.addAll(path.asList())
-    }
+
 
 
     @Synchronized

@@ -39,6 +39,7 @@ internal class InternalRouterHandler(uri: Uri = Uri.EMPTY) :
     internal var uriBuilder = uri.buildUpon()
     internal val mBundle = bundleOf()
     internal val interceptors = arrayListOf<String>()
+    internal val replaceInterceptors = arrayListOf<String>()
 
     internal var greenChannel = false
     private val iBundle = createFormBundle(mBundle)
@@ -178,6 +179,11 @@ internal class InternalRouterHandler(uri: Uri = Uri.EMPTY) :
     }
 
     override fun interceptors(vararg path: String): IRouterHandler {
+        replaceInterceptors.addAll(path.asList())
+        return this
+    }
+
+    override fun addInterceptor(vararg path: String): IRouterHandler {
         if (interceptors.isEmpty()) {
             if (path.isNotEmpty())
                 interceptors.addAll(path)

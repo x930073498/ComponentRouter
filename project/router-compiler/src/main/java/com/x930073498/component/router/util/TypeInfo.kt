@@ -194,7 +194,7 @@ sealed class TypeInfo constructor(
         if (interceptors.isEmpty()) return
         val parameters = interceptors.foldIndexed(StringBuilder()) { index, builder, it ->
             builder.apply {
-                append(it)
+                append("\"").append(it).append("\"")
                 if (index < interceptors.size - 1) {
                     append(",")
                 }
@@ -205,7 +205,7 @@ sealed class TypeInfo constructor(
         typeSpec.addFunction(
             FunSpec.builder("interceptors")
                 .addModifiers(KModifier.OVERRIDE)
-                .addStatement("return %M(%S)", memberName, parameters)
+                .addStatement("return %M(%L)", memberName, parameters)
                 .build()
         )
     }
@@ -360,6 +360,11 @@ class InterceptorInfo(
         typeSpec.addProperty(
             PropertySpec.builder("scope", InterceptorScope::class, KModifier.OVERRIDE)
                 .initializer("%T.%L", InterceptorScope::class, annotation.scope.name)
+                .build()
+        )
+        typeSpec.addProperty(
+            PropertySpec.builder("priority", Int::class, KModifier.OVERRIDE)
+                .initializer("%L", annotation.priority)
                 .build()
         )
     }
