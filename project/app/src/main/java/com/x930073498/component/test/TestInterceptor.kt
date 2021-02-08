@@ -54,7 +54,6 @@ class TestGlobal2Interceptor : RouterInterceptor {
 @InterceptorAnnotation(
     "/test/interceptors/testGlobal2",
     scope = InterceptorScope.GLOBAL,
-    priority =1000
 )
 class TestGlobal1Interceptor : RouterInterceptor {
     override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {

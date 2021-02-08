@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.core.util.lruCache
+import com.x930073498.component.annotations.InterceptorAnnotation
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.coroutines.ResultListenable
@@ -161,10 +163,12 @@ internal class RouterImpl private constructor(
                         .apply {
                             if (!setter.isGreenChannel) {
                                 add(
-                                    InternalInterceptor(
+                                    PreGlobalInterceptor(),
+                                    ActionInterceptor(
                                         setter.interceptors,
                                         setter.replaceInterceptors
-                                    )
+                                    ),
+                                    ProGlobalInterceptor()
                                 )
                             }
                         }
@@ -176,6 +180,50 @@ internal class RouterImpl private constructor(
     }
 }
 
+
+internal class PreGlobalInterceptor internal constructor() : RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+        var preGlobalInterceptors =
+            globalInterceptors.filter { it.priority < InterceptorAnnotation.DEFAULT_PRIORITY }
+        preGlobalInterceptors = preGlobalInterceptors.sorted().reversed()
+        preGlobalInterceptors.forEach {
+            chain.addNext(it.factory().create(ContextHolder.create(), it.target.targetClazz))
+        }
+        return chain.process(chain.request())
+    }
+}
+
+internal class ProGlobalInterceptor internal constructor() : RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+        var proGlobalInterceptors =
+            globalInterceptors.filter { it.priority >= InterceptorAnnotation.DEFAULT_PRIORITY }
+        proGlobalInterceptors = proGlobalInterceptors.sorted().reversed()
+        proGlobalInterceptors.forEach {
+            chain.addNext(it.factory().create(ContextHolder.create(), it.target.targetClazz))
+        }
+        return chain.process(chain.request())
+    }
+}
+
+internal class ActionInterceptor internal constructor(
+    private val handlerInterceptorList: List<String>,
+    private val replaceInterceptors: List<String>
+) : RouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+        val uri = chain.request().uri
+        val action = ActionCenter.getAction(uri)
+        val actionInterceptors =
+            (if (replaceInterceptors.isNotEmpty()) replaceInterceptors else action.interceptors() + handlerInterceptorList).mapNotNull {
+                ActionCenter.getAction(it) as? InterceptorActionDelegate
+            }.reversed()
+        actionInterceptors.forEach {
+            chain.addNext(it.factory().create(ContextHolder.create(), it.target.targetClazz))
+        }
+        return chain.process(chain.request())
+    }
+
+}
+
 internal class InternalInterceptor internal constructor(
     private val handlerInterceptorList: List<String>,
     private val replaceInterceptors: List<String>
@@ -184,6 +232,17 @@ internal class InternalInterceptor internal constructor(
     override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
         val uri = chain.request().uri
         val action = ActionCenter.getAction(uri)
+        LogUtil.log("开始拦截，uri=$uri")
+        LogUtil.log(
+            "handlerInterceptorList=${
+                handlerInterceptorList.toTypedArray().contentDeepToString()
+            }"
+        )
+        LogUtil.log(
+            "replaceInterceptors=${
+                replaceInterceptors.toTypedArray().contentDeepToString()
+            }"
+        )
         val interceptors = globalInterceptors.sorted().toMutableList()
         val actionInterceptors =
             (if (replaceInterceptors.isNotEmpty()) replaceInterceptors else action.interceptors() + handlerInterceptorList).mapNotNull {
@@ -200,6 +259,7 @@ internal class InternalInterceptor internal constructor(
                 interceptors.addAll(0, actionInterceptors)
             }
         }
+        LogUtil.log("拦截器path=${interceptors.map { it.path }.toTypedArray().contentDeepToString()}")
         interceptors.reversed().forEach {
             chain.addNext(it.factory().create(ContextHolder.create(), it.target.targetClazz))
         }

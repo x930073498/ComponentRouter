@@ -10,7 +10,7 @@ annotation class InterceptorAnnotation(
     val desc: String = "",
     val autoRegister: Boolean = true,
     @IntRange(from = 0, to = Int.MAX_VALUE.toLong())
-    val priority: Int = DEFAULT_PRIORITY,//仅当与globalInterceptor 比较排序时有用，当scope为Normal时不建议修改默认值
+    val priority: Int = DEFAULT_PRIORITY,//仅当scope 不是Normal时有效，scope为normal时priority无效，隐性priority为255
     val scope: InterceptorScope = InterceptorScope.NORMAL
 ) {
     companion object {
