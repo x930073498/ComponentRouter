@@ -3,7 +3,8 @@ package com.x930073498.component.test
 import com.x930073498.component.annotations.InterceptorAnnotation
 import com.x930073498.component.annotations.InterceptorScope
 import com.x930073498.component.auto.LogUtil
-import com.x930073498.component.router.impl.RouterInterceptor
+import com.x930073498.component.router.impl.CoroutineRouterInterceptor
+import com.x930073498.component.router.impl.DirectRouterInterceptor
 import com.x930073498.component.router.interceptor.Chain
 import com.x930073498.component.router.request.RouterRequest
 import com.x930073498.component.router.response.RouterResponse
@@ -12,8 +13,8 @@ import com.x930073498.component.router.response.RouterResponse
     "/test/interceptors/test1",
     scope = InterceptorScope.NORMAL
 )
-class TestInterceptor : RouterInterceptor {
-    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+class TestInterceptor : DirectRouterInterceptor {
+    override fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
         LogUtil.log("enter this line test1")
         return chain.process(chain.request())
     }
@@ -23,19 +24,21 @@ class TestInterceptor : RouterInterceptor {
     "/test/interceptors/test2",
     scope = InterceptorScope.NORMAL
 )
-class Test2Interceptor : RouterInterceptor {
-    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+class Test2Interceptor : CoroutineRouterInterceptor {
+    override suspend fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
         LogUtil.log("enter this line test2")
         return chain.process(chain.request())
     }
 }
+
 @InterceptorAnnotation(
     "/test/interceptors/test3",
     scope = InterceptorScope.NORMAL
 )
-class Test3Interceptor : RouterInterceptor {
-    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+class Test3Interceptor : DirectRouterInterceptor {
+    override fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
         LogUtil.log("enter this line test3")
+        val request=chain.request()
         return chain.process(chain.request())
     }
 }
@@ -45,18 +48,19 @@ class Test3Interceptor : RouterInterceptor {
     scope = InterceptorScope.GLOBAL,
     priority = 0
 )
-class TestGlobal2Interceptor : RouterInterceptor {
-    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+class TestGlobal2Interceptor : DirectRouterInterceptor {
+    override fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
         LogUtil.log("enter this line testGlobal1")
         return chain.process(chain.request())
     }
 }
+
 @InterceptorAnnotation(
     "/test/interceptors/testGlobal2",
     scope = InterceptorScope.GLOBAL,
 )
-class TestGlobal1Interceptor : RouterInterceptor {
-    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+class TestGlobal1Interceptor : DirectRouterInterceptor {
+    override fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
         LogUtil.log("enter this line testGlobal2")
         return chain.process(chain.request())
     }
@@ -66,8 +70,8 @@ class TestGlobal1Interceptor : RouterInterceptor {
     path = "/interceptor/scheme-http",
     scope = InterceptorScope.GLOBAL
 )
-class HttpSchemeInterceptor : RouterInterceptor {
-    override suspend fun intercept(chain: Chain<RouterRequest, RouterResponse>): RouterResponse {
+class HttpSchemeInterceptor : DirectRouterInterceptor {
+    override fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
         val request = chain.request()
         val uri = request.uri
         val scheme = uri.scheme

@@ -15,6 +15,8 @@ object Versions {
 }
 
 
+const val lifecycle_version = "2.3.0"
+//const val arch_version = "2.1.0"
 
 object Libraries {
     const val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
@@ -29,6 +31,9 @@ object Libraries {
     const val kotlin_compiler_embeddable = "org.jetbrains.kotlin:kotlin-compiler-embeddable:1.4.21"
     const val google_auto_service = "com.google.auto.service:auto-service:1.0-rc7"
     const val kotlin_poet = "com.squareup:kotlinpoet:1.7.2"
+    const val room_runtime = "androidx.room:room-runtime:2.2.6"
+    const val room_compiler = "androidx.room:room-compiler:2.2.6"
+    const val room_ktx = "androidx.room:room-ktx:2.2.6"
     const val moshi = "com.squareup.moshi:moshi:1.11.0"
     const val gson = "com.google.code.gson:gson:2.8.6"
     const val fastJson = "com.alibaba:fastjson:1.1.72.android"
@@ -38,13 +43,33 @@ object Libraries {
     const val hilt_android_compiler = "com.google.dagger:hilt-android-compiler:+"
     const val hilt_compiler = "androidx.hilt:hilt-compiler:+"
     const val constraintlayout = "androidx.constraintlayout:constraintlayout:2.0.4"
-   const val  kotlinx_serialization_json="org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
+    const val kotlinx_serialization_json = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
     const val kotlinx_coroutines_core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1"
     const val datastore_preferences = "androidx.datastore:datastore-preferences:1.0.0-alpha04"
     const val startup = "androidx.startup:startup-runtime:1.0.0"
     const val agent_web = "com.just.agentweb:agentweb:4.1.3"
-    const val navigation_fragment_ktx="androidx.navigation:navigation-fragment-ktx:2.3.2"
-    const val navigation_ui_ktx="androidx.navigation:navigation-ui-ktx:2.3.2"
+    const val navigation_fragment_ktx = "androidx.navigation:navigation-fragment-ktx:2.3.2"
+    const val navigation_ui_ktx = "androidx.navigation:navigation-ui-ktx:2.3.2"
+
+    //lifecycle
+    const val lifecycle_viewmodel_ktx =
+        "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    const val lifecycle_livedata_ktx =
+        "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    const val lifecycle_runtime_ktx =
+        "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+    const val lifecycle_viewmodel_savedstate =
+        "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
+    const val lifecycle_common_java8 =
+        "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+    const val lifecycle_service =
+        "androidx.lifecycle:lifecycle-service:$lifecycle_version"
+    const val lifecycle_process =
+        "androidx.lifecycle:lifecycle-process:$lifecycle_version"
+
+    //mvrx
+    const val mvrx = "com.airbnb.android:mavericks:2.0.0"
+
 }
 
 

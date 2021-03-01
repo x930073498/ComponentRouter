@@ -1,16 +1,14 @@
 package com.x930073498.component.router.interceptor
 
+interface Interceptor
 
-interface Interceptor< T, V, S> where T : Request, V : Response, S : Chain<T, V> {
-    suspend fun intercept(chain: S): V
+ interface CoroutineInterceptor<T> : Interceptor {
+    suspend fun intercept(chain: Chain<T>):Chain.ChainResult<T>
 }
 
-internal fun <T, V, S> (suspend S.() -> V).toInterceptor() where T : Request, V : Response, S : Chain<T, V> =
-    object : Interceptor<T, V, S> {
-        override suspend fun intercept(chain: S): V {
-            return invoke(chain)
-        }
+interface DirectInterceptor<T>: Interceptor {
 
-    }
+    fun intercept(chain: Chain<T>):Chain.ChainResult<T>
 
 
+}

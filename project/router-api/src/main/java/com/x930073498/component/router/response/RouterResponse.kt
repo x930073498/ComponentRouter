@@ -5,11 +5,10 @@ import android.os.Bundle
 import com.x930073498.component.router.action.*
 import com.x930073498.component.router.coroutines.ResultListenable
 import com.x930073498.component.router.impl.*
-import com.x930073498.component.router.interceptor.Response
 import com.x930073498.component.router.navigator.*
 import com.x930073498.component.router.util.ParameterSupport
 
-interface RouterResponse : Response {
+interface RouterResponse {
     val uri: Uri
     val bundle: Bundle
     val contextHolder: ContextHolder
@@ -17,7 +16,7 @@ interface RouterResponse : Response {
 
 
     companion object {
-        val Empty = object : RouterResponse {
+        internal val Empty = object : RouterResponse {
             override val uri: Uri
                 get() = Uri.EMPTY
             override val bundle: Bundle
@@ -36,10 +35,8 @@ fun RouterResponse.success(isSuccess: Boolean = true): RouterResponse {
 }
 
 
-
-
-fun ResultListenable<RouterResponse>.asNavigator(navigatorOption: NavigatorOption=NavigatorOption.Empty):DispatcherNavigator {
-    return DispatcherNavigator(this,navigatorOption)
+fun ResultListenable<RouterResponse>.asNavigator(navigatorOption: NavigatorOption = NavigatorOption.Empty): DispatcherNavigator {
+    return DispatcherNavigator(this, navigatorOption)
 }
 
 

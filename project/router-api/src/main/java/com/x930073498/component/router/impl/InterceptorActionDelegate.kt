@@ -5,6 +5,7 @@ import com.x930073498.component.annotations.InterceptorScope
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.Target
 
+
 interface InterceptorActionDelegate : ActionDelegate, Comparable<InterceptorActionDelegate> {
     override fun type(): ActionType {
         return ActionType.INTERCEPTOR

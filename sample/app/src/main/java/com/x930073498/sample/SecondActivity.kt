@@ -18,7 +18,7 @@ class SecondActivity : AppCompatActivity(R.layout.activity_second) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-     val binding=  ActivitySecondBinding.bind(findViewById(R.id.container))
+        val binding = ActivitySecondBinding.bind(findViewById(R.id.container))
         binding.tv.setOnClickListener {
 //            setResult(RESULT_OK, Intent().putExtra("result","第二个activity"))
             finish()

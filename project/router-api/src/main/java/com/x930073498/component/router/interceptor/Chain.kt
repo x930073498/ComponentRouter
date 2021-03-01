@@ -1,27 +1,43 @@
 package com.x930073498.component.router.interceptor
 
+import com.x930073498.component.router.coroutines.ChannelResultAwaitHandle
 
-interface Chain<T, V> : ChainSource<T> where T : Request, V : Response {
+interface Chain<T> {
 
+    fun process(data: T): ChainResult<T>
 
-    suspend fun process(request: T): V
+    fun intercept(): ChainResult<T>
 
-    fun addNext(interceptor: Interceptor<T, V, Chain<T, V>>)
+    fun dispose(): ChainResult<T>
 
-
-}
-
-interface ChainSource<T> where T : Request {
-    suspend fun headerRequest(): T
-    suspend fun request(): T
-}
+    fun request(): T
 
 
-fun <T, V> Chain<T, V>.addNext(interceptor: suspend Chain<T, V>.() -> V) where T : Request, V : Response {
-    addNext(object : Interceptor<T, V, Chain<T, V>> {
-        override suspend fun intercept(chain: Chain<T, V>): V {
-            return interceptor(chain)
+    fun addNext(interceptor: Interceptor)
+
+    class ChainResult<T> internal constructor(private val result: T){
+        fun get():T{
+            return result
         }
-    })
+    }
+
+}
+
+fun <T> Chain<T>.addDirect(block: (Chain<T>) -> Chain.ChainResult<T>) {
+    val interceptor = object : DirectInterceptor<T> {
+        override fun intercept(chain: Chain<T>): Chain.ChainResult<T> {
+           return block(chain)
+        }
+    }
+    addNext(interceptor)
+}
+
+fun <T> Chain<T>.addCoroutine(block: suspend (Chain<T>) -> Chain.ChainResult<T>) {
+    val interceptor = object : CoroutineInterceptor<T> {
+        override suspend fun intercept(chain: Chain<T>): Chain.ChainResult<T> {
+            return block(chain)
+        }
+    }
+    addNext(interceptor)
 }
 

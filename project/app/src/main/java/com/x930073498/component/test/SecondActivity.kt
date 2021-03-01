@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.util.keyIterator
 import androidx.lifecycle.lifecycleScope
+import com.airbnb.mvrx.Success
 import com.x930073498.component.annotations.*
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.core.requireLifecycleOwner
@@ -49,6 +50,7 @@ class SecondActivity : AppCompatActivity() {
                 .map { it.toInt() }
                 .await()
         }
+
         binding.tvSecond.setOnClickListener {
             Router.from("/activity/navigation")
 //                .asActivity(lifecycleScope,navigatorOption = NavigatorOption.ActivityNavigatorOption(launchMode = LaunchMode.SingleTop))

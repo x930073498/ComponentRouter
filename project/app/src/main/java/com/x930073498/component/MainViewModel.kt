@@ -5,9 +5,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 
-class MainViewModel  constructor(
+class MainViewModel constructor(
 
- val savedStateHandle: SavedStateHandle,
+    val savedStateHandle: SavedStateHandle,
     application: Application,
 ) : AndroidViewModel(application) {
 

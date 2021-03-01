@@ -1,8 +1,6 @@
 package com.x930073498.component.router.action
 
-import com.x930073498.component.router.interceptor.Response
-
-data class NavigateResult(val result: Any?) : Response {
+data class NavigateResult(val result: Any?)  {
 
     companion object {
         val empty = NavigateResult(null)

@@ -12,6 +12,7 @@ import com.x930073498.component.router.coroutines.cast
 import com.x930073498.component.router.coroutines.flatMap
 import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.IService
+import com.x930073498.component.router.impl.DirectRouterInterceptor
 import com.x930073498.component.router.impl.RouterInterceptor
 import com.x930073498.component.router.response.RouterResponse
 import com.x930073498.component.router.thread.IThread

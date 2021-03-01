@@ -9,7 +9,6 @@ import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ModuleHandle
 import com.x930073498.component.router.core.*
 import com.x930073498.component.router.impl.InterceptorActionDelegate
-import com.x930073498.component.router.impl.RouterInterceptor
 
 internal val globalInterceptors = arrayListOf<InterceptorActionDelegate>()
 

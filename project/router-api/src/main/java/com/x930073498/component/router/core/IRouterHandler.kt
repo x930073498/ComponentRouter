@@ -2,7 +2,6 @@ package com.x930073498.component.router.core
 
 import android.net.Uri
 import android.os.Bundle
-import com.x930073498.component.router.impl.RouterInterceptor
 
 interface IRouterHandler {
     fun greenChannel(): IRouterHandler
