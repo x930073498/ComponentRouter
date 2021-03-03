@@ -8,7 +8,7 @@ import com.x930073498.component.router.util.ParameterSupport
 
 internal class InternalRouterRequest private constructor() : RouterRequest {
 
-    private var _header :RouterRequest= this
+    private var _header: RouterRequest = this
 
     constructor(
         header: RouterRequest? = null,
@@ -53,6 +53,17 @@ internal class InternalRouterRequest private constructor() : RouterRequest {
         return InternalRouterRequestBuilder(this)
     }
 
+    override fun newBuilder(): RouterRequest.Builder {
+        return InternalRouterRequestBuilder(
+            InternalRouterRequest(
+                header,
+                Uri.EMPTY,
+                bundleOf(),
+                contextHolder
+            )
+        )
+    }
+
     override fun syncUriToBundle() {
         if (bundle.getInt(KEY_SYNC_URI) == uri.hashCode()) {
             return
@@ -78,5 +89,5 @@ internal fun routerRequest(
     bundle: Bundle = bundleOf(),
     contextHolder: ContextHolder = ContextHolder.create()
 ): RouterRequest {
-    return InternalRouterRequest(null,uri, bundle, contextHolder)
+    return InternalRouterRequest(null, uri, bundle, contextHolder)
 }

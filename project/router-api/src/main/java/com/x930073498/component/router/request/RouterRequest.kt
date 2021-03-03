@@ -11,6 +11,7 @@ interface RouterRequest {
     val bundle: Bundle
     val contextHolder: ContextHolder
     fun buildUpon(): Builder
+    fun newBuilder():Builder
     fun syncUriToBundle()
     val header:RouterRequest
     interface Builder {
@@ -20,33 +21,6 @@ interface RouterRequest {
         fun serializer(action: ISerializerBundle.() -> Unit): Builder
         fun bundle(action: Bundle.() -> Unit): Builder
         fun build(): RouterRequest
-    }
-
-    companion object {
-        fun builder(): Builder {
-            return Empty.buildUpon()
-        }
-
-        val Empty = object : RouterRequest {
-            override val uri: Uri = Uri.EMPTY
-
-            override val bundle: Bundle = bundleOf()
-            override val contextHolder: ContextHolder
-                get() = ContextHolder.create()
-
-
-            override fun buildUpon(): Builder {
-                return InternalRouterRequestBuilder(this)
-            }
-
-            override fun syncUriToBundle() {
-            }
-
-            override val header: RouterRequest
-                get() = this
-
-
-        }
     }
 }
 
