@@ -5,7 +5,7 @@ plugins {
     id("com.android.application")
     kotlin("android")
     kotlin("kapt")
-    kotlin("plugin.serialization") version "1.4.20"
+    kotlin("plugin.serialization") version "1.4.30"
     id("kotlin-parcelize")
     id("kotlin-android")
 
@@ -73,6 +73,7 @@ dependencies {
     implementation(Libraries.lifecycle_service)
     implementation(Libraries.lifecycle_process)
     implementation(Libraries.agent_web)
+    implementation(Libraries.preference)
     implementation(Libraries.mvrx)
     implementation(project(":router-annotations"))
     implementation(project(":auto"))

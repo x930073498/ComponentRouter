@@ -6,7 +6,7 @@ interface Interceptor
     suspend fun intercept(chain: Chain<T>):Chain.ChainResult<T>
 }
 
-interface DirectInterceptor<T>: Interceptor {
+fun interface DirectInterceptor<T>: Interceptor {
 
     fun intercept(chain: Chain<T>):Chain.ChainResult<T>
 

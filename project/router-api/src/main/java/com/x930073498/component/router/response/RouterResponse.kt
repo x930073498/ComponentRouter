@@ -27,6 +27,17 @@ interface RouterResponse {
                 get() = true
 
         }
+        internal val DISPOSE = object : RouterResponse {
+            override val uri: Uri
+                get() = Uri.EMPTY
+            override val bundle: Bundle
+                get() = Bundle.EMPTY
+            override val contextHolder: ContextHolder
+                get() = ContextHolder.create()
+            override val isSuccessful: Boolean
+                get() = true
+
+        }
     }
 }
 

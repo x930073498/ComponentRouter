@@ -1,7 +1,5 @@
 package com.x930073498.component.router.interceptor
 
-import com.x930073498.component.router.coroutines.ChannelResultAwaitHandle
-
 interface Chain<T> {
 
     fun process(data: T): ChainResult<T>

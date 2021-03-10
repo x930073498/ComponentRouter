@@ -34,10 +34,10 @@ internal fun createFormBundle(bundle: Bundle): ISerializerBundle {
     }
 }
 
-internal class InternalRouterHandler(uri: Uri = Uri.EMPTY) :
+internal class InternalRouterHandler(uri: Uri = Uri.EMPTY, bundle: Bundle = bundleOf()) :
     IRouterHandler {
     internal var uriBuilder = uri.buildUpon()
-    internal val mBundle = bundleOf()
+    internal val mBundle = bundle
     internal val interceptors = arrayListOf<String>()
     internal val replaceInterceptors = arrayListOf<String>()
 

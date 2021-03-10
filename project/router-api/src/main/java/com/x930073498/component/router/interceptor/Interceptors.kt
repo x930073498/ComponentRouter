@@ -6,6 +6,3 @@ private class InstanceTransformer<V>: Transformer<V, V> {
     }
 
 }
-
-class Interceptors<V>:
-    TransformerInterceptors<V, V>(InstanceTransformer<V>(), InstanceTransformer<V>())

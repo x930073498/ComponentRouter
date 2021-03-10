@@ -7,13 +7,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.x930073498.component.annotations.FragmentAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
-import com.x930073498.component.auto.IAuto
 import com.x930073498.component.fragmentation.startWithRouter
-import com.x930073498.component.router.Router
-import com.x930073498.component.router.coroutines.bindLifecycle
 import com.x930073498.module1.databinding.FragmentTestBinding
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 @FragmentAnnotation(path = "/module1/fragment/test")
 class TestFragment : Fragment() {
@@ -40,7 +35,7 @@ class TestFragment : Fragment() {
                 withRouter {
                     bundle("name", "NAME")
                 }
-            }.bindLifecycle(this)
+            }.start()
 
         }
     }

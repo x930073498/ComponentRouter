@@ -1,17 +1,15 @@
 package com.x930073498.component.router.navigator.impl
 
-import android.os.Bundle
 import androidx.collection.arrayMapOf
 import com.x930073498.component.router.action.*
-import com.x930073498.component.router.action.Target
 import com.x930073498.component.router.coroutines.ResultListenable
+import com.x930073498.component.router.coroutines.cast
 import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.IService
 import com.x930073498.component.router.navigator.NavigatorOption
 import com.x930073498.component.router.navigator.NavigatorResult
 import com.x930073498.component.router.navigator.ServiceNavigator
 import com.x930073498.component.router.navigator.ServiceNavigatorParams
-import com.x930073498.component.router.response.RouterResponse
 import java.lang.ref.WeakReference
 
 
@@ -53,7 +51,7 @@ internal class ServiceNavigatorImpl(
     }
 
     override fun <T : IService> getInstanceService(clazz: Class<T>): ResultListenable<T> {
-        return serviceLazy.map { clazz.cast(it) as T }
+        return serviceLazy.cast()
     }
 
 

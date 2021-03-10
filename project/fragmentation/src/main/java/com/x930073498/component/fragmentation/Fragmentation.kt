@@ -122,14 +122,14 @@ private fun RouterResponse.asNavigateParams(): NavigateParams {
 fun Fragment.loadRootFromRouter(
     containerId: Int,
     path: String,
-    scope: CoroutineScope = AwaitResultCoroutineScope,
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     coroutineContext: CoroutineContext = scope.coroutineContext,
-    action: suspend IRouterHandler.() -> Unit = {}
+    action: suspend NavRouter.() -> Unit = {}
 ): ResultListenable<Any> {
-    return resultOf(scope, coroutineContext) {
+    return listenOf(scope) {
         withContext(Dispatchers.Main) {
             val view = requireView().findViewById<View>(containerId)
-                ?: return@withContext resultOf(scope, coroutineContext, Unit)
+                ?: return@withContext listenOf(scope, data = Unit)
             val controller = NavHostController(requireContext())
             controller.setLifecycleOwner(this@loadRootFromRouter)
             controller.setViewModelStore(viewModelStore)
@@ -153,24 +153,21 @@ fun Fragment.loadRootFromRouter(
                 action
             ).await()
         }
-    }
-
-
+    }.start()
 }
 
 fun FragmentActivity.loadRootFromRouter(
     containerId: Int,
     path: String,
-    scope: CoroutineScope = AwaitResultCoroutineScope,
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     coroutineContext: CoroutineContext = scope.coroutineContext,
-    action:suspend IRouterHandler.() -> Unit = {}
+    action: suspend NavRouter.() -> Unit = {}
 ): ResultListenable<Any> {
-    return resultOf(scope, coroutineContext) {
+    return listenOf(scope) {
         withContext(Dispatchers.Main) {
-            val view = findViewById<View>(containerId) ?: return@withContext resultOf(
+            val view = findViewById<View>(containerId) ?: return@withContext listenOf(
                 scope,
-                coroutineContext,
-                Unit
+                data = Unit
             )
             val controller = NavHostController(this@loadRootFromRouter)
             controller.setLifecycleOwner(this@loadRootFromRouter)
@@ -196,26 +193,26 @@ fun FragmentActivity.loadRootFromRouter(
             ).await()
         }
 
-    }
+    }.start()
 
 }
 
 
 fun Fragment.startWithRouter(
     path: String,
-    scope: CoroutineScope = AwaitResultCoroutineScope,
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     coroutineContext: CoroutineContext = scope.coroutineContext,
-    action: NavRouter.() -> Unit = {}
+    action:suspend NavRouter.() -> Unit = {}
 ): ResultListenable<Any> {
     val controller = runCatching {
         Navigation.findNavController(requireView())
     }.getOrNull() ?: run {
-        return resultOf(scope, coroutineContext, LogUtil.log("请先调用loadRootFromRouter"))
+        return loadRootFromRouter(requireView().id,path, scope, coroutineContext,action)
     }
-    val router = Router.from(path)
-    val nav = NavRouter(router as IRouterHandler)
-    action(nav)
-    return router.request(scope, coroutineContext, context = requireContext())
+    var navRouter: NavRouter? = null
+    return Router.from(path).request(scope, coroutineContext, context = requireContext()) {
+        navRouter = NavRouter(this).apply { action(this) }
+    }
         .map {
             val destination = it.asDestination(controller) ?: run {
                 LogUtil.log("path:$path 没有对应的Router，请检查路由定义是否正确或者检查路由是否已经被卸载")
@@ -229,10 +226,45 @@ fun Fragment.startWithRouter(
                 controller.navigate(
                     destination.id,
                     it.asNavigateParams().bundle,
-                    nav.getNavOptions()
+                    navRouter?.getNavOptions()
                 )
             }
-        }
+        }.start().cast()
+}
+
+fun FragmentActivity.startWithRouter(
+    path: String,
+    id: Int,
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
+    coroutineContext: CoroutineContext = scope.coroutineContext,
+    action: suspend NavRouter.() -> Unit = {}
+): ResultListenable<Any> {
+    val controller = runCatching {
+        Navigation.findNavController(this, id)
+    }.getOrNull() ?: run {
+        return loadRootFromRouter(id, path, scope, coroutineContext, action)
+    }
+    var navRouter: NavRouter? = null
+    return Router.from(path).request(scope, coroutineContext, context = this) {
+        navRouter = NavRouter(this).apply { action(this) }
+    }
+        .map {
+            val destination = it.asDestination(controller) ?: run {
+                LogUtil.log("path:$path 没有对应的Router，请检查路由定义是否正确或者检查路由是否已经被卸载")
+                return@map
+            }
+            val graph = controller.graph
+            runCatching {
+                graph[destination.id]
+            }.onFailure { graph.addDestination(destination) }
+            withContext(Dispatchers.Main) {
+                controller.navigate(
+                    destination.id,
+                    it.asNavigateParams().bundle,
+                    navRouter?.getNavOptions()
+                )
+            }
+        }.start().cast()
 }
 
 
@@ -260,13 +292,15 @@ fun Fragment.popTo(path: String, inclusive: Boolean = false) {
 
 private fun NavController.loadRootFromRouter(
     path: String,
-    scope: CoroutineScope = AwaitResultCoroutineScope,
+    scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     coroutineContext: CoroutineContext = scope.coroutineContext,
     context: Context,
-    action: suspend IRouterHandler.() -> Unit = {}
+    action: suspend NavRouter.() -> Unit = {}
 ): ResultListenable<Any> {
     return Router.from(path)
-        .request(scope, coroutineContext, context = context,request = action)
+        .request(scope, coroutineContext, context = context) {
+            action(NavRouter(this))
+        }
         .map {
             val destination = it.asDestination(this) ?: return@map
             val params = it.asNavigateParams()
@@ -277,7 +311,7 @@ private fun NavController.loadRootFromRouter(
             withContext(Dispatchers.Main) {
                 setGraph(mNavGraph, params.bundle)
             }
-        }
+        }.start().cast()
 
 
 }

@@ -38,8 +38,7 @@ class Test2Interceptor : CoroutineRouterInterceptor {
 class Test3Interceptor : DirectRouterInterceptor {
     override fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
         LogUtil.log("enter this line test3")
-        val request=chain.request()
-        return chain.process(chain.request())
+        return chain.dispose()
     }
 }
 

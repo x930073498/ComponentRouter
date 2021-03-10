@@ -4,7 +4,9 @@ package com.x930073498.component.auto.plugin
 import com.android.build.gradle.AppPlugin
 import com.android.build.gradle.LibraryPlugin
 import com.android.build.gradle.tasks.KOTLIN_KAPT_PLUGIN_ID
+import com.x930073498.component.auto.plugin.options.RouterOptions
 import groovy.lang.Closure
+import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaLibraryPlugin
@@ -20,72 +22,30 @@ enum class SerializerType {
     NONE //没有序列化
 }
 
-class AutoOptions internal constructor(
-    var enableDependency: Boolean = true,
-    var enableRouter: Boolean = true,
-    var enableDispatcher: Boolean = true,
-    var enable: Boolean = true,
-    var enableFragmentation: Boolean = true,
-    var serializer: String = SerializerType.NONE.name,
-    var mavenUrl: String = "",
-    var versionPattern: String = "+",
-    var enableLog: Boolean = false
-) {
-    internal val map: MutableMap<String, AutoOptions> = mutableMapOf()
-    fun child(name: String, options: AutoOptions.() -> Unit) {
-        val option = AutoOptions(
-            enableDependency,
-            enableRouter,
-            enableDispatcher,
-            enable,
-            enableFragmentation,
-            serializer,
-            mavenUrl,
-            versionPattern,
-            enableLog
-        )
-        options(option)
-        map[name] = option
-    }
-
-    fun child(name: String, action: Closure<AutoOptions>) {
-        val option = AutoOptions(
-            enableDependency,
-            enableRouter,
-            enableDispatcher,
-            enable,
-            enableFragmentation,
-            serializer,
-            mavenUrl,
-            versionPattern,
-            enableLog
-        )
-        ConfigureUtil.configure(action, option)
-        map[name] = option
-    }
-}
 
 open class Auto constructor(val project: Project) {
-    private fun serializerType(options: AutoOptions): SerializerType {
-        return runCatching { SerializerType.valueOf(options.serializer.toUpperCase(Locale.getDefault())) }.getOrNull()
-            ?: SerializerType.NONE
-    }
 
-    fun options(auto: AutoOptions. () -> Unit) {
-        val options = AutoOptions()
-        auto(options)
-        this.apply(project, options)
-    }
+    private var options = AutoOptions()
+    private var actionHasDone = false
+
 
     fun options(action: Closure<AutoOptions>) {
-        val options = AutoOptions()
-        ConfigureUtil.configure(action, options)
-        this.apply(project, options)
+        if (actionHasDone) return
+        options = ConfigureUtil.configure(action, options)
+        options.apply(project)
+        actionHasDone = true
+    }
+
+    fun options(action: Action<AutoOptions>) {
+        if (actionHasDone) return
+        action.execute(options)
+        options.apply(project)
+        actionHasDone = true
     }
 
 
-    private companion object {
-        private const val GROUP = "com.x930073498.component"
+    companion object {
+        const val GROUP = "com.x930073498.component"
         const val ARTIFACT_AUTO = "auto"
         const val ARTIFACT_CORE = "core"
         const val ARTIFACT_AUTO_STARTER_DISPATCHER = "auto-starter-dispatcher"
@@ -109,17 +69,11 @@ open class Auto constructor(val project: Project) {
 
         const val IMPLEMENTATION = "api"
         const val KAPT = "kapt"
-        const val REMOTE_MAVEN_URL="https://dl.bintray.com/x930073498/component"
+        const val REMOTE_MAVEN_URL = "https://dl.bintray.com/x930073498/component"
 //        const val KAPT = "annotationProcessor"
 
     }
 
-    private fun getDependency(artifact: String, options: AutoOptions): String {
-        return "$GROUP:$artifact:${options.versionPattern}".apply {
-            if (options.enableLog)
-                println("dependency=$this")
-        }
-    }
 
     internal data class Dependency(val command: String, val path: String) {
         fun dependency(scope: DependencyHandlerScope) {
@@ -130,14 +84,33 @@ open class Auto constructor(val project: Project) {
     }
 
 
-    private fun Project.getDependency(plugin: Plugin<*>, options: AutoOptions): List<Dependency> {
-        val result = arrayListOf<Dependency>()
-        result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_AUTO, options)))
-        val serializerType = serializerType(options)
-        if (options.enableLog)
-            println("serializerType=$serializerType")
-        when (serializerType) {
-            SerializerType.K -> {
+}
+
+fun Project.setDependency(plugin: Plugin<*>, options: AutoOptions) {
+    if (options.enableDependency) {
+        repositories {
+            if (options.mavenUrl.isEmpty()) {
+                maven(url = Auto.REMOTE_MAVEN_URL)
+            } else
+                maven(url = options.mavenUrl)
+        }
+        val list = getDependency(plugin, options)
+        dependencies {
+            list.forEach {
+                it.dependency(this)
+            }
+        }
+    }
+}
+
+private fun Project.getDependency(plugin: Plugin<*>, options: AutoOptions): List<Auto.Dependency> {
+    val result = arrayListOf<Auto.Dependency>()
+    result.add(Auto.Dependency(Auto.IMPLEMENTATION, getDependency(Auto.ARTIFACT_AUTO, options)))
+    val serializerType = serializerType(options)
+    if (options.enableLog)
+        println("serializerType=$serializerType")
+    when (serializerType) {
+        SerializerType.K -> {
 //                if (KotlinVersion.CURRENT.also {
 //                        println("kotlin version=$it")
 //                    }.run {
@@ -156,147 +129,106 @@ open class Auto constructor(val project: Project) {
 //                        )
 //                    )
 //                }
-            }
-            SerializerType.M -> {
-                if (!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
-                    if (plugin !is JavaLibraryPlugin) {
-                        plugins.apply("kotlin-android")
-                    } else {
-                        plugins.apply("kotlin")
-                    }
-                    plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
-                }
-                result.add(Dependency(KAPT, MOSHI_CODEGEN_DEPENDENCY))
-                result.add(Dependency(IMPLEMENTATION, MOSHI_DEPENDENCY))
-                result.add(
-                    Dependency(
-                        IMPLEMENTATION,
-                        getDependency(ARTIFACT_M_SERIALIZER, options)
-                    )
-                )
-            }
-            SerializerType.G -> {
-                result.add(
-                    Dependency(
-                        IMPLEMENTATION,
-                        getDependency(ARTIFACT_G_SERIALIZER, options)
-                    )
-                )
-                result.add(Dependency(IMPLEMENTATION, GSON_DEPENDENCY))
-            }
-            SerializerType.F -> {
-                result.add(
-                    Dependency(
-                        IMPLEMENTATION,
-                        getDependency(ARTIFACT_F_SERIALIZER, options)
-                    )
-                )
-                result.add(Dependency(IMPLEMENTATION, FAST_JSON_DEPENDENCY))
-                result.add(Dependency(IMPLEMENTATION, KOTLIN_REFLECT_DEPENDENCY))
-            }
-            SerializerType.NONE -> {
-//do nothing
-            }
         }
-
-        fun addRouterDependency() {
+        SerializerType.M -> {
             if (!plugins.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)) {
-                if (!plugins.hasPlugin("kotlin-android")) {
+                if (plugin !is JavaLibraryPlugin) {
                     plugins.apply("kotlin-android")
+                } else {
+                    plugins.apply("kotlin")
                 }
                 plugins.apply(KOTLIN_KAPT_PLUGIN_ID)
             }
+            result.add(Auto.Dependency(Auto.KAPT, Auto.MOSHI_CODEGEN_DEPENDENCY))
+            result.add(Auto.Dependency(Auto.IMPLEMENTATION, Auto.MOSHI_DEPENDENCY))
             result.add(
-                Dependency(IMPLEMENTATION, getDependency(ARTIFACT_ROUTER_API, options))
-            )
-            result.add(
-                Dependency(KAPT, getDependency(ARTIFACT_ROUTER_COMPILER, options))
-            )
-            result.add(
-                Dependency(
-                    IMPLEMENTATION,
-                    getDependency(ARTIFACT_ROUTER_ANNOTATIONS, options)
-                )
-            )
-
-        }
-
-        fun addDispatcherDependency() {
-            result.add(
-                Dependency(
-                    IMPLEMENTATION,
-                    getDependency(ARTIFACT_STARTER_DISPATCHER, options)
-                )
-            )
-            result.add(
-                Dependency(
-                    IMPLEMENTATION,
-                    getDependency(ARTIFACT_AUTO_STARTER_DISPATCHER, options)
+                Auto.Dependency(
+                    Auto.IMPLEMENTATION,
+                    getDependency(Auto.ARTIFACT_M_SERIALIZER, options)
                 )
             )
         }
-
-        fun addFragmentationDependency() {
-            if (!options.enableRouter) {
-                addRouterDependency()
-            }
-            result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_FRAGMENTATION, options)))
-            result.add(Dependency(IMPLEMENTATION, KOTLIN_NAVIGATION_FRAGMENT_KTX_DEPENDENCY))
+        SerializerType.G -> {
+            result.add(
+                Auto.Dependency(
+                    Auto.IMPLEMENTATION,
+                    getDependency(Auto.ARTIFACT_G_SERIALIZER, options)
+                )
+            )
+            result.add(Auto.Dependency(Auto.IMPLEMENTATION, Auto.GSON_DEPENDENCY))
         }
-        if (plugin is AppPlugin || plugin is LibraryPlugin) {
-            result.add(Dependency(IMPLEMENTATION, getDependency(ARTIFACT_CORE, options)))
-            if (options.enableRouter) {
-                addRouterDependency()
-            }
-            if (options.enableDispatcher) {
-                addDispatcherDependency()
-            }
-            if (options.enableFragmentation) {
-                addFragmentationDependency()
-            }
+        SerializerType.F -> {
+            result.add(
+                Auto.Dependency(
+                    Auto.IMPLEMENTATION,
+                    getDependency(Auto.ARTIFACT_F_SERIALIZER, options)
+                )
+            )
+            result.add(Auto.Dependency(Auto.IMPLEMENTATION, Auto.FAST_JSON_DEPENDENCY))
+            result.add(Auto.Dependency(Auto.IMPLEMENTATION, Auto.KOTLIN_REFLECT_DEPENDENCY))
         }
-        return result
-    }
-
-
-    private fun isValid(options: AutoOptions) = options.enable
-
-    private fun Project.setDependency(plugin: Plugin<*>, options: AutoOptions) {
-        if (options.enableDependency) {
-            repositories {
-                if (options.mavenUrl.isEmpty()) {
-                    maven(url=REMOTE_MAVEN_URL)
-                } else
-                    maven(url = options.mavenUrl)
-            }
-            val list = getDependency(plugin, options)
-            dependencies {
-                list.forEach {
-                    it.dependency(this)
-                }
-            }
+        SerializerType.NONE -> {
+//do nothing
         }
     }
 
-    private fun apply(project: Project, options: AutoOptions) {
-        if (!isValid(options)) {
-            return
-        }
-        project.allprojects {
-            if (this == rootProject) return@allprojects
-            val childOptions = options.map[name] ?: options
-            if (!childOptions.enable) return@allprojects
-            plugins.whenPluginAdded {
-                if (this is AppPlugin) {
-                    android.registerTransform(ASMTransform(this@allprojects))
-                    setDependency(this, childOptions)
-                } else if (this is LibraryPlugin || this is JavaLibraryPlugin) {
-                    setDependency(this, childOptions)
-                }
-            }
-        }
 
+    fun addDispatcherDependency() {
+        result.add(
+            Auto.Dependency(
+                Auto.IMPLEMENTATION,
+                getDependency(Auto.ARTIFACT_STARTER_DISPATCHER, options)
+            )
+        )
+        result.add(
+            Auto.Dependency(
+                Auto.IMPLEMENTATION,
+                getDependency(Auto.ARTIFACT_AUTO_STARTER_DISPATCHER, options)
+            )
+        )
     }
 
+    fun addFragmentationDependency() {
+        result.add(
+            Auto.Dependency(
+                Auto.IMPLEMENTATION,
+                getDependency(Auto.ARTIFACT_FRAGMENTATION, options)
+            )
+        )
+        result.add(
+            Auto.Dependency(
+                Auto.IMPLEMENTATION,
+                Auto.KOTLIN_NAVIGATION_FRAGMENT_KTX_DEPENDENCY
+            )
+        )
+    }
+    if (plugin is AppPlugin || plugin is LibraryPlugin) {
+        result.add(Auto.Dependency(Auto.IMPLEMENTATION, getDependency(Auto.ARTIFACT_CORE, options)))
+        if (options.enableDispatcher) {
+            addDispatcherDependency()
+        }
+        if (options.enableFragmentation) {
+            addFragmentationDependency()
+        }
+    }
+    return result
+}
 
+fun getDependency(artifact: String, options: AutoOptions): String {
+    return "${Auto.GROUP}:$artifact:${options.versionPattern}".apply {
+        if (options.enableLog)
+            println("dependency=$this")
+    }
+}
+
+fun getDependency(artifact: String, version: String,options: AutoOptions): String {
+    return "${Auto.GROUP}:$artifact:$version".apply {
+        if (options.enableLog)
+            println("dependency=$this")
+    }
+}
+
+private fun serializerType(options: AutoOptions): SerializerType {
+    return runCatching { SerializerType.valueOf(options.serializer.toUpperCase(Locale.getDefault())) }.getOrNull()
+        ?: SerializerType.NONE
 }

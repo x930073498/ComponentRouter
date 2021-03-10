@@ -3,7 +3,8 @@ package com.x930073498.component.router.interceptor
 @Suppress("UNCHECKED_CAST")
 open class TransformerInterceptors<T, V>(
     private val requestToResponseTransformer: Transformer<T, V>,
-    private val responseToRequestTransformer: Transformer<V, T>
+    private val responseToRequestTransformer: Transformer<V, T>,
+    private val dataStateChange: DataStateChange<T>
 ) {
     private val interceptors = arrayListOf<Interceptor>()
 
@@ -24,7 +25,13 @@ open class TransformerInterceptors<T, V>(
         runCatching {
             while (hasNext()) {
                 response = interceptDirect(index, request)
+                val oldData = request
                 request = responseToRequestTransformer.transform(response)
+                if (dataStateChange.isStateChanged(
+                        oldData,
+                        request
+                    )
+                ) throw DataStateChangeException(request)
             }
         }.onFailure {
             if (it !is InterceptException) throw it
@@ -44,8 +51,12 @@ open class TransformerInterceptors<T, V>(
         }
         runCatching {
             while (hasNext()) {
+                val oldData=request
                 response = interceptCoroutine(index, request)
                 request = responseToRequestTransformer.transform(response)
+                if (dataStateChange.isStateChanged(oldData,request)){
+                    throw DataStateChangeException(request)
+                }
             }
         }.onFailure {
             if (it !is InterceptException) {

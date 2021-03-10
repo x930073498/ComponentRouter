@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher">
+
+
+        <!--但是这样做比较死板，不能起到管理的作用-->
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="component://x930073498.com/test/a?name=24254&amp;title=测试" />
+        <categories android:name="android.shortcut.conversation"/>
+    </shortcut>
+
+
+</shortcuts>

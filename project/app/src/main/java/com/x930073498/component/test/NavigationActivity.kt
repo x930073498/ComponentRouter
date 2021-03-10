@@ -9,7 +9,6 @@ import com.x930073498.component.annotations.ActivityAnnotation
 import com.x930073498.component.annotations.LaunchMode
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.fragmentation.loadRootFromRouter
-import com.x930073498.component.router.coroutines.bindLifecycle
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -22,7 +21,7 @@ class NavigationActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_navigation)
         loadRootFromRouter(R.id.container, "/test/a?name=24254&title=测试", scope = lifecycleScope)
-            .bindLifecycle(this)
+
     }
 
 

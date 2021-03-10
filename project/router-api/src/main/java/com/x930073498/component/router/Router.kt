@@ -4,6 +4,8 @@ package com.x930073498.component.router
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
+import androidx.core.os.bundleOf
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ModuleHandle
@@ -18,17 +20,15 @@ internal var activityPropertyAutoInject = true
 object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,
     PropertyInjector by PropertyInjectorImpl() {
 
+    @JvmStatic
     fun ofHandle(): ModuleHandle {
         return ActionCenter.moduleHandler
     }
 
 
-
     internal fun addGlobalInterceptor(vararg interceptor: InterceptorActionDelegate) {
         globalInterceptors.addAll(interceptor.asList())
     }
-
-
 
 
     @Synchronized
@@ -54,26 +54,32 @@ object Router : InitI, ModuleHandle by ActionCenter.moduleHandler,
     }
 
 
-    fun from(uri: Uri): IRequestRouter {
-        return RouterImpl(uri)
+    @JvmOverloads
+    @JvmStatic
+    fun from(uri: Uri, bundle: Bundle = bundleOf()): IRequestRouter {
+        return RouterImpl(uri, bundle)
     }
 
 
-    fun from(url: String): IRequestRouter {
-        return from(Uri.parse(url))
+    @JvmStatic
+    @JvmOverloads
+    fun from(url: String, bundle: Bundle = bundleOf()): IRequestRouter {
+        return from(Uri.parse(url), bundle)
     }
 
-
-    fun <T> create(clazz: Class<T>): IClassRequestRouter<T> {
-        return ClassRequestRouterImpl(clazz)
+    @JvmStatic
+    @JvmOverloads
+    fun <T> create(clazz: Class<T>, bundle: Bundle = bundleOf()): IClassRequestRouter<T> {
+        return ClassRequestRouterImpl(clazz,bundle)
     }
 
-    inline fun <reified T> create(): IClassRequestRouter<T> {
-        return create(T::class.java)
+    inline fun <reified T> create(bundle: Bundle = bundleOf()): IClassRequestRouter<T> {
+        return create(T::class.java,bundle)
     }
 
+    @JvmStatic
     fun from(intent: Intent): IRequestRouter {
-        return from(intent.toUri(0))
+        return from(intent.toUri(0), intent.extras ?: bundleOf())
     }
 
 }

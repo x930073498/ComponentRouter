@@ -36,6 +36,9 @@ buildscript {
 configure<com.x930073498.component.auto.plugin.Auto> {
     options {
         enableDependency = false
+        router{
+            enableDoc()
+        }
     }
 
 }

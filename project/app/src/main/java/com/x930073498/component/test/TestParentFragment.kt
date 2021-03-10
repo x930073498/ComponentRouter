@@ -11,7 +11,6 @@ import com.x930073498.component.R
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.*
 import com.x930073498.component.router.action.ContextHolder
-import com.x930073498.component.router.coroutines.forceEnd
 import com.x930073498.component.router.asActivity
 import com.x930073498.component.router.impl.FragmentActionDelegate
 
@@ -29,11 +28,7 @@ open class TestParentFragment : Fragment(R.layout.fragment_test) {
 //                .asActivity(lifecycleScope,navigatorOption = NavigatorOption.ActivityNavigatorOption(launchMode = LaunchMode.SingleTop))
                 .asActivity()
                 .requestActivity()
-                .invokeOnDispose {
-                    LogUtil.log("enter this line onCompleted")
-                }.forceEnd {
-                    LogUtil.log(it)
-                }
+
         }
     }
 

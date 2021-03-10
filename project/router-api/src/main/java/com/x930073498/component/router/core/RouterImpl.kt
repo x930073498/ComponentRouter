@@ -2,17 +2,20 @@ package com.x930073498.component.router.core
 
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
+import androidx.core.os.bundleOf
 import androidx.core.util.lruCache
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.coroutines.ResultListenable
-import com.x930073498.component.router.coroutines.resultOf
-import com.x930073498.component.router.coroutines.scopeResultOf
+import com.x930073498.component.router.coroutines.listenOf
 import com.x930073498.component.router.interceptor.DisposeException
 import com.x930073498.component.router.response.RouterResponse
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 
 internal class RouterImpl private constructor(
@@ -33,8 +36,8 @@ internal class RouterImpl private constructor(
         }
     }
 
-    internal constructor(uri: Uri = Uri.EMPTY) : this(
-        InternalRouterHandler(uri)
+    internal constructor(uri: Uri = Uri.EMPTY,bundle: Bundle= bundleOf()) : this(
+        InternalRouterHandler(uri,bundle)
     )
 
 
@@ -44,7 +47,7 @@ internal class RouterImpl private constructor(
         context: Context?,
         request: suspend IRouterHandler.() -> Unit
     ): ResultListenable<RouterResponse> {
-        return scopeResultOf(coroutineContext) {
+        return listenOf(CoroutineScope(coroutineContext ?: EmptyCoroutineContext),coroutineContext?:EmptyCoroutineContext) {
             request(this)
             RequestParams(
                 mHandler.uriBuilder.build(),
@@ -64,7 +67,7 @@ internal class RouterImpl private constructor(
         request: suspend IRouterHandler.() -> Unit
 
     ): ResultListenable<RouterResponse> {
-        return resultOf(scope, coroutineContext) {
+        return listenOf(scope,coroutineContext) {
             request(this)
             RequestParams(
                 mHandler.uriBuilder.build(),
@@ -82,7 +85,7 @@ internal class RouterImpl private constructor(
         debounce: Long,
         context: Context?,
         request: IRouterHandler.() -> Unit
-    ): DirectRequestResult {
+    ): RouterResponse {
         request(this)
         val params = RequestParams(
             mHandler.uriBuilder.build(),
@@ -94,14 +97,10 @@ internal class RouterImpl private constructor(
         val time = getParamsTime(params)
         setParamsTime(params)
         if (System.currentTimeMillis() - time < debounce) {
-            return DirectRequestResult.Ignore
+            return RouterResponse.Empty
         }
-        val response =  params.toResponse(context)
-        if (response == RouterResponse.Empty) {
-            return DirectRequestResult.Ignore
-        }
-        val contextHolder = ContextHolder.create(context)
-        return ActionCenter.getResultDirect(response.uri, response.bundle, contextHolder)
+       return params.toResponse(context)
+
     }
 }
 

@@ -11,10 +11,7 @@ import com.x930073498.component.annotations.LaunchMode
 import com.x930073498.component.annotations.LaunchMode.*
 import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.Target
-import com.x930073498.component.router.coroutines.ResultListenable
-import com.x930073498.component.router.coroutines.ResultSetter
-import com.x930073498.component.router.coroutines.cast
-import com.x930073498.component.router.coroutines.map
+import com.x930073498.component.router.coroutines.*
 import com.x930073498.component.router.navigator.ActivityNavigator
 import com.x930073498.component.router.navigator.ActivityNavigatorParams
 import com.x930073498.component.router.navigator.NavigatorOption
@@ -48,7 +45,8 @@ internal open class ActivityNavigatorImpl constructor(
                         val action = target.action
                         launchMode = activityNavigatorOption.launchMode ?: action.launchMode()
                         val intent = Intent(context, target.targetClazz)
-                        val componentName = intent.resolveActivity(contextHolder.getPackageManager())
+                        val componentName =
+                            intent.resolveActivity(contextHolder.getPackageManager())
                         if (componentName == null) {
                             null
                         } else {
@@ -132,10 +130,10 @@ internal open class ActivityNavigatorImpl constructor(
     }
 
     private val createRequestActivityListenable by lazy {
-        launchIntentLazy.createUpon<Activity?> {
+        launchIntentLazy.setter {
             if (it == null) {
                 setResult(null)
-                return@createUpon
+                return@setter
             }
             val params = listenable.await()
             val componentName = it.resolveActivity(params.contextHolder.getPackageManager())
@@ -171,22 +169,22 @@ internal open class ActivityNavigatorImpl constructor(
 
     override fun navigateForActivityResult(activity: Activity): ResultListenable<ActivityResult> {
         val anchorActivityRef = WeakReference(activity)
-        launchIntentLazy.createUpon<Activity?> {
+        launchIntentLazy.setter {
             if (it == null) {
                 setResult(null)
-                return@createUpon
+                return@setter
             }
             val params = listenable.await()
             val componentName = it.resolveActivity(params.contextHolder.getPackageManager())
             if (componentName == null) {
                 setResult(null)
-                return@createUpon
+                return@setter
             }
             componentName.listenerActivityCreated(launchMode, this)
         }.listen {
             activityRef = WeakReference(it)
         }
-        return launchIntentLazy.createUpon {
+        return launchIntentLazy.setter {
             val anchorActivity = anchorActivityRef.get()
             if (anchorActivity == null) {
                 setResult(
@@ -209,6 +207,7 @@ internal open class ActivityNavigatorImpl constructor(
         return requestActivity().map {
             NavigatorResult.ACTIVITY(it)
         }
+
     }
 
 }

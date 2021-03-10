@@ -21,7 +21,6 @@ class AutoPlugin : Plugin<Project> {
         val auto = project.extensions.findByType<Auto>()
         if (auto == null)
             project.extensions.add("auto", Auto(project))
-
     }
 
 }

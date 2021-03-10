@@ -1,31 +1,26 @@
 package com.x930073498.component
 
 import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.View
 import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.liveData
-import androidx.viewbinding.ViewBinding
 import com.just.agentweb.AgentWebConfig
 import com.x930073498.component.annotations.ActivityAnnotation
 import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.fragmentation.loadRootFromRouter
 import com.x930073498.component.router.*
 import com.x930073498.component.router.coroutines.end
+import com.x930073498.component.router.coroutines.result
 import com.x930073498.component.test.TestParentService1
-import com.x930073498.component.test.TestService1
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.experimental.ExperimentalTypeInference
 
 class Sp<T> : SparseArray<T>()
 
@@ -37,6 +32,19 @@ class MainActivity : AppCompatActivity() {
 //        ViewModelProvider(this)[MainViewModel::class.java]
 //    }
 
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent == null) return
+        val uri = intent.data ?: return
+        loadRootFromRouter(Window.ID_ANDROID_CONTENT, uri.toString(), lifecycleScope) {
+            this.withRouter {
+                bundle {
+                    putAll(intent.extras)
+                }
+            }
+        }
+    }
 
     @ValueAutowiredAnnotation("name")
     var name: String = ""
@@ -51,9 +59,6 @@ class MainActivity : AppCompatActivity() {
             100
         )
         AgentWebConfig.debug()
-
-
-
         findViewById<View>(Window.ID_ANDROID_CONTENT).setOnClickListener { view ->
 
             lifecycleScope.launch {
@@ -76,15 +81,23 @@ class MainActivity : AppCompatActivity() {
 //                    test()
 //                    invoke()
 //                }
-                Router.from("/test/service/1").navigate {
-                    addInterceptor("/test/interceptors/test3")
+//               Router.from("/test/service/1").asService {
+//                    addInterceptor("/test/interceptors/test3")
+//                }.navigate().await()
+                Router.from("/test/service/1").navigate(lifecycleScope) {
+//                    addInterceptor("/test/interceptors/test3")
+//                    addInterceptor("/interceptor/toActivitySecond")
                 }
+                LogUtil.log("enter this line tttt")
 
-                delay(2000)
-                LogUtil.log("777777777777777777777777777777")
-                Router.from("/test/service/1").requestDirectAsService {
-                    addInterceptor("/test/interceptors/test3")
-                }?.getService<TestParentService1>()
+                Router.from("/activity/navigation").navigate(lifecycleScope).await()
+//                delay(2000)
+//                LogUtil.log("777777777777777777777777777777")
+//                Router.from("/test/service/1").requestDirectAsService {
+//                    addInterceptor("/test/interceptors/test3")
+//                }?.getService<TestParentService1>()
+            }.invokeOnCompletion {
+                LogUtil.log("enter this line sasa")
             }
 
 
@@ -123,7 +136,7 @@ class MainActivity : AppCompatActivity() {
 //                .bindLifecycle(this)
 
         }
-
+        onNewIntent(intent)
     }
 
     override fun onRequestPermissionsResult(

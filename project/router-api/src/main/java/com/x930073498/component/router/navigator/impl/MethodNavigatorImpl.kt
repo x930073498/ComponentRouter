@@ -1,6 +1,7 @@
 package com.x930073498.component.router.navigator.impl
 
 import com.x930073498.component.router.coroutines.ResultListenable
+import com.x930073498.component.router.coroutines.cast
 import com.x930073498.component.router.coroutines.map
 import com.x930073498.component.router.impl.MethodInvoker
 import com.x930073498.component.router.navigator.MethodNavigator

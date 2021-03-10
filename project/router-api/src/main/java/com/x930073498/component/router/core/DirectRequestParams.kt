@@ -3,17 +3,20 @@ package com.x930073498.component.router.core
 import android.content.Context
 import com.x930073498.component.annotations.InterceptorAnnotation
 import com.x930073498.component.auto.LogUtil
+import com.x930073498.component.router.Router
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.globalInterceptors
 import com.x930073498.component.router.impl.DirectRouterInterceptor
 import com.x930073498.component.router.impl.InterceptorActionDelegate
 import com.x930073498.component.router.interceptor.Chain
+import com.x930073498.component.router.interceptor.DataStateChangeException
 import com.x930073498.component.router.interceptor.DisposeException
 import com.x930073498.component.router.interceptor.TransformerInterceptors
 import com.x930073498.component.router.request.RouterRequest
 import com.x930073498.component.router.request.routerRequest
 import com.x930073498.component.router.response.RouterResponse
+import kotlinx.coroutines.CoroutineScope
 
 internal fun RequestParams.toResponse(context: Context?): RouterResponse {
     val contextHolder = ContextHolder.create(context)
@@ -25,7 +28,9 @@ internal fun RequestParams.toResponse(context: Context?): RouterResponse {
     val mInterceptors = TransformerInterceptors(
         RequestToResponseTransformer(),
         ResponseToRequestTransformer(header)
-    )
+    ) { oldData, newData ->
+        oldData.uri.path != newData.uri.path
+    }
     if (!isGreenChannel) {
         mInterceptors.addInterceptor(
             DirectPreGlobalInterceptor(),
@@ -40,11 +45,25 @@ internal fun RequestParams.toResponse(context: Context?): RouterResponse {
     return runCatching {
         mInterceptors.requestDirect(header)
     }.getOrElse {
-        if (it !is DisposeException) it.printStackTrace()
-        else {
-            LogUtil.log("用户取消路由请求")
+        when (it) {
+            is DataStateChangeException -> {
+                val data = it.getData<RouterRequest>()
+                Router.from(data.uri).requestInternalDirect(
+                    context = contextHolder.getContext()
+                ) {
+                    bundle {
+                        putAll(data.bundle)
+                    }
+                }
+            }
+            is DisposeException -> {
+                LogUtil.log("用户取消路由请求")
+                RouterResponse.Empty
+            }
+            else -> {
+                RouterResponse.Empty
+            }
         }
-        RouterResponse.Empty
     }
 
 }

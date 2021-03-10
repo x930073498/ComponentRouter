@@ -1,18 +1,14 @@
 package com.x930073498.component.router.core
 
 import android.content.Context
-import android.os.Bundle
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
-import androidx.core.os.bundleOf
-import androidx.fragment.app.Fragment
-import com.x930073498.component.router.action.ContextHolder
-import com.x930073498.component.router.coroutines.AwaitResultCoroutineScope
 import com.x930073498.component.router.coroutines.ResultListenable
-import com.x930073498.component.router.router_default_debounce
 import com.x930073498.component.router.impl.*
 import com.x930073498.component.router.response.RouterResponse
+import com.x930073498.component.router.router_default_debounce
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 
 abstract class IClassRequestRouter<T> internal constructor(val clazz: Class<T>){
@@ -38,7 +34,7 @@ abstract class IRequestRouter internal constructor() {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal abstract fun requestInternal(
-        scope: CoroutineScope = AwaitResultCoroutineScope,
+        scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
         coroutineContext: CoroutineContext = scope.coroutineContext,
         debounce: Long = router_default_debounce,
         context: Context? = null,
@@ -54,7 +50,7 @@ abstract class IRequestRouter internal constructor() {
         debounce: Long = router_default_debounce,
         context: Context? = null,
         request: IRouterHandler.() -> Unit = {}
-    ): DirectRequestResult
+    ): RouterResponse
 
 
 }

@@ -20,12 +20,26 @@
         tools:ignore="UnusedAttribute">
         <activity android:name=".test.NavigationActivity"></activity>
         <activity android:name=".test.SecondActivity" />
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTask">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN" />
             </intent-filter>
+            <intent-filter>
+                <data
+                    android:host="x930073498.com"
+                    android:scheme="component" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+            </intent-filter>
+
+                <meta-data
+                    android:name="android.app.shortcuts"
+                    android:resource="@xml/test_short_cut" />
         </activity>
     </application>
 

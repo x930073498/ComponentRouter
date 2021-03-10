@@ -11,11 +11,11 @@ import com.x930073498.component.annotations.ValueAutowiredAnnotation
 import com.x930073498.component.databinding.FragmentWebBinding
 import com.x930073498.component.fragmentation.IFragmentation
 
-@FragmentAnnotation(path = "/fragment/web")
+@FragmentAnnotation(path = "/fragment/web",desc = "网页")
 class WebFragment : Fragment(R.layout.fragment_web), IFragmentation {
 
     @ValueAutowiredAnnotation("title")
-    var title: String = ""
+    var mTitle: String = ""
 
     @ValueAutowiredAnnotation("url")
     var url: String = ""
@@ -27,7 +27,7 @@ class WebFragment : Fragment(R.layout.fragment_web), IFragmentation {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.title.text = title
+        binding.title.text = mTitle
         agentWeb = AgentWeb.with(this).setAgentWebParent(
             binding.webView, -1, ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT

@@ -22,6 +22,7 @@ object Libraries {
     const val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
     const val androidx_core_ktx = "androidx.core:core-ktx:1.3.1"
     const val multidex = "androidx.multidex:multidex:2.0.1"
+  const val preference= "androidx.preference:preference-ktx:1.1.1"
     const val androidx_appcompat = "androidx.appcompat:appcompat:1.2.0"
     const val androidx_annotation = "androidx.annotation:annotation:1.1.0"
     const val androidx_fragment_ktx = "androidx.fragment:fragment-ktx:1.3.0-beta01"

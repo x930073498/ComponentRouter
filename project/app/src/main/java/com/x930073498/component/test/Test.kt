@@ -31,11 +31,14 @@ suspend fun testMethod2(context: Context) {
 }
 
 @UiThread
-@MethodAnnotation(path = "/method/toast")
+@MethodAnnotation(path = "/method/toast", desc = "吐司")
 fun toast(context: Context, info: ToastInfo?) {
-    if (info==null)return
+    if (info == null) return
     Toast.makeText(context.applicationContext, info.msg, info.duration).show()
 }
 
 //data class ToastInfo(@JSONField(name = "msg")val msg:String, @JSONField(name = "duration")val duration:Int =Toast.LENGTH_SHORT)
-data class ToastInfo(@SerializedName( "msg")val msg:String, @SerializedName("duration")val duration:Int=Toast.LENGTH_SHORT)
+data class ToastInfo(
+    @SerializedName("msg") val msg: String,
+    @SerializedName("duration") val duration: Int = Toast.LENGTH_SHORT
+)

@@ -16,9 +16,27 @@ import com.x930073498.component.router.Router
 import com.x930073498.component.router.coroutines.*
 import com.x930073498.component.router.asActivity
 import com.x930073498.component.router.core.hasPropertyAutoInjectByRouter
+import com.x930073498.component.router.impl.DirectRouterInterceptor
+import com.x930073498.component.router.interceptor.Chain
 import com.x930073498.component.router.navigate
+import com.x930073498.component.router.request.RouterRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+/**
+ *
+ */
+@InterceptorAnnotation("/interceptor/toActivitySecond")
+class SecondInterceptor : DirectRouterInterceptor {
+    override fun intercept(chain: Chain<RouterRequest>): Chain.ChainResult<RouterRequest> {
+        return chain.process(
+            chain.request().newBuilder().uri {
+                path("/activity/second")
+            }.build()
+        )
+    }
+
+}
 
 @ActivityAnnotation(path = "/activity/second", interceptors = ["/test/interceptors/test1"])
 //@FragmentAnnotation(path = "/activity/second", interceptors = ["/test/interceptors/test1"])
@@ -42,11 +60,10 @@ class SecondActivity : AppCompatActivity() {
             LogUtil.log("enter this line array[1]=${sparseArray[1]}")
         }
         lifecycleScope.launch {
-            scopeResultOf {
+            listenOf {
                 delay(2000)
                 "1"
             }
-                .bindLifecycle(requireLifecycleOwner())
                 .map { it.toInt() }
                 .await()
         }
@@ -56,13 +73,7 @@ class SecondActivity : AppCompatActivity() {
 //                .asActivity(lifecycleScope,navigatorOption = NavigatorOption.ActivityNavigatorOption(launchMode = LaunchMode.SingleTop))
                 .asActivity()
                 .requestActivity()
-                .forceEnd {
-                    LogUtil.log(it)
-                    setResult(RESULT_OK, Intent().putExtra("result", "result"))
-                    toast("返回结果")
-                    finish()
-                }
-                .bindLifecycle(this)
+
 
         }
 
@@ -91,6 +102,6 @@ class SecondActivity : AppCompatActivity() {
                     delay(1000)
                 }
             }
-            .forceEnd()
+            .end()
     }
 }

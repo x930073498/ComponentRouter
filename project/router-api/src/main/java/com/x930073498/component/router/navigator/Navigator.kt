@@ -4,13 +4,11 @@ import android.app.Activity
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.x930073498.component.annotations.LaunchMode
+import com.x930073498.component.auto.LogUtil
 import com.x930073498.component.router.action.ActionCenter
 import com.x930073498.component.router.action.ContextHolder
 import com.x930073498.component.router.action.Target
-import com.x930073498.component.router.coroutines.ResultListenable
-import com.x930073498.component.router.coroutines.cast
-import com.x930073498.component.router.coroutines.flatMap
-import com.x930073498.component.router.coroutines.map
+import com.x930073498.component.router.coroutines.*
 import com.x930073498.component.router.impl.IService
 import com.x930073498.component.router.impl.DirectRouterInterceptor
 import com.x930073498.component.router.impl.RouterInterceptor
@@ -28,7 +26,7 @@ sealed class NavigatorOption {
         NavigatorOption()
 
     class MethodNavigatorOption(val thread: IThread? = null) : NavigatorOption()
-    class ActivityNavigatorOption(val launchMode: LaunchMode?=null) : NavigatorOption()
+    class ActivityNavigatorOption(val launchMode: LaunchMode? = null) : NavigatorOption()
     class FragmentNavigatorOption : NavigatorOption()
 }
 
@@ -97,7 +95,7 @@ class DispatcherNavigator internal constructor(
     private val navigatorOption: NavigatorOption = NavigatorOption.Empty
 ) : Navigator {
     private val navigatorParamsListenable by lazy {
-        listenable.createUpon<NavigatorParams> {
+        listenable.setter {
             val action = ActionCenter.getAction(it.uri)
             val result = when (val target = action.target) {
                 is Target.ServiceTarget -> ServiceNavigatorParams(
@@ -128,7 +126,7 @@ class DispatcherNavigator internal constructor(
                 )
             }
             setResult(result)
-        }
+        }.start()
     }
 
 
@@ -152,6 +150,7 @@ class DispatcherNavigator internal constructor(
             methodNavigatorOption ?: navigatorOption
         )
     }
+
     internal fun asInterceptor(): InterceptorNavigator {
         return InterceptorNavigator.create(navigatorParamsListenable.cast())
     }
@@ -166,8 +165,8 @@ class DispatcherNavigator internal constructor(
     override fun navigate(): ResultListenable<NavigatorResult> {
         return navigatorParamsListenable.map {
             it.mapToNavigator(navigatorParamsListenable, navigatorOption)
-        }.flatMap {
-            it.navigate()
+        }.map {
+            it.navigate().await()
         }
     }
 }
